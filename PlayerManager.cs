@@ -12,7 +12,7 @@ namespace Capital_and_Cargo
     internal class PlayerManager
     {
         private SqliteConnection _connection;
-     
+     //add comment
 
         public PlayerManager(ref SqliteConnection connection)
         {
