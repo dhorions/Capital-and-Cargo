@@ -23,7 +23,7 @@ namespace Capital_and_Cargo
 
         public void EnsureTableExistsAndIsPopulated()
         {
-            if (!TableExists("player"))
+            if (!TableExists("Player"))
             {
                 CreatePlayerTable();
                 InitPlayerTable();
@@ -92,6 +92,19 @@ namespace Capital_and_Cargo
             }
 
             return dataTable;
+        }
+        public void nextDay()
+        {
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = @"
+                    UPDATE Player
+            SET Date = date(Date, '+1 day');";
+
+                command.ExecuteNonQuery();
+            }
+            //
+
         }
     }
 }

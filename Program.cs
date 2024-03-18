@@ -5,16 +5,24 @@ using static System.Net.Mime.MediaTypeNames;
 using Application = Terminal.Gui.Application;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Timers;
+
+
 
 class Program
 {
+    static int loopIntervalSeconds = 5;
     static GameDataManager dataManager = null;
+    static Terminal.Gui.Label dateField;
+    static Terminal.Gui.Label moneyField;
+    private static System.Timers.Timer timer;
     static void Main(string[] args)
     {
         //dataManager.init();
         dataManager = new GameDataManager();
         Application.Init();
         var top = Application.Top;
+        
 
         // Menu at the top
         var menu = new MenuBar(new MenuBarItem[] {
@@ -23,20 +31,58 @@ class Program
             }),
         });
         top.Add(menu);
+        var topContainer =
+            new Terminal.Gui.FrameView()
+            {
+                X = 0,
+                Y = 1, // Offset by 1 due to the menu bar
+                Width = Dim.Fill(),
+                Height = Dim.Fill() - 1, // Account for the menu bar
+                Title = "Capital & Cargo"
 
+            };
+
+        top.Add(topContainer);
+        // title container for date and money
+        var titleContainer = new Terminal.Gui.View()
+        {
+            X = 0,
+            Y = 0, // Offset by 1 due to the menu bar
+            Width = Dim.Fill(),
+            Height = 1, // Account for the menu bar
+        };
+       
+         dateField = new Terminal.Gui.Label()
+        {
+            X = 1,
+            Y = 0,
+            Text = "Jan 1 1900"
+        };
+        
+        moneyField = new Terminal.Gui.Label()
+        {
+            X = Pos.Percent(50),
+            Y = 0,
+            Text = "€ 0.000.000.000"
+        };
+        populatePlayerData();
+
+
+
+        titleContainer.Add(dateField);
+        titleContainer.Add(moneyField);
+        topContainer.Add(titleContainer);
         // Main container for two-column layout
-        var mainContainer = new Terminal.Gui.FrameView()
+        var mainContainer = new Terminal.Gui.View()
         {
             X = 0,
             Y = 1, // Offset by 1 due to the menu bar
             Width = Dim.Fill(),
             Height = Dim.Fill() - 1, // Account for the menu bar
-           Title = "Capital & Cargo"
-
         };
 
 
-        top.Add(mainContainer);
+        topContainer.Add(mainContainer);
 
         // Left column container for the list
         var leftColumn = new View()
@@ -179,7 +225,7 @@ class Program
             
             var numberLabel = new Label()
             {
-                X = 1,
+                X = 1,  
                 Y = 1,
                 Text = "Amount"
             };
@@ -234,7 +280,8 @@ class Program
             dialog.Add(unitPriceValue);
             dialog.Add(totalPriceLabel);
             dialog.Add(totalPriceValue);
-            dialog.Add(button);
+            //dialog.Add(button);
+            dialog.AddButton(button);
 
             // Display the modal dialog
             Application.Run(dialog);
@@ -252,7 +299,12 @@ class Program
         cityMarketListView.KeyDown += ( key) =>{
             Debug.WriteLine("Key pressed : " + key.ToString());
         };
+        timer = new System.Timers.Timer(loopIntervalSeconds * 1000);
+        timer.Elapsed += gameLoop;
+        timer.AutoReset = true;
+        timer.Enabled = true;
         Application.Run();
+       
     }
 
     private static void populateMarket(string city,TableView cityMarketListView)
@@ -260,4 +312,21 @@ class Program
         System.Data.DataTable marketTable = dataManager.cities.GetGoodsForCity(city);
         cityMarketListView.Table = marketTable;
     }
+    private static void populatePlayerData()
+    {
+        System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+        dateField.Text = playerTable.Rows[0]["Date"].ToString();
+        
+        var formatted_string = String.Format("{0:N2}", playerTable.Rows[0]["Money"]); 
+        moneyField.Text =  "€ " + formatted_string;
+
+    }
+
+    private static void gameLoop(Object source, ElapsedEventArgs e)
+    {
+        dataManager.gameUpdateLoop();
+        populatePlayerData();
+        Application.Refresh();
+    }
+
 }

@@ -32,7 +32,7 @@ namespace Capital_and_Cargo
             cities = new CitiesManager(ref this.connection,ref dm);
             transits = new TransitManager(ref this.connection,ref dm);
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
-            player = new PlayerManager(this.connection);
+            player = new PlayerManager(ref this.connection);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
         }
 
@@ -62,6 +62,11 @@ namespace Capital_and_Cargo
                 this.connection.Dispose();
                 this.connection = null;
             }
+        }
+
+        public void gameUpdateLoop()
+        {
+            player.nextDay();
         }
     }
 }
