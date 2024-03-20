@@ -18,6 +18,7 @@ class Program
     private static System.Timers.Timer timer;
     static Terminal.Gui.TableView citiesListView;
     static Terminal.Gui.TableView cityMarketListView;
+    static Terminal.Gui.TableView cityGoodsListView;
     static void Main(string[] args)
     {
         //dataManager.init();
@@ -186,7 +187,7 @@ class Program
 
         // Example ListViews for the two areas in the right column
         // You would populate these similar to the listView with relevant data
-        var cityGoodsListView = new TableView()
+        cityGoodsListView = new TableView()
         {
             X = 0,
             Y = 0,
@@ -350,6 +351,7 @@ class Program
             String city = (string)Action.Table.Rows[Action.NewRow]["city"];
             Debug.WriteLine("Selected city : " + city);
             populateMarket(city, cityMarketListView);
+            populateWarehouse(city, cityGoodsListView);
         };
         // - Buy/Sell Goods
         //cityMarketListView.AddKeyBinding(Key.Enter,)
@@ -369,6 +371,11 @@ class Program
         System.Data.DataTable marketTable = dataManager.cities.GetGoodsForCity(city);
         cityMarketListView.Table = marketTable;
     }
+    private static void populateWarehouse(string city, TableView cityGoodsListView)
+    {
+        System.Data.DataTable warehouseTable = dataManager.player.loadWarehouse(city);
+        cityGoodsListView.Table = warehouseTable;
+    }
     private static void populatePlayerData()
     {
         System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
@@ -386,6 +393,7 @@ class Program
         populatePlayerData();
         //Update Market for Selected City
         populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"],cityMarketListView);
+        populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
         try
         {
             Application.Refresh();
