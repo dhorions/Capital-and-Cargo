@@ -451,6 +451,11 @@ class Program
             Height = 15
         };
         var buttonTransport = new Button("OK", is_default: true);
+
+        int price;
+        
+
+            
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
         var transportToLabel = new Label("Transport to:")
@@ -463,7 +468,7 @@ class Program
             X = 1,
             Y = 6
         };
-        var costLabel = new Label("Transport price:")
+        var costLabel = new Label()
         {
             X = 1,
             Y = 7
@@ -476,19 +481,29 @@ class Program
             Height = 5
 
         };
-
-        //TODO : velden toevoegen aan dialog met city, en hoeveelheid (max amount)
-
+        cityListView.SelectedItemChanged += (ListViewItemEventArgs) =>
+        {
+            var targetCityId = cityListView.SelectedItem;
+            var targetCity = cityListView.Text;
+            var (price, distance) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
+            costLabel.Text = "Transport price:" + Convert.ToInt32(price);
+            distanceLabel.Text = "Distance:" + Convert.ToInt32(distance) + " km";
+        };
         dialog.Add(cityListView);
         dialog.Add(distanceLabel);
         dialog.Add(transportToLabel);
+        dialog.Add(costLabel);
         dialog.AddButton(buttonTransport);
         dialog.AddButton(buttonCancel);
 
+
         buttonTransport.Clicked += () => {
             //TODO transport registreren
-
-
+            var targetCityId = cityListView.SelectedItem;
+            var targetCity = cityListView.Text;
+            var(price,distance) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
+            costLabel.Text = "Transport price:" + Convert.ToInt32(price);
+            
             Application.RequestStop();
         };
         buttonCancel.Clicked += () => { Application.RequestStop(); };
@@ -498,4 +513,8 @@ class Program
         Application.Run(dialog);
     }
 
+    private static void CitiesListView_SelectedCellChanged(TableView.SelectedCellChangedEventArgs obj)
+    {
+        throw new NotImplementedException();
+    }
 }

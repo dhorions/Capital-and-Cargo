@@ -87,14 +87,17 @@ namespace Capital_and_Cargo
             string sql = "SELECT Latitude, Longitude from cities where city = @city";
             double lat = 0;
             double lon = 0;
+            DataTable dataTable = new DataTable();
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = sql;
                 command.Parameters.AddWithValue("@city", city);
                 using (var reader = command.ExecuteReader())
                 {
-                    lat = reader.GetDouble("Latitude");
-                    lon = reader.GetDouble("Longitude");
+                  
+                    dataTable.Load(reader);
+                    lat = (Double)dataTable.Rows[0]["Latitude"];
+                    lon = (Double)dataTable.Rows[0]["Longitude"];
                 }
 
             }
