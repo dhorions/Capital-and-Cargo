@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.Diagnostics;
+using Microsoft.SqlServer.Server;
+using System.Globalization;
 
 namespace Capital_and_Cargo
 {
@@ -63,10 +65,26 @@ namespace Capital_and_Cargo
                 this.connection = null;
             }
         }
-
+        private bool IsFirstDayOfMonth(DateTime date)
+        {
+            return date.Day == 1;
+        }
         public void gameUpdateLoop()
         {
             player.nextDay();
+            System.Data.DataTable p = player.LoadPlayer();
+            //Debug.WriteLine("->" + p.Rows[0]["Date"]);
+            DateTime currentDay =  DateTime.ParseExact((String)p.Rows[0]["Date"], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            Debug.WriteLine("->"+currentDay);
+            if (IsFirstDayOfMonth(currentDay))
+            {
+                Debug.WriteLine("First Day of new Month : " + currentDay);
+                cities.UpdateCityMarketTable(cities.LoadCities(), currentDay);
+            }
+        }
+        public void purchase(String city, String CargoType, int amount, Double price)
+        {
+            player.purchase(city,CargoType,amount,price);
         }
     }
 }

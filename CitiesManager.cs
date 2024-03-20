@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using System.Data.SQLite;
 using System.Data;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Diagnostics;
 
 namespace Capital_and_Cargo
 {
@@ -25,13 +27,19 @@ namespace Capital_and_Cargo
             if (!TableExists("cities"))
             {
                 CreateCitiesTable();
+                if (!TableExists("city_market"))
+                {
+                    CreateCityMarketTable();
+                }
                 PopulateCitiesTable();
             }
-            if (!TableExists("city_market"))
+            if (!TableExists("city_market_history"))
             {
-                CreateCityMarketTable();
+                CreateCityMarketHistoryTable();
             }
-            
+
+
+
         }
         
 
@@ -119,18 +127,33 @@ namespace Capital_and_Cargo
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = @"
-            CREATE TABLE IF NOT EXISTS city_market (
-                CityName TEXT NOT NULL,
-                CargoType String NOT NULL,
-                SupplyAmount INTEGER NOT NULL,
-                BuyPrice REAL NOT NULL,
-                SellPrice REAL NOT NULL
-            );";
+                CREATE TABLE IF NOT EXISTS city_market (
+                    CityName TEXT NOT NULL,
+                    CargoType String NOT NULL,
+                    SupplyAmount INTEGER NOT NULL,
+                    BuyPrice REAL NOT NULL,
+                    SellPrice REAL NOT NULL
+                );";
+                   command.ExecuteNonQuery();
+            }
+        }
+        private void CreateCityMarketHistoryTable()
+        {
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = @"
+                CREATE TABLE IF NOT EXISTS city_market_history (
+                    Date TEXT NOT NULL,
+                    CityName TEXT NOT NULL,
+                    CargoType String NOT NULL,
+                    SupplyAmount INTEGER NOT NULL,
+                    BuyPrice REAL NOT NULL,
+                    SellPrice REAL NOT NULL
+                );";
                 command.ExecuteNonQuery();
             }
-
-            
         }
+
         public void DeleteAllFromCityMarket()
         {
             using (var command = _connection.CreateCommand())
@@ -170,6 +193,74 @@ namespace Capital_and_Cargo
 
                         command.ExecuteNonQuery();
                     }
+                }
+            }
+        }
+        private double RandomDoubleBetween(double minValue, double maxValue)
+        {
+            Random random = new Random();
+            return random.NextDouble() * (maxValue - minValue) + minValue;
+        }
+        public void UpdateCityMarketTable(DataTable cities, DateTime date)
+        {
+            DateTime lastDayOfPreviousMonth = date.AddDays(-date.Day);
+            using (var transaction = _connection.BeginTransaction())
+            {
+                try
+                {
+                    // Now that we're in the previous month, set the day to 1 to get the first day of the previous month
+                    DateTime firstDayOfPreviousMonth = new DateTime(lastDayOfPreviousMonth.Year, lastDayOfPreviousMonth.Month, 1);
+                    //Move current prices to history
+                    using (var command = _connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+                            INSERT INTO city_market_history(Date, CityName, CargoType, SupplyAmount, BuyPrice, SellPrice)
+                            SELECT @HistoryDate, CityName, CargoType, SupplyAmount, BuyPrice, SellPrice
+                            FROM city_market;";
+
+                        command.Parameters.AddWithValue("@HistoryDate", firstDayOfPreviousMonth);
+
+                        command.ExecuteNonQuery();
+                    }
+                    //Now calculate new prices for each city
+
+                    foreach (DataRow city in cities.Rows)
+                    {
+                        
+                        {
+                            var economicModifier = RandomDoubleBetween(.2, 2.0);
+                            var buyPriceModifier = economicModifier;
+                            var sellPriceModifier = economicModifier / 2;
+                            var supplyModifier = RandomDoubleBetween(1.0, 3.0);
+                            Debug.WriteLine($"market Update : {city["City"]}\t supplyModifier : {supplyModifier}\t buyPriceModifier : {buyPriceModifier}\t sellPriceModifier: {sellPriceModifier}");
+                            using (var command = _connection.CreateCommand())
+                            {
+                                command.CommandText = @"
+                               UPDATE city_market
+                               SET 
+                                    SupplyAmount = round(SupplyAmount * @supplyModifier),
+                                    BuyPrice = BuyPrice * @buyPriceModifier,
+                                    SellPrice = SellPrice * @sellPriceModifier
+                                    where cityName = @city;";
+
+                                command.Parameters.AddWithValue("@buyPriceModifier", buyPriceModifier);
+                                command.Parameters.AddWithValue("@sellPriceModifier", sellPriceModifier);
+                                command.Parameters.AddWithValue("@supplyModifier", supplyModifier);
+                                command.Parameters.AddWithValue("@city", city["City"]);
+
+                                command.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error occurred updating the marklet: {ex.Message}");
+
+                    // Rollback the transaction on error
+                    transaction.Rollback();
                 }
             }
         }

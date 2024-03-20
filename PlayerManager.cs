@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using System.Data.SQLite;
 using System.Data;
+using System.Diagnostics;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Terminal.Gui;
 
 namespace Capital_and_Cargo
 {
@@ -28,6 +31,11 @@ namespace Capital_and_Cargo
                 CreatePlayerTable();
                 InitPlayerTable();
             }
+            if (!TableExists("warehouse"))
+            {
+                CreateWarehouseTable();
+            }
+            
         }
 
         private bool TableExists(string tableName)
@@ -75,7 +83,92 @@ namespace Capital_and_Cargo
                
             
         }
+        private void CreateWarehouseTable()
+        {
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = @"
+                CREATE TABLE IF NOT EXISTS warehouse (
+                    CityName TEXT NOT NULL,
+                    CargoType String NOT NULL,
+                    Amount INTEGER NOT NULL
+                );";
+                command.ExecuteNonQuery();
+            }
+        }
+        public void purchase(String city, String CargoType, int amount, Double price)
+        {
+            using (var transaction = _connection.BeginTransaction())
+            {
+                try
+                {
+                    //Decrease market supply
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Debug.WriteLine("Removing " + amount + " of " + CargoType + " from " + city + " market");
+                        command.CommandText = @"
+                               UPDATE city_market SET SupplyAmount = SupplyAmount - @amount WHERE CargoType = @cargoType and CityName = @city
+                        ";
+                        command.Parameters.AddWithValue("@cargoType", CargoType);
+                        command.Parameters.AddWithValue("@city", city);
+                        command.Parameters.AddWithValue("@amount", amount);
+                        command.ExecuteNonQuery();
+                    }
+                    //Pay
+                    using (var command = _connection.CreateCommand())
+                    {
+                        
+                        Double totalPrice = amount * price;
+                        Debug.WriteLine("Paying " + totalPrice);
+                        command.CommandText = @"
+                               UPDATE player SET money = money - @price 
+                        ";
+                        command.Parameters.AddWithValue("@price", totalPrice);
+                        command.ExecuteNonQuery();
+                    }
+                    //Add to Warehouse
+                    int recordsAffected = 0;
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Double totalPrice = amount * price;
+                        Debug.WriteLine("Adding " + amount + " of " + CargoType + " to  " + city + " warehouse");
+                        command.CommandText = @"
+                               UPDATE warehouse SET Amount = Amount + @amount WHERE CityName = @city AND CargoType = @cargoType
+                        ";
+                        command.Parameters.AddWithValue("@cargoType", CargoType);
+                        command.Parameters.AddWithValue("@city", city);
+                        command.Parameters.AddWithValue("@amount", amount);
+                        recordsAffected = command.ExecuteNonQuery();
+                    }
+                    if (recordsAffected == 0)
+                    {
+                        //This cargo wasn't in the warehouse yet, add it
+                        using (var cmdInsert = _connection.CreateCommand())
+                        {
+                            cmdInsert.CommandText = @"
+                               INSERT INTO warehouse (CityName, CargoType, Amount) VALUES (@city, @cargoType, @amount)
+                        ";
+                            cmdInsert.Parameters.AddWithValue("@cargoType", CargoType);
+                            cmdInsert.Parameters.AddWithValue("@city", city);
+                            cmdInsert.Parameters.AddWithValue("@amount", amount);
+                            cmdInsert.ExecuteNonQuery();
+                        }
 
+                    }
+
+
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error making a purchase: {ex.Message}");
+
+                    // Rollback the transaction on error
+                    transaction.Rollback();
+                }
+            }
+        }
         public DataTable LoadPlayer()
         {
             DataTable dataTable = new DataTable();

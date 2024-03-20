@@ -11,11 +11,13 @@ using System.Timers;
 
 class Program
 {
-    static int loopIntervalSeconds = 5;
+    static int loopIntervalSeconds = 2;
     static GameDataManager dataManager = null;
     static Terminal.Gui.Label dateField;
     static Terminal.Gui.Label moneyField;
     private static System.Timers.Timer timer;
+    static Terminal.Gui.TableView citiesListView;
+    static Terminal.Gui.TableView cityMarketListView;
     static void Main(string[] args)
     {
         //dataManager.init();
@@ -121,7 +123,7 @@ class Program
         // ListView for continents and cities
         
         System.Data.DataTable citiesTable = dataManager.cities.LoadCities();
-        var citiesListView = new TableView(citiesTable)
+        citiesListView = new TableView(citiesTable)
         {
             X = 0,
             Y = 0,
@@ -193,7 +195,7 @@ class Program
         };
        
 
-        var cityMarketListView = new TableView()
+        cityMarketListView = new TableView()
         {
             X = 0,
             Y = 1,
@@ -256,7 +258,8 @@ class Program
             };
 
             var dialog = new Dialog("Purchase " + CargoType, 60, 10 );
-            var button = new Button("OK", is_default: true);
+            var buttonBuy = new Button("OK", is_default: true);
+            var buttonCancel = new Button("Cancel", is_default: false);
             var buttonBuyMax = new Button("Max")
             {
                 X = 1,
@@ -264,7 +267,15 @@ class Program
                
             };
 
-            button.Clicked += () => { Application.RequestStop(); };
+            buttonBuy.Clicked += () => { 
+                //TODO Kobe : Call dataManager.purchase here !!
+
+
+
+
+                Application.RequestStop(); 
+            };
+            buttonCancel.Clicked += () => { Application.RequestStop(); };
             buttonBuyMax.Clicked += () => {
                 
                 System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
@@ -323,7 +334,8 @@ class Program
             dialog.Add(totalPriceValue);
             dialog.Add(buttonBuyMax);
             //dialog.Add(button);
-            dialog.AddButton(button);
+            dialog.AddButton(buttonBuy);
+            dialog.AddButton(buttonCancel);
 
             // Display the modal dialog
             Application.Run(dialog);
@@ -367,8 +379,19 @@ class Program
     private static void gameLoop(Object source, ElapsedEventArgs e)
     {
         dataManager.gameUpdateLoop();
+        //Update Date and Money
         populatePlayerData();
-        Application.Refresh();
+        //Update Market for Selected City
+        populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"],cityMarketListView);
+        try
+        {
+            Application.Refresh();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("Gameloop Refresh error : "+ ex.GetBaseException().ToString());
+        }
+        
     }
 
 }
