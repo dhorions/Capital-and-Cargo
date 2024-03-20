@@ -280,7 +280,7 @@ class Program
                 else
                 {
                     Debug.WriteLine("Can NOT buy whole stock");
-                    numberField.Text = (totalMoney/SupplyAmount).ToString();
+                    numberField.Text = (Math.Floor(totalMoney/SupplyAmount)).ToString();
                 }
 
             };
