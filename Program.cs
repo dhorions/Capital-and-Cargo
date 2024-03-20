@@ -271,7 +271,7 @@ class Program
             buttonBuy.Clicked += () => {
                 //TODO Kobe : Call dataManager.purchase here !!
                 var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
-                dataManager.purchase(city, CargoType, Convert.ToInt64(numberField.Text), Convert.ToDouble(totalPriceLabel.Text));
+                dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(totalPriceValue.Text));
                 
                 
 
