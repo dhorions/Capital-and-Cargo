@@ -96,6 +96,31 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
+        public DataTable loadWarehouse(String city)
+        {
+            DataTable dataTable = new DataTable();
+
+            using (var command = _connection.CreateCommand())
+            {
+              
+                command.CommandText = @"
+            SELECT CargoType, Amount
+            FROM warehouse 
+            WHERE CityName = @CityName
+            ORDER BY CargoType;";
+
+                // Use parameters to prevent SQL injection
+                command.Parameters.AddWithValue("@CityName", city);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+               
+            }
+
+            return dataTable;
+        }
         public void purchase(String city, String CargoType, int amount, Double price)
         {
             using (var transaction = _connection.BeginTransaction())
