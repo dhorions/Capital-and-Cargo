@@ -122,6 +122,17 @@ namespace Capital_and_Cargo
             }
             return dataTable;
         }
+        public System.Collections.IList LoadCitiesList()
+        {
+            DataTable cities = LoadCities();
+            var list = new List<String>();
+            foreach (DataRow c in cities.Rows)
+            {
+                list.Add((string)c["City"]);
+            }
+            return list;
+        }
+
         private void CreateCityMarketTable()
         {
             using (var command = _connection.CreateCommand())
