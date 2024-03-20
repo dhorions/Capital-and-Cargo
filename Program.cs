@@ -218,14 +218,9 @@ class Program
             Double SellPrice = (Double)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SellPrice"];
             Int64 SupplyAmount = (Int64)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SupplyAmount"];
             //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
-            var dialog = new Dialog("Purchase " + CargoType, 60, 10 );
-            var button = new Button("OK", is_default: true);
-            button.Clicked += () => { Application.RequestStop(); };
-
-            
             var numberLabel = new Label()
             {
-                X = 1,  
+                X = 1,
                 Y = 1,
                 Text = "Amount"
             };
@@ -245,7 +240,7 @@ class Program
             {
                 X = 20,
                 Y = 2,
-                Text =SellPrice.ToString()
+                Text = SellPrice.ToString()
             };
             var totalPriceLabel = new Label()
             {
@@ -260,6 +255,38 @@ class Program
                 Text = "0"
             };
 
+            var dialog = new Dialog("Purchase " + CargoType, 60, 10 );
+            var button = new Button("OK", is_default: true);
+            var buttonBuyMax = new Button("Max")
+            {
+                X = 1,
+                Y = 4,
+               
+            };
+
+            button.Clicked += () => { Application.RequestStop(); };
+            buttonBuyMax.Clicked += () => {
+                
+                System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+                double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+                Debug.WriteLine("buy max button pressed");
+                var maxAmount = SupplyAmount;
+                double minMoney = SupplyAmount * SellPrice;
+                if (minMoney <= totalMoney)
+                {
+                    Debug.WriteLine("Can buy whole stock");
+                    numberField.Text = SupplyAmount.ToString();
+                }
+                else
+                {
+                    Debug.WriteLine("Can NOT buy whole stock");
+                    numberField.Text = (totalMoney/SupplyAmount).ToString();
+                }
+
+            };
+
+            
+
             string lastValidValue = "0";
 
             numberField.TextChanged += (e) =>
@@ -267,12 +294,26 @@ class Program
                 if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount)
                 {
                     lastValidValue = numberField.Text.ToString();
+
+                }
+                else if (numberField.Text == "")
+                {
+                    lastValidValue = numberField.Text.ToString();
                 }
                 else
                 {
                     numberField.Text = lastValidValue;
                 }
-                totalPriceValue.Text = (int.Parse(numberField.Text.ToString()) * SellPrice).ToString();
+                if (numberField.Text != "")
+                {
+                    totalPriceValue.Text = (int.Parse(numberField.Text.ToString()) * SellPrice).ToString();
+                }
+                else
+                {
+                    totalPriceValue.Text = "";
+
+
+                }
             };
             dialog.Add(numberLabel);
             dialog.Add(numberField);
@@ -280,6 +321,7 @@ class Program
             dialog.Add(unitPriceValue);
             dialog.Add(totalPriceLabel);
             dialog.Add(totalPriceValue);
+            dialog.Add(buttonBuyMax);
             //dialog.Add(button);
             dialog.AddButton(button);
 
