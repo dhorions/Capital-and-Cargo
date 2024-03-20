@@ -227,15 +227,15 @@ class Program
             Y = 0,
             Text = "Transport"
         };
-        var transportButtonPlane = new Button("By _Plane")
+        var transportButtonPlane = new Button("By _Plane ✈")
         {
             X =30, 
             Height = 1,
             Y = 0
         };
-        var transportButtonTruck = new Button("By _Truck")
+        var transportButtonTruck = new Button("By _Truck ⛍")
         {
-            X = 42, 
+            X = 44, 
             Height = 1,
             Y = 0
         };
@@ -471,7 +471,12 @@ class Program
         dialog.AddButton(buttonSell);
         dialog.AddButton(buttonCancel); 
 
-        buttonSell.Clicked += () => { resume(); Application.RequestStop(); };
+        buttonSell.Clicked += () => { 
+            
+            //TODO Kobe: verkopen
+           // functie :  dataManager.player.sell
+            
+            resume(); Application.RequestStop(); };
 
         buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
         Application.Run(dialog);

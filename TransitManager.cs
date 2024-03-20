@@ -73,7 +73,7 @@ namespace Capital_and_Cargo
         public DataTable LoadTransit()
         {
             DataTable dataTable = new DataTable();
-            string sql = "SELECT OriginCity as Origin,DestinationCity as Destination,CargoType as Cargo,CargoAmount  as Amount,Progress as progressPercentage FROM city_transit;";
+            string sql = "SELECT OriginCity as Origin,DestinationCity as Destination,CargoType as Cargo,CargoAmount  as Amount,Progress as progressPercentage,TransportationMethod FROM city_transit;";
 
             using (var command = _connection.CreateCommand())
             {
@@ -86,19 +86,39 @@ namespace Capital_and_Cargo
             }
             var col = dataTable.Columns.Add("Progress");
             col.SetOrdinal(0);
+            
             foreach (DataRow row in dataTable.Rows)
             {
 
                 //Convert the progress into a progress indicator
                 Double progress = (Double)row["progressPercentage"];
-                row["Progress"] = createProgressIndicatorString(progress);
+                row["Progress"] = createProgressIndicatorString(progress, (String)row["TransportationMethod"]);
+                
                     
             }
             dataTable.Columns.Remove("progressPercentage");
+            dataTable.Columns.Remove("TransportationMethod");
             return dataTable;
         }
-        private String createProgressIndicatorString(Double progress)
+        private String createProgressIndicatorString(Double progress,String transportMethod)
         {
+
+            // Unicode character for a plane
+
+            string plane = "\u2708"; // Alternatively, use char.ConvertFromUtf32(0x2708)
+
+            // Unicode character for a truck
+            string truck = "\u26CD"; // Alternatively, use char.ConvertFromUtf32(0x1F69A)
+            String indicator = ">";
+            if(transportMethod == "plane")
+            {
+                indicator = plane;
+            }
+            if (transportMethod == "truck")
+            {
+                indicator = truck;
+            }
+
             // Define the total length of the scale (number of dashes + arrow)
             int scaleLength = 10;
 
@@ -112,7 +132,7 @@ namespace Capital_and_Cargo
             {
                 if (i == arrowPosition)
                 {
-                    result += ">";
+                    result += indicator;
                 }
                 else
                 {
@@ -169,7 +189,7 @@ namespace Capital_and_Cargo
                 {
                     dataTable.Load(reader);
                 }
-                if (dataTable.Rows[0]["SameContinent"] == "Yes") return true;
+                if ((String)dataTable.Rows[0]["SameContinent"] == "Yes") return true;
             }
             return false;
         }

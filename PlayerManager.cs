@@ -206,6 +206,65 @@ namespace Capital_and_Cargo
                 }
             }
         }
+        public void sell(String city, String CargoType, int amount, Double price)
+        {
+            using (var transaction = _connection.BeginTransaction())
+            {
+                try
+                {
+                    //Decrease market supply
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Debug.WriteLine("Adding " + amount + " of " + CargoType + " to " + city + " market");
+                        command.CommandText = @"
+                               UPDATE city_market SET SupplyAmount = SupplyAmount + @amount WHERE CargoType = @cargoType and CityName = @city
+                        ";
+                        command.Parameters.AddWithValue("@cargoType", CargoType);
+                        command.Parameters.AddWithValue("@city", city);
+                        command.Parameters.AddWithValue("@amount", amount);
+                        command.ExecuteNonQuery();
+                    }
+                    //Get Payed
+                    using (var command = _connection.CreateCommand())
+                    {
+
+                        Double totalPrice = amount * price;
+                        Debug.WriteLine("Getting Payed " + totalPrice);
+                        command.CommandText = @"
+                               UPDATE player SET money = money + @price 
+                        ";
+                        command.Parameters.AddWithValue("@price", totalPrice);
+                        command.ExecuteNonQuery();
+                    }
+                    //Remove from to Warehouse
+                    int recordsAffected = 0;
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Double totalPrice = amount * price;
+                        Debug.WriteLine("Removing " + amount + " of " + CargoType + " from  " + city + " warehouse");
+                        command.CommandText = @"
+                               UPDATE warehouse SET Amount = Amount - @amount WHERE CityName = @city AND CargoType = @cargoType
+                        ";
+                        command.Parameters.AddWithValue("@cargoType", CargoType);
+                        command.Parameters.AddWithValue("@city", city);
+                        command.Parameters.AddWithValue("@amount", amount);
+                        recordsAffected = command.ExecuteNonQuery();
+                    }
+                    
+
+
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error making a sale: {ex.Message}");
+
+                    // Rollback the transaction on error
+                    transaction.Rollback();
+                }
+            }
+        }
         public DataTable LoadPlayer()
         {
             DataTable dataTable = new DataTable();
