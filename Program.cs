@@ -267,9 +267,12 @@ class Program
                
             };
 
-            buttonBuy.Clicked += () => { 
+            buttonBuy.Clicked += () => {
                 //TODO Kobe : Call dataManager.purchase here !!
-
+                var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+                dataManager.purchase(city, CargoType, Convert.ToInt64(numberField.Text), Convert.ToDouble(totalPriceLabel.Text));
+                
+                
 
 
 

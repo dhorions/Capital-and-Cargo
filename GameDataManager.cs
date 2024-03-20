@@ -9,6 +9,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using Microsoft.SqlServer.Server;
 using System.Globalization;
+using System.Runtime.Intrinsics.X86;
 
 namespace Capital_and_Cargo
 {
@@ -23,7 +24,6 @@ namespace Capital_and_Cargo
         private SqliteConnection connection = new SqliteConnection("Data Source=CandC.db");
         public GameDataManager()
         {
-           
             EnsureDatabaseCreated();
             initData();
         }
