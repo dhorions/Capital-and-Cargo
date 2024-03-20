@@ -21,6 +21,7 @@ class Program
     static Terminal.Gui.TableView citiesListView;
     static Terminal.Gui.TableView cityMarketListView;
     static Terminal.Gui.TableView cityGoodsListView;
+    static Terminal.Gui.TableView transitListView;
     static void Main(string[] args)
     {
         //dataManager.init();
@@ -146,15 +147,12 @@ class Program
             Title = "Transit"
         };
         leftColumn.Add(transitView);
-        var transitList = new List<string>
-        {
-            "Iron|Paris|New York", "Wood|New York|Brussels", "Paper|Delhi|Heusden-Zolder"
-        };
+        
         System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
 
 
 
-        var transitListView = new TableView(transitTable)
+         transitListView = new TableView(transitTable)
         {
             X = 0,
             Y = 0,
@@ -216,22 +214,28 @@ class Program
             Y = 0
         };
         cityMarketView.Add(buyButton);
-        var transportLabel = new Label("")
+        var sellButton = new Button("Sell")
         {
             X = 1,
+            Height = 1,
+            Y = 0
+        };
+        var transportLabel = new Label("")
+        {
+            X = 20,
             Height = 1,
             Y = 0,
             Text = "Transport"
         };
-        var transportButtonPlane = new Button("By Plane")
+        var transportButtonPlane = new Button("By _Plane")
         {
-            X = 15, 
+            X =30, 
             Height = 1,
             Y = 0
         };
-        var transportButtonTruck = new Button("By Truck")
+        var transportButtonTruck = new Button("By _Truck")
         {
-            X = 30, 
+            X = 42, 
             Height = 1,
             Y = 0
         };
@@ -240,20 +244,25 @@ class Program
 
 
         cityMarketView.Add(buyButton);
+        cityGoodsView.Add(sellButton);
         cityGoodsView.Add(transportLabel);
         cityGoodsView.Add(transportButtonPlane);
         cityGoodsView.Add(transportButtonTruck);
         transportButtonPlane.Clicked += () => { transportDialog("plane"); };
         transportButtonTruck.Clicked += () => { transportDialog("truck"); };
+        sellButton.Clicked += () => { sellDialog(); };
         cityGoodsView.Add(cityGoodsListView);
 
         cityGoodsView.Add(cityGoodsListView);
         // Add an action for the button click
         buyButton.Clicked += () =>
         {
+            pause();//pause game loop when in dialog
             String CargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
             Double SellPrice = (Double)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SellPrice"];
             Int64 SupplyAmount = (Int64)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SupplyAmount"];
+            System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+            double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
             //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
             var numberLabel = new Label()
             {
@@ -303,21 +312,16 @@ class Program
             };
 
             buttonBuy.Clicked += () => {
-                //TODO Kobe : Call dataManager.purchase here !!
+                
                 var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
-                dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(totalPriceValue.Text));
-                
-                
-
-
-
+                dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
+                resume();
                 Application.RequestStop(); 
             };
-            buttonCancel.Clicked += () => { Application.RequestStop(); };
+            buttonCancel.Clicked += () => { resume();  Application.RequestStop(); };
             buttonBuyMax.Clicked += () => {
                 
-                System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
-                double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+                
                 Debug.WriteLine("buy max button pressed");
                 var maxAmount = SupplyAmount;
                 double minMoney = SupplyAmount * SellPrice;
@@ -339,8 +343,8 @@ class Program
             string lastValidValue = "0";
             numberField.TextChanged += (e) =>
             {
-                System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
-                double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+                //System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+                //double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
                 var maxBuy = Math.Floor(totalMoney / SupplyAmount);
                 if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount && value <= maxBuy)
                 {
@@ -353,6 +357,11 @@ class Program
                     lastValidValue = numberField.Text.ToString();
                 }
                 else
+                {
+                    numberField.Text = lastValidValue;
+                }
+                //do we have enough money
+                if(value > maxBuy  )
                 {
                     numberField.Text = lastValidValue;
                 }
@@ -422,7 +431,11 @@ class Program
         moneyField.Text =  "€ " + formatted_string;
 
     }
-
+    private static void populateTransitTable()
+    {
+        System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
+        transitListView.Table = transitTable;
+    }
     private static void gameLoop(Object source, ElapsedEventArgs e)
     {
         dataManager.gameUpdateLoop();
@@ -431,6 +444,7 @@ class Program
         //Update Market for Selected City
         populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"],cityMarketListView);
         populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
+        populateTransitTable();
         try
         {
             Application.Refresh();
@@ -441,10 +455,34 @@ class Program
         }
         
     }
-    private static void transportDialog(String transportationMode)
+    private static void sellDialog()
     {
+        pause();//pause game loop when in dialog
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+        var dialog = new Dialog("Sell " + CargoType + " from " + city)
+        {
+            X = 60,
+            Y = 10,
+            Height = 15
+        };
+        var buttonSell= new Button("OK", is_default: true);
+        var buttonCancel = new Button("Cancel", is_default: false);
+        dialog.AddButton(buttonSell);
+        dialog.AddButton(buttonCancel); 
+
+        buttonSell.Clicked += () => { resume(); Application.RequestStop(); };
+
+        buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
+        Application.Run(dialog);
+    }
+    private static void transportDialog(String transportationMode)
+    {
+        pause();//pause game loop when in dialog
+        String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
+        String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+        double distance = 0;
+        double price = 0;
         //amount = hoeveel er in het warehouse is
         Int64 amount = (Int64)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["Amount"];
         var dialog = new Dialog("Transport " + CargoType + " from " + city)
@@ -455,7 +493,7 @@ class Program
         };
         var buttonTransport = new Button("OK", is_default: true);
 
-        int price;
+        
         
 
             
@@ -484,13 +522,14 @@ class Program
             Height = 5
 
         };
+        
         cityListView.SelectedItemChanged += (ListViewItemEventArgs) =>
         {
             var targetCityId = cityListView.SelectedItem;
             var targetCity = cityListView.Text;
-            var (price, distance) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
-            costLabel.Text = "Transport price:" + Convert.ToInt32(price);
-            distanceLabel.Text = "Distance:" + Convert.ToInt32(distance) + " km";
+            (distance,price ) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
+            costLabel.Text = "Transport price:" + Convert.ToInt64(price) * amount;
+            distanceLabel.Text = "Distance:" + Convert.ToInt64(distance) + " km";
         };
         dialog.Add(cityListView);
         dialog.Add(distanceLabel);
@@ -501,12 +540,31 @@ class Program
 
 
         buttonTransport.Clicked += () => {
+            
             //TODO transport registreren;
             var targetCity = cityListView.Text;
-            dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
-            Application.RequestStop();
+            Boolean transportOk = dataManager.transits.canBeTransported(transportationMode, city, (string)targetCity);
+            if(!transportOk)
+            {
+                MessageBox.ErrorQuery("Incompatible Transport Method", "Transporting with a truck to a different continent is not possible.", "Ok");
+            }
+            System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+            double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+            Boolean enoughMoney = totalMoney >= price;
+            if (!enoughMoney)
+            {
+                MessageBox.ErrorQuery("Insufficient funds", "You don't have enough money to pay for this transport", "Ok");
+            }
+            if (transportOk && enoughMoney)
+            {
+                dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
+                resume();
+                Application.RequestStop();
+            }
+           
+
         };
-        buttonCancel.Clicked += () => { Application.RequestStop(); };
+        buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
 
         
         // Display the modal dialog
@@ -516,5 +574,13 @@ class Program
     private static void CitiesListView_SelectedCellChanged(TableView.SelectedCellChangedEventArgs obj)
     {
         throw new NotImplementedException();
+    }
+    private static void pause()
+    {
+        timer.Enabled = false;
+    }
+    private static void resume()
+    {
+        timer.Enabled = true;
     }
 }

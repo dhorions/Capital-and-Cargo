@@ -81,6 +81,7 @@ namespace Capital_and_Cargo
                 Debug.WriteLine("First Day of new Month : " + currentDay);
                 cities.UpdateCityMarketTable(cities.LoadCities(), currentDay);
             }
+            transits.updateTransits();
         }
         public void purchase(String city, String CargoType, int amount, Double price)
         {

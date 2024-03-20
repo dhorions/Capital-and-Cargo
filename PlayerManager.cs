@@ -96,8 +96,20 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
+        private void cleanupWarehouse()
+        {
+            //delete from warehouse where amount is 0
+            using (var command = _connection.CreateCommand())
+            {
+                Debug.WriteLine("Cleaning up the warehouse");
+                command.CommandText = @"delete from warehouse where amount <= 0";
+                command.ExecuteNonQuery();
+            }
+        }
         public DataTable loadWarehouse(String city)
         {
+            cleanupWarehouse();
+            
             DataTable dataTable = new DataTable();
 
             using (var command = _connection.CreateCommand())

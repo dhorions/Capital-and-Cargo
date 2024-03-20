@@ -240,9 +240,9 @@ namespace Capital_and_Cargo
                         
                         {
                             var economicModifier = RandomDoubleBetween(.2, 2.0);
-                            var buyPriceModifier = economicModifier;
+                            var buyPriceModifier = RandomDoubleBetween(.01, .50); ;
                             var sellPriceModifier = economicModifier / 2;
-                            var supplyModifier = RandomDoubleBetween(1.0, 3.0);
+                            var supplyModifier = RandomDoubleBetween(0.8, 1.2);
                             Debug.WriteLine($"market Update : {city["City"]}\t supplyModifier : {supplyModifier}\t buyPriceModifier : {buyPriceModifier}\t sellPriceModifier: {sellPriceModifier}");
                             using (var command = _connection.CreateCommand())
                             {
@@ -250,7 +250,7 @@ namespace Capital_and_Cargo
                                UPDATE city_market
                                SET 
                                     SupplyAmount = round(SupplyAmount * @supplyModifier),
-                                    BuyPrice = BuyPrice * @buyPriceModifier,
+                                    BuyPrice = (SellPrice * @sellPriceModifier)  - ((SellPrice * @sellPriceModifier) * @buyPriceModifier),
                                     SellPrice = SellPrice * @sellPriceModifier
                                     where cityName = @city;";
 

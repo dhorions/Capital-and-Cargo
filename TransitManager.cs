@@ -7,6 +7,7 @@ using Microsoft.Data.Sqlite;
 using System.Data.SQLite;
 using System.Data;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Capital_and_Cargo
 {
@@ -16,6 +17,8 @@ namespace Capital_and_Cargo
         private GameDataManager dataManager;
         private Double kmPriceTruck = 0.01;
         private Double kmPricePlane = 0.06;
+        private Double speedTruck = 100;
+        private Double speedPlane = 500;
         public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager)
         {
             _connection = connection;
@@ -51,6 +54,7 @@ namespace Capital_and_Cargo
     DestinationCity  TEXT NOT NULL,
     Distance REAL NOT NULL, -- Assuming distance is in kilometers
     Progress REAL NOT NULL, -- Assuming progress is a percentage (0-100)
+    ProgressKM REAL NOT NULL,
     CargoType TEXT NOT NULL,
     CargoAmount INTEGER NOT NULL, -- Assuming cargo amount is in units or kilograms, depending on cargo type
     TransportationMethod TEXT NOT NULL,
@@ -69,7 +73,7 @@ namespace Capital_and_Cargo
         public DataTable LoadTransit()
         {
             DataTable dataTable = new DataTable();
-            string sql = "SELECT OriginCity,DestinationCity,Progress,CargoType,CargoAmount FROM city_transit;";
+            string sql = "SELECT OriginCity as Origin,DestinationCity as Destination,CargoType as Cargo,CargoAmount  as Amount,Progress as progressPercentage FROM city_transit;";
 
             using (var command = _connection.CreateCommand())
             {
@@ -80,8 +84,43 @@ namespace Capital_and_Cargo
                 }
                 
             }
+            var col = dataTable.Columns.Add("Progress");
+            col.SetOrdinal(0);
+            foreach (DataRow row in dataTable.Rows)
+            {
 
+                //Convert the progress into a progress indicator
+                Double progress = (Double)row["progressPercentage"];
+                row["Progress"] = createProgressIndicatorString(progress);
+                    
+            }
+            dataTable.Columns.Remove("progressPercentage");
             return dataTable;
+        }
+        private String createProgressIndicatorString(Double progress)
+        {
+            // Define the total length of the scale (number of dashes + arrow)
+            int scaleLength = 10;
+
+            // Calculate the position of the arrow based on the percentage
+            // Since the scale is 10 characters long, divide by 10 to find the position
+            int arrowPosition = (int)Math.Round(progress / 10.0);
+
+            // Create the string representation
+            string result = string.Empty;
+            for (int i = 1; i <= scaleLength; i++)
+            {
+                if (i == arrowPosition)
+                {
+                    result += ">";
+                }
+                else
+                {
+                    result += "-";
+                }
+            }
+
+            return result;
         }
         private (double lat,double lon) getCityCoordinates(String city)
         {
@@ -103,6 +142,36 @@ namespace Capital_and_Cargo
 
             }
             return (lat, lon);
+        }
+        public Boolean canBeTransported(String transportType, String originCity, String targetCity)
+        {
+            if (transportType == "plane") return true;
+            DataTable dataTable = new DataTable();
+            Debug.WriteLine("Checking if a truck transport between " + originCity +" and " + targetCity +" is possible");
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = @"SELECT 
+                    c1.city AS City1, 
+                    c2.city AS City2, 
+                    CASE 
+                        WHEN c1.continent = c2.continent THEN 'Yes' 
+                        ELSE 'No' 
+                    END AS SameContinent
+                FROM 
+                    cities c1, 
+                    cities c2
+                WHERE 
+                    c1.city = @originCity AND 
+                    c2.city = @TargetCity;";
+                command.Parameters.AddWithValue("@originCity", originCity);
+                command.Parameters.AddWithValue("@TargetCity", targetCity);
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+                if (dataTable.Rows[0]["SameContinent"] == "Yes") return true;
+            }
+            return false;
         }
         public (Double distance,Double price) getTransportPrice(String transportType,String originCity, String targetCity)
         {
@@ -138,6 +207,106 @@ namespace Capital_and_Cargo
         {
             return deg * (Math.PI / 180);
         }
+        public void updateTransits()
+        {
+            
+
+            using (var transaction = _connection.BeginTransaction())
+            {
+                try
+                {
+                    var sql = @"
+                            UPDATE city_transit
+                            SET ProgressKM = ProgressKM + @speed,
+                            Progress = ((ProgressKM + @speed) / Distance) * 100
+                            where TransportationMethod = @TransportationMethod and Progress < 100
+                                        ";
+                    //Decrease market supply
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Debug.WriteLine("Updating transport progress");
+                        command.CommandText = sql;
+                        Debug.WriteLine("Updating transport progress for trucks");
+                        command.Parameters.AddWithValue("@speed", speedTruck);
+                        command.Parameters.AddWithValue("@TransportationMethod", "truck");
+                        command.ExecuteNonQuery();
+                    }
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Debug.WriteLine("Updating transport progress");
+                        command.CommandText = sql;
+                        Debug.WriteLine("Updating transport progress for planes");
+                        command.Parameters.AddWithValue("@speed", speedPlane);
+                        command.Parameters.AddWithValue("@TransportationMethod", "plane");
+                        command.ExecuteNonQuery();
+                    }
+                        
+                    
+                    //If something arrives, add it to the warehouse
+                    DataTable dataTable = new DataTable();
+                    Debug.WriteLine("Finding all transits that have arrived ");
+                    using (var command = _connection.CreateCommand())
+                    {
+                        command.CommandText = " select * from city_transit where progress >= 100";
+                        using (var reader = command.ExecuteReader())
+                        {
+                            dataTable.Load(reader);
+                        }
+                    }
+                    //Add all these to the Warehouse
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+
+                        
+                        using (var command = _connection.CreateCommand())
+                        {
+                            Debug.WriteLine("Adding to warehouse of " + row["DestinationCity"] + " \t" + row["CargoAmount"] + " " + row["CargoType"]);
+                            command.CommandText = @"
+                            INSERT INTO warehouse (
+                                  CityName,
+                                  CargoType,
+                                  Amount
+                              )
+                              VALUES (
+                                  @city,
+                                  @CargoType,
+                                  @Amount
+                              );
+
+                                        ";
+                            command.Parameters.AddWithValue("@city", row["DestinationCity"]);
+                            command.Parameters.AddWithValue("@CargoType", row["CargoType"]);
+                            command.Parameters.AddWithValue("@Amount", row["CargoAmount"]);
+                            command.ExecuteNonQuery();
+                        }
+                        
+                        using (var cmdDelete = _connection.CreateCommand())
+                        {
+                            Debug.WriteLine("Deleting all finished transports");
+                            cmdDelete.CommandText = @"delete from city_transit where progress >= 100;";
+
+                            cmdDelete.ExecuteNonQuery();
+                        }
+
+
+                    }
+
+                    
+
+
+
+
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error updating transports {ex.Message} {ex.Source}");
+                    // Rollback the transaction on error
+                    transaction.Rollback();
+                }
+            }
+        }
         public void transport(String transportationMode, String originCity, String targetCity, String CargoType, int amount)
         {
             var (distance, price) = getTransportPrice(transportationMode, originCity, targetCity);
@@ -167,7 +336,7 @@ namespace Capital_and_Cargo
                         command.CommandText = @"
                                UPDATE player SET money = money - @price 
                         ";
-                        command.Parameters.AddWithValue("@price", price);
+                        command.Parameters.AddWithValue("@price", price * amount);
                         command.ExecuteNonQuery();
                     }
                     
@@ -181,6 +350,7 @@ namespace Capital_and_Cargo
                              DestinationCity,
                              Distance,
                              Progress,
+                             ProgressKm,
                              CargoType,
                              CargoAmount,
                              TransportationMethod,
@@ -192,6 +362,7 @@ namespace Capital_and_Cargo
                              @DestinationCity,
                              @Distance,
                              @Progress,
+                            @ProgressKm,
                              @CargoType,
                              @CargoAmount,
                              @TransportationMethod,
@@ -205,6 +376,7 @@ namespace Capital_and_Cargo
                         cmdInsert.Parameters.AddWithValue("@Distance", distance);
                         cmdInsert.Parameters.AddWithValue("@TransportationMethod", transportationMode);
                         cmdInsert.Parameters.AddWithValue("@Progress", 0);
+                        cmdInsert.Parameters.AddWithValue("@ProgressKm", 0);
                         cmdInsert.Parameters.AddWithValue("@Price", price);
                         cmdInsert.ExecuteNonQuery();
                         }
