@@ -140,7 +140,7 @@ namespace Capital_and_Cargo
         }
         public void transport(String transportationMode, String originCity, String targetCity, String CargoType, int amount)
         {
-            var (distance, price) = dataManager.transits.getTransportPrice(transportationMode, originCity, targetCity);
+            var (distance, price) = getTransportPrice(transportationMode, originCity, targetCity);
 
             using (var transaction = _connection.BeginTransaction())
             {

@@ -337,11 +337,14 @@ class Program
             
 
             string lastValidValue = "0";
-
             numberField.TextChanged += (e) =>
             {
-                if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount)
+                System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+                double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+                var maxBuy = Math.Floor(totalMoney / SupplyAmount);
+                if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount && value <= maxBuy)
                 {
+                    
                     lastValidValue = numberField.Text.ToString();
 
                 }
@@ -498,12 +501,9 @@ class Program
 
 
         buttonTransport.Clicked += () => {
-            //TODO transport registreren
-            var targetCityId = cityListView.SelectedItem;
+            //TODO transport registreren;
             var targetCity = cityListView.Text;
-            var(price,distance) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
-            costLabel.Text = "Transport price:" + Convert.ToInt32(price);
-            
+            dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
             Application.RequestStop();
         };
         buttonCancel.Clicked += () => { Application.RequestStop(); };
