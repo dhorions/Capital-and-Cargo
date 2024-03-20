@@ -6,6 +6,7 @@ using Application = Terminal.Gui.Application;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Timers;
+using System.Runtime.CompilerServices;
 
 
 
@@ -190,9 +191,10 @@ class Program
         cityGoodsListView = new TableView()
         {
             X = 0,
-            Y = 0,
+            Y = 1,
             Width = Dim.Fill(),
             Height = Dim.Percent(90),
+            FullRowSelect = true,
         };
        
 
@@ -213,6 +215,37 @@ class Program
             Y = 0
         };
         cityMarketView.Add(buyButton);
+        var transportLabel = new Label("")
+        {
+            X = 1,
+            Height = 1,
+            Y = 0,
+            Text = "Transport"
+        };
+        var transportButtonPlane = new Button("By Plane")
+        {
+            X = 15, 
+            Height = 1,
+            Y = 0
+        };
+        var transportButtonTruck = new Button("By Truck")
+        {
+            X = 30, 
+            Height = 1,
+            Y = 0
+        };
+
+        
+
+
+        cityMarketView.Add(buyButton);
+        cityGoodsView.Add(transportLabel);
+        cityGoodsView.Add(transportButtonPlane);
+        cityGoodsView.Add(transportButtonTruck);
+        transportButtonPlane.Clicked += () => { transportDialog("plane"); };
+        transportButtonTruck.Clicked += () => { transportDialog("truck"); };
+        cityGoodsView.Add(cityGoodsListView);
+
         cityGoodsView.Add(cityGoodsListView);
         // Add an action for the button click
         buyButton.Clicked += () =>
@@ -400,6 +433,47 @@ class Program
             Debug.WriteLine("Gameloop Refresh error : "+ ex.GetBaseException().ToString());
         }
         
+    }
+    private static void transportDialog(String transportationMode)
+    {
+        String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
+        String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+        //amount = hoeveel er in het warehouse is
+        Int64 amount = (Int64)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["Amount"];
+        var dialog = new Dialog("Transport " + CargoType + " from " + city)
+        {
+            X = 60,
+            Y = 10,
+            Height = 15
+        };
+        var buttonTransport = new Button("OK", is_default: true);
+        var buttonCancel = new Button("Cancel", is_default: false);
+        var cityList = dataManager.cities.LoadCitiesList();
+        var cityListView = new Terminal.Gui.ComboBox(cityList)
+        {
+            X = 1,
+            Y = 1,
+            Width = 25,
+            Height = 5
+
+        };
+        //TODO : velden toevoegen aan dialog met city, en hoeveelheid (max amount)
+
+        dialog.Add(cityListView);
+        dialog.AddButton(buttonTransport);
+        dialog.AddButton(buttonCancel);
+
+        buttonTransport.Clicked += () => {
+            //TODO transport registreren
+
+
+            Application.RequestStop();
+        };
+        buttonCancel.Clicked += () => { Application.RequestStop(); };
+
+
+        // Display the modal dialog
+        Application.Run(dialog);
     }
 
 }
