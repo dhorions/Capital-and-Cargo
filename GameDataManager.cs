@@ -81,8 +81,10 @@ namespace Capital_and_Cargo
                 Debug.WriteLine("First Day of new Month : " + currentDay);
                 cities.UpdateCityMarketTable(cities.LoadCities(), currentDay);
             }
-
-
+        }
+        public void purchase(String city, String CargoType, int amount, Double price)
+        {
+            player.purchase(city,CargoType,amount,price);
         }
     }
 }

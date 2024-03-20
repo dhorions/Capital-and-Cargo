@@ -258,7 +258,8 @@ class Program
             };
 
             var dialog = new Dialog("Purchase " + CargoType, 60, 10 );
-            var button = new Button("OK", is_default: true);
+            var buttonBuy = new Button("OK", is_default: true);
+            var buttonCancel = new Button("Cancel", is_default: false);
             var buttonBuyMax = new Button("Max")
             {
                 X = 1,
@@ -266,7 +267,15 @@ class Program
                
             };
 
-            button.Clicked += () => { Application.RequestStop(); };
+            buttonBuy.Clicked += () => { 
+                //TODO Kobe : Call dataManager.purchase here !!
+
+
+
+
+                Application.RequestStop(); 
+            };
+            buttonCancel.Clicked += () => { Application.RequestStop(); };
             buttonBuyMax.Clicked += () => {
                 
                 System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
@@ -325,7 +334,8 @@ class Program
             dialog.Add(totalPriceValue);
             dialog.Add(buttonBuyMax);
             //dialog.Add(button);
-            dialog.AddButton(button);
+            dialog.AddButton(buttonBuy);
+            dialog.AddButton(buttonCancel);
 
             // Display the modal dialog
             Application.Run(dialog);
