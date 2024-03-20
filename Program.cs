@@ -7,6 +7,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.Timers;
 using System.Runtime.CompilerServices;
+using System.Net.Http.Headers;
 
 
 
@@ -452,17 +453,35 @@ class Program
         var buttonTransport = new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
-        var cityListView = new Terminal.Gui.ComboBox(cityList)
+        var transportToLabel = new Label("Transport to:")
+        { 
+            X = 1,
+            Y = 1
+        };
+        var distanceLabel = new Label("Distance:")
         {
             X = 1,
+            Y = 6
+        };
+        var costLabel = new Label("Transport price:")
+        {
+            X = 1,
+            Y = 7
+        };
+        var cityListView = new Terminal.Gui.ComboBox(cityList)
+        {
+            X = 18,
             Y = 1,
             Width = 25,
             Height = 5
 
         };
+
         //TODO : velden toevoegen aan dialog met city, en hoeveelheid (max amount)
 
         dialog.Add(cityListView);
+        dialog.Add(distanceLabel);
+        dialog.Add(transportToLabel);
         dialog.AddButton(buttonTransport);
         dialog.AddButton(buttonCancel);
 
