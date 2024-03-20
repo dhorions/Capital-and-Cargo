@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using System.Data.SQLite;
 using System.Data;
+using System.Diagnostics;
 
 namespace Capital_and_Cargo
 {
@@ -137,5 +138,92 @@ namespace Capital_and_Cargo
         {
             return deg * (Math.PI / 180);
         }
+        public void transport(String transportationMode, String originCity, String targetCity, String CargoType, int amount)
+        {
+            var (distance, price) = dataManager.transits.getTransportPrice(transportationMode, originCity, targetCity);
+
+            using (var transaction = _connection.BeginTransaction())
+            {
+                try
+                {
+                    //Decrease market supply
+                    using (var command = _connection.CreateCommand())
+                    {
+                        Debug.WriteLine("Removing " + amount + " of " + CargoType + " from " + originCity + " warehouse");
+                        command.CommandText = @"
+                               UPDATE warehouse SET Amount = Amount - @amount WHERE CargoType = @cargoType and CityName = @city
+                        ";
+                        command.Parameters.AddWithValue("@cargoType", CargoType);
+                        command.Parameters.AddWithValue("@city", originCity);
+                        command.Parameters.AddWithValue("@amount", amount);
+                        command.ExecuteNonQuery();
+                    }
+                    //Pay
+                    using (var command = _connection.CreateCommand())
+                    {
+
+                        
+                        Debug.WriteLine("Paying " + price);
+                        command.CommandText = @"
+                               UPDATE player SET money = money - @price 
+                        ";
+                        command.Parameters.AddWithValue("@price", price);
+                        command.ExecuteNonQuery();
+                    }
+                    
+                   
+                        
+                        using (var cmdInsert = _connection.CreateCommand())
+                        {
+                            cmdInsert.CommandText = @"
+                            INSERT INTO city_transit (
+                             OriginCity,
+                             DestinationCity,
+                             Distance,
+                             Progress,
+                             CargoType,
+                             CargoAmount,
+                             TransportationMethod,
+                             Price
+                         )
+                         VALUES (
+                            
+                            @OriginCity,
+                             @DestinationCity,
+                             @Distance,
+                             @Progress,
+                             @CargoType,
+                             @CargoAmount,
+                             @TransportationMethod,
+                             @Price
+                         );
+                        ";
+                        cmdInsert.Parameters.AddWithValue("@CargoType", CargoType);
+                        cmdInsert.Parameters.AddWithValue("@OriginCity", originCity);
+                        cmdInsert.Parameters.AddWithValue("@DestinationCity", targetCity);
+                        cmdInsert.Parameters.AddWithValue("@CargoAmount", amount);
+                        cmdInsert.Parameters.AddWithValue("@Distance", distance);
+                        cmdInsert.Parameters.AddWithValue("@TransportationMethod", transportationMode);
+                        cmdInsert.Parameters.AddWithValue("@Progress", 0);
+                        cmdInsert.Parameters.AddWithValue("@Price", price);
+                        cmdInsert.ExecuteNonQuery();
+                        }
+
+                    
+
+
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error registering a transport: {ex.Message}");
+
+                    // Rollback the transaction on error
+                    transaction.Rollback();
+                }
+            }
+        }
     }
+
 }
