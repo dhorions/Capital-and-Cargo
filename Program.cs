@@ -493,7 +493,7 @@ class Program
         };
         buttonCancel.Clicked += () => { Application.RequestStop(); };
 
-
+        
         // Display the modal dialog
         Application.Run(dialog);
     }

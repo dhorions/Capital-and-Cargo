@@ -13,7 +13,8 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private GameDataManager dataManager;
-
+        private Double kmPriceTruck = 0.01;
+        private Double kmPricePlane = 0.06;
         public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager)
         {
             _connection = connection;
@@ -80,6 +81,58 @@ namespace Capital_and_Cargo
             }
 
             return dataTable;
+        }
+        private (double lat,double lon) getCityCoordinates(String city)
+        {
+            string sql = "SELECT Latitude, Longitude from cities where city = @city";
+            double lat = 0;
+            double lon = 0;
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                using (var reader = command.ExecuteReader())
+                {
+                    lat = reader.GetDouble("Latitude");
+                    lon = reader.GetDouble("Longitude");
+                }
+
+            }
+            return (lat, lon);
+        }
+        public (Double distance,Double price) getTransportPrice(String transportType,String originCity, String targetCity)
+        {
+            var (lat1, lon1) = getCityCoordinates(originCity);
+            var (lat2, lon2) = getCityCoordinates(targetCity);
+            Double distance = CalculateDistance(lat1, lon1,lat2,lon2) ;
+            Double price = 0.0;
+            if(transportType == "plane")
+            {
+                price = distance * kmPricePlane;
+            }
+            else
+            {
+                price = distance * kmPriceTruck;
+            }
+            return (distance, price);
+        }
+        private  double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            var R = 6371; // Radius of the earth in kilometers
+            var dLat = DegreesToRadians(lat2 - lat1);
+            var dLon = DegreesToRadians(lon2 - lon1);
+            var a =
+                Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            var distance = R * c; // Distance in kilometers
+            return distance;
+        }
+
+        private  double DegreesToRadians(double deg)
+        {
+            return deg * (Math.PI / 180);
         }
     }
 }
