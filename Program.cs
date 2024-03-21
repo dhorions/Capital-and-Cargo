@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Timers;
 using System.Runtime.CompilerServices;
 using System.Net.Http.Headers;
+using System.Reflection.Emit;
 
 
 
@@ -220,7 +221,7 @@ class Program
             Height = 1,
             Y = 0
         };
-        var transportLabel = new Label("")
+        var transportLabel = new Terminal.Gui.Label("")
         {
             X = 20,
             Height = 1,
@@ -264,7 +265,7 @@ class Program
             System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
             double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
             //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
-            var numberLabel = new Label()
+            var numberLabel = new Terminal.Gui.Label()
             {
                 X = 1,
                 Y = 1,
@@ -276,25 +277,25 @@ class Program
                 Y = 1,
                 Width = 40,
             };
-            var unitPriceLabel = new Label()
+            var unitPriceLabel = new Terminal.Gui.Label()
             {
                 X = 1,
                 Y = 2,
                 Text = "Unit Price"
             };
-            var unitPriceValue = new Label()
+            var unitPriceValue = new Terminal.Gui.Label()
             {
                 X = 20,
                 Y = 2,
                 Text = SellPrice.ToString()
             };
-            var totalPriceLabel = new Label()
+            var totalPriceLabel = new Terminal.Gui.Label()
             {
                 X = 1,
                 Y = 3,
                 Text = "Total Price"
             };
-            var totalPriceValue = new Label()
+            var totalPriceValue = new Terminal.Gui.Label()
             {
                 X = 20,
                 Y = 3,
@@ -468,13 +469,48 @@ class Program
         };
         var buttonSell= new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
-        dialog.AddButton(buttonSell);
-        dialog.AddButton(buttonCancel); 
+        var sellPriceLabel = new Terminal.Gui.Label("Money gained:")
+        {
+            X = 1,
+            Y = 1
+        };
+        var amountLabel = new Terminal.Gui.Label("Amount:")
+        {
+            X = 1,
+            Y = 3
+        };
+        var amountField = new TextField("0")
+        {
+            X = 10,
+            Y = 3
+        };
+        var totalSellPriceLabel = new Terminal.Gui.Label("Total money gained:")
+        {
+            X = 1,
+            Y = 5
+        };
 
-        buttonSell.Clicked += () => { 
-            
+
+
+        dialog.AddButton(buttonSell);
+        dialog.AddButton(buttonCancel);
+        dialog.Add(amountLabel);
+        dialog.Add(amountField);
+        dialog.Add(sellPriceLabel);
+        dialog.Add(totalSellPriceLabel);
+
+        int amount = 0;
+        amountField.TextChanged += (args) =>
+        {
+            amount = Convert.ToInt32(amountField.Text);
+        };
+
+        buttonSell.Clicked += () => {
+
             //TODO Kobe: verkopen
-           // functie :  dataManager.player.sell
+            // functie :  dataManager.player.sell
+            dataManager.player.sell(city, CargoType, amount, );
+            
             
             resume(); Application.RequestStop(); };
 
@@ -504,17 +540,17 @@ class Program
             
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
-        var transportToLabel = new Label("Transport to:")
+        var transportToLabel = new Terminal.Gui.Label("Transport to:")
         { 
             X = 1,
             Y = 1
         };
-        var distanceLabel = new Label("Distance:")
+        var distanceLabel = new Terminal.Gui.Label("Distance:")
         {
             X = 1,
             Y = 6
         };
-        var costLabel = new Label()
+        var costLabel = new Terminal.Gui.Label()
         {
             X = 1,
             Y = 7
