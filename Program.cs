@@ -25,6 +25,7 @@ class Program
     static Terminal.Gui.TableView transitListView;
     static void Main(string[] args)
     {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
         //dataManager.init();
         dataManager = new GameDataManager();
         Application.Init();
@@ -439,6 +440,7 @@ class Program
     }
     private static void gameLoop(Object source, ElapsedEventArgs e)
     {
+        pause();//pause timer
         dataManager.gameUpdateLoop();
         //Update Date and Money
         populatePlayerData();
@@ -454,7 +456,8 @@ class Program
         {
             Debug.WriteLine("Gameloop Refresh error : "+ ex.GetBaseException().ToString());
         }
-        
+        resume();//resume timer
+
     }
     private static void sellDialog()
     {
@@ -509,7 +512,7 @@ class Program
 
             //TODO Kobe: verkopen
             // functie :  dataManager.player.sell
-            dataManager.player.sell(city, CargoType, amount, );
+            //dataManager.player.sell(city, CargoType, amount, );
             
             
             resume(); Application.RequestStop(); };

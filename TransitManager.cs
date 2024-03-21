@@ -241,30 +241,37 @@ namespace Capital_and_Cargo
                             Progress = ((ProgressKM + @speed) / Distance) * 100
                             where TransportationMethod = @TransportationMethod and Progress < 100
                                         ";
-                    //Decrease market supply
+                    //Debug.WriteLine("Updating transport progress");
                     using (var command = _connection.CreateCommand())
                     {
-                        Debug.WriteLine("Updating transport progress");
+                        
                         command.CommandText = sql;
-                        Debug.WriteLine("Updating transport progress for trucks");
+                        
                         command.Parameters.AddWithValue("@speed", speedTruck);
                         command.Parameters.AddWithValue("@TransportationMethod", "truck");
-                        command.ExecuteNonQuery();
+                       int affected =  command.ExecuteNonQuery();
+                        if(affected > 0)
+                        {
+                            Debug.WriteLine("moving trucks \t" + affected);
+                        }
                     }
                     using (var command = _connection.CreateCommand())
                     {
-                        Debug.WriteLine("Updating transport progress");
+                       
                         command.CommandText = sql;
-                        Debug.WriteLine("Updating transport progress for planes");
                         command.Parameters.AddWithValue("@speed", speedPlane);
                         command.Parameters.AddWithValue("@TransportationMethod", "plane");
-                        command.ExecuteNonQuery();
+                        int affected = command.ExecuteNonQuery();
+                        if (affected > 0)
+                        {
+                            Debug.WriteLine("moving planes \t" + affected);
+                        }
                     }
                         
                     
                     //If something arrives, add it to the warehouse
                     DataTable dataTable = new DataTable();
-                    Debug.WriteLine("Finding all transits that have arrived ");
+                    
                     using (var command = _connection.CreateCommand())
                     {
                         command.CommandText = " select * from city_transit where progress >= 100";
@@ -273,6 +280,10 @@ namespace Capital_and_Cargo
                             dataTable.Load(reader);
                         }
                     }
+                    if(dataTable.Rows.Count > 0)
+                    {
+                        Debug.WriteLine("Offloading " + dataTable.Rows.Count + " loads of Cargo "  );
+                    }
                     //Add all these to the Warehouse
                     foreach (DataRow row in dataTable.Rows)
                     {
@@ -280,7 +291,7 @@ namespace Capital_and_Cargo
                         
                         using (var command = _connection.CreateCommand())
                         {
-                            Debug.WriteLine("Adding to warehouse of " + row["DestinationCity"] + " \t" + row["CargoAmount"] + " " + row["CargoType"]);
+                            //Debug.WriteLine("Adding to warehouse of " + row["DestinationCity"] + " \t" + row["CargoAmount"] + " " + row["CargoType"]);
                             command.CommandText = @"
                             INSERT INTO warehouse (
                                   CityName,
@@ -297,12 +308,13 @@ namespace Capital_and_Cargo
                             command.Parameters.AddWithValue("@city", row["DestinationCity"]);
                             command.Parameters.AddWithValue("@CargoType", row["CargoType"]);
                             command.Parameters.AddWithValue("@Amount", row["CargoAmount"]);
+                            Debug.WriteLine("\t " + row["DestinationCity"] + "\t" + row["CargoAmount"] + "\t" + row["CargoAmount"]);
                             command.ExecuteNonQuery();
                         }
                         
                         using (var cmdDelete = _connection.CreateCommand())
                         {
-                            Debug.WriteLine("Deleting all finished transports");
+                            //Debug.WriteLine("Deleting all finished transports");
                             cmdDelete.CommandText = @"delete from city_transit where progress >= 100;";
 
                             cmdDelete.ExecuteNonQuery();

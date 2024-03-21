@@ -99,11 +99,16 @@ namespace Capital_and_Cargo
         private void cleanupWarehouse()
         {
             //delete from warehouse where amount is 0
+            //TODO : if there are multiple records for the same resource in the warehouse of a city, merge them
             using (var command = _connection.CreateCommand())
             {
-                Debug.WriteLine("Cleaning up the warehouse");
-                command.CommandText = @"delete from warehouse where amount <= 0";
-                command.ExecuteNonQuery();
+               
+               command.CommandText = @"delete from warehouse where amount <= 0";
+                int affected =  command.ExecuteNonQuery();
+                if(affected > 0)
+                {
+                    Debug.WriteLine("Cleaning up the warehouse");
+                }
             }
         }
         public DataTable loadWarehouse(String city)
