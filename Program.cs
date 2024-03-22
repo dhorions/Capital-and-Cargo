@@ -473,7 +473,7 @@ class Program
         };
         var buttonSell= new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
-        var sellPriceLabel = new Terminal.Gui.Label("Money gained:")
+        var sellPriceLabel = new Terminal.Gui.Label("Price: " + price + "€")
         {
             X = 1,
             Y = 1
@@ -490,7 +490,7 @@ class Program
             Height = 1,
             Width = 10
         };
-        var totalSellPriceLabel = new Terminal.Gui.Label("Total money gained:")
+        var totalSellPriceLabel = new Terminal.Gui.Label("Total :")
         {
             X = 1,
             Y = 5
@@ -511,6 +511,7 @@ class Program
             if (amountField.Text != "") 
             { 
                 amount = Convert.ToInt32(amountField.Text);
+                totalSellPriceLabel.Text = "Total :" + amount * price + "€";
             }
 
         };

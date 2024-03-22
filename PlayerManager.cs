@@ -99,17 +99,57 @@ namespace Capital_and_Cargo
         private void cleanupWarehouse()
         {
             //delete from warehouse where amount is 0
-            //TODO : if there are multiple records for the same resource in the warehouse of a city, merge them
-            using (var command = _connection.CreateCommand())
+            //TODO : 
+            using (var transaction = _connection.BeginTransaction())
             {
-               
-               command.CommandText = @"delete from warehouse where amount <= 0";
-                int affected =  command.ExecuteNonQuery();
-                if(affected > 0)
+                //Remove goods with 0 amounts
+                using (var command = _connection.CreateCommand())
                 {
-                    Debug.WriteLine("Cleaning up the warehouse");
+
+                    command.CommandText = @"delete from warehouse where amount <= 0";
+                    int affected = command.ExecuteNonQuery();
+                    if (affected > 0)
+                    {
+                        Debug.WriteLine("Cleaning up the warehouse");
+                    }
+                }
+                try
+                {
+                    //if there are multiple records for the same resource in the warehouse of a city, merge them
+                    using (var command = _connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+                        -- Create a temporary table to store aggregated results
+                        CREATE TEMPORARY TABLE warehouse_temp AS
+                        SELECT CityName, CargoType, SUM(Amount) AS TotalAmount
+                        FROM warehouse
+                        GROUP BY CityName, CargoType;
+                        -- Delete the original data from the `warehouse` table
+                        DELETE FROM warehouse;
+                        --Insert the aggregated data back into the `warehouse` table
+                        INSERT INTO warehouse (CityName, CargoType, Amount)
+                        SELECT CityName, CargoType, TotalAmount
+                        FROM warehouse_temp;
+                        --Drop the temporary table
+                        DROP TABLE warehouse_temp;";
+                        command.ExecuteNonQuery();
+                        
+                        
+                    }
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error making a purchase: {ex.Message}");
+
+                    // Rollback the transaction on error
+                    transaction.Rollback();
                 }
             }
+
+
+            
         }
         public DataTable loadWarehouse(String city)
         {
