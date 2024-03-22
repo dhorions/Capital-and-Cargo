@@ -23,6 +23,11 @@ class Program
     static Terminal.Gui.TableView cityMarketListView;
     static Terminal.Gui.TableView cityGoodsListView;
     static Terminal.Gui.TableView transitListView;
+    static Boolean startPopupDisplayed = false;
+    static ColorScheme ColorScheme = new ColorScheme
+    {
+        Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black)
+    };
     static void Main(string[] args)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -410,13 +415,46 @@ class Program
             Debug.WriteLine("Key pressed : " + key.ToString());
         };
         timer = new System.Timers.Timer(loopIntervalSeconds * 1000);
-        timer.Elapsed += gameLoop;
+        //timer.Elapsed += gameLoop;
         timer.AutoReset = true;
         timer.Enabled = true;
-        Application.Run();
-       
-    }
+        Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
 
+        Application.Run();
+        
+    }
+    private static void startPopup()
+    {
+        
+        var dialog = new Dialog("Welcome")
+        {
+            X = 60,
+            Y = 40,
+            Width = 120,
+            Height = 30,
+            ColorScheme = ColorScheme,
+        };
+        string ascii = @"
+           ___                              _               _     ___               _  _          _ 
+          / __\ __ _  _ __  __ _   ___     /_\   _ __    __| |   / __\ __ _  _ __  (_)| |_  __ _ | |
+         / /   / _` || '__|/ _` | / _ \   //_\\ | '_ \  / _` |  / /   / _` || '_ \ | || __|/ _` || |
+        / /___| (_| || |  | (_| || (_) | /  _  \| | | || (_| | / /___| (_| || |_) || || |_| (_| || |
+        \____/ \__,_||_|   \__, | \___/  \_/ \_/|_| |_| \__,_| \____/ \__,_|| .__/ |_| \__|\__,_||_|
+                           |___/                                            |_|                     
+        ";
+        var label = new Terminal.Gui.Label(ascii)
+        {
+            Height = 6
+        };
+        
+        label.ColorScheme = ColorScheme;
+        var buttonCancel = new Button("Ok", is_default: false);
+        buttonCancel.ColorScheme = ColorScheme;
+        dialog.Add(label);
+        dialog.AddButton(buttonCancel);
+        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        Application.Run(dialog);
+    }
     private static void populateMarket(string city,TableView cityMarketListView)
     {
         System.Data.DataTable marketTable = dataManager.cities.GetGoodsForCity(city);
@@ -441,25 +479,37 @@ class Program
         System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
         transitListView.Table = transitTable;
     }
-    private static void gameLoop(Object source, ElapsedEventArgs e)
+    //private static void gameLoop(Object source, ElapsedEventArgs e)
+    private static bool gameLoop(MainLoop mainLoop)
     {
-        pause();//pause timer
-        dataManager.gameUpdateLoop();
-        //Update Date and Money
-        populatePlayerData();
-        //Update Market for Selected City
-        populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"],cityMarketListView);
-        populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
-        populateTransitTable();
-        try
+        Debug.WriteLine("gameloop");
+        Application.MainLoop.Invoke(() =>
         {
-            Application.Refresh();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("Gameloop Refresh error : "+ ex.GetBaseException().ToString());
-        }
-        resume();//resume timer
+            pause();//pause timer
+            if (!startPopupDisplayed)
+            {
+                startPopupDisplayed = true;
+                startPopup();
+
+            }
+            dataManager.gameUpdateLoop();
+            //Update Date and Money
+            populatePlayerData();
+            //Update Market for Selected City
+            populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
+            populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
+            populateTransitTable();
+            try
+            {
+                Application.Refresh();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
+            }
+            resume();//resume timer
+        });
+        return true;
 
     }
     private static void sellDialog()
