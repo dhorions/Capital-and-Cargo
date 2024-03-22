@@ -518,6 +518,7 @@ class Program
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
+        //int maxAmount = (int)dataManager.transits.
         var dialog = new Dialog("Sell " + CargoType + " from " + city)
         {
             X = 60,
@@ -573,9 +574,12 @@ class Program
 
             //TODO Kobe: verkopen
             // functie :  dataManager.player.sell
+            /*if (amount <= maxAmount)
+            {
+                dataManager.player.sell(city, CargoType, amount, price); 
+            }*/
             dataManager.player.sell(city, CargoType, amount, price);
-            
-            
+
             resume(); Application.RequestStop(); };
 
         buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
