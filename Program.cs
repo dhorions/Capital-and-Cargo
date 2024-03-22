@@ -464,6 +464,7 @@ class Program
         pause();//pause game loop when in dialog
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+        double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
         var dialog = new Dialog("Sell " + CargoType + " from " + city)
         {
             X = 60,
@@ -485,7 +486,9 @@ class Program
         var amountField = new TextField("0")
         {
             X = 10,
-            Y = 3
+            Y = 3,
+            Height = 1,
+            Width = 10
         };
         var totalSellPriceLabel = new Terminal.Gui.Label("Total money gained:")
         {
@@ -505,14 +508,18 @@ class Program
         int amount = 0;
         amountField.TextChanged += (args) =>
         {
-            amount = Convert.ToInt32(amountField.Text);
+            if (amountField.Text != "") 
+            { 
+                amount = Convert.ToInt32(amountField.Text);
+            }
+
         };
 
         buttonSell.Clicked += () => {
 
             //TODO Kobe: verkopen
             // functie :  dataManager.player.sell
-            //dataManager.player.sell(city, CargoType, amount, );
+            dataManager.player.sell(city, CargoType, amount, price);
             
             
             resume(); Application.RequestStop(); };
