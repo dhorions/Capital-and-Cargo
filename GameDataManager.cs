@@ -43,6 +43,7 @@ namespace Capital_and_Cargo
             Debug.WriteLine("opening db");
             // Open the connection
             this.connection.Open();
+            
 
             // Optionally, execute queries to set up the database schema.
             // For example, creating tables if they don't exist.
@@ -79,7 +80,10 @@ namespace Capital_and_Cargo
             if (IsFirstDayOfMonth(currentDay))
             {
                 Debug.WriteLine("First Day of new Month : " + currentDay);
+                //Update city market prices
                 cities.UpdateCityMarketTable(cities.LoadCities(), currentDay);
+                //Capture historical data
+                player.UpdateMoneyHistoryTable();
             }
             transits.updateTransits();
         }

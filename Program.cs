@@ -37,6 +37,9 @@ class Program
             new MenuBarItem("_File", new MenuItem[] {
                 new MenuItem("_Quit", "", () => { Application.RequestStop(); })
             }),
+            new MenuBarItem("_Info", new MenuItem[] {
+                new MenuItem("_History", "", () => {  })
+            })
         });
         top.Add(menu);
         var topContainer =
