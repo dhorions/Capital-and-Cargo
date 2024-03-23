@@ -15,13 +15,13 @@ namespace Capital_and_Cargo
     internal class PlayerManager
     {
         private SqliteConnection _connection;
-     //add comment
+        //add comment
 
         public PlayerManager(ref SqliteConnection connection)
         {
             _connection = connection;
             EnsureTableExistsAndIsPopulated();
-           
+
         }
 
         public void EnsureTableExistsAndIsPopulated()
@@ -35,7 +35,11 @@ namespace Capital_and_Cargo
             {
                 CreateWarehouseTable();
             }
-            
+            if (!TableExists("MoneyHistory"))
+            {
+                CreateMoneyHistoryTable();
+            }
+
         }
 
         private bool TableExists(string tableName)
@@ -64,24 +68,52 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
+        private void CreateMoneyHistoryTable()
+        {
+            string sql = @"
+           CREATE TABLE MoneyHistory (
+            Date TEXT NOT NULL,
+            Money REAL NOT NULL
+            );
+            ";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.ExecuteNonQuery();
+            }
+        }
+        public void UpdateMoneyHistoryTable()
+        {
+            DataTable playerTable = LoadPlayer();
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = @"
+                    INSERT INTO MoneyHistory (Date, Money)
+                    VALUES (@Date, @Money);";
+
+                command.Parameters.AddWithValue("@Date", playerTable.Rows[0]["Date"]);
+                command.Parameters.AddWithValue("@Money", playerTable.Rows[0]["Money"]);
+
+                command.ExecuteNonQuery();
+            }
+        }
         public void InitPlayerTable()
         {
-            
 
-           
-                    using (var command = _connection.CreateCommand())
-                    {
-                        command.CommandText = @"
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = @"
                     INSERT INTO Player (Date, Money)
                     VALUES (@Date, @Money);";
 
-                        command.Parameters.AddWithValue("@Date", "1900-01-01");
-                        command.Parameters.AddWithValue("@Money", 1000000000);
+                command.Parameters.AddWithValue("@Date", "1900-01-01");
+                command.Parameters.AddWithValue("@Money", 1000000000);
 
-                        command.ExecuteNonQuery();
-                    }
-               
-            
+                command.ExecuteNonQuery();
+            }
+
+
         }
         private void CreateWarehouseTable()
         {
@@ -99,22 +131,68 @@ namespace Capital_and_Cargo
         private void cleanupWarehouse()
         {
             //delete from warehouse where amount is 0
-            using (var command = _connection.CreateCommand())
+            //TODO : 
+            using (var transaction = _connection.BeginTransaction())
             {
-                Debug.WriteLine("Cleaning up the warehouse");
-                command.CommandText = @"delete from warehouse where amount <= 0";
-                command.ExecuteNonQuery();
+               
+                //Remove goods with 0 amounts
+                using (var command = _connection.CreateCommand())
+                {
+
+                    command.CommandText = @"delete from warehouse where amount <= 0";
+                    int affected = command.ExecuteNonQuery();
+                    if (affected > 0)
+                    {
+                        Debug.WriteLine("Cleaning up the warehouse");
+                    }
+                }
+                try
+                {
+                    //if there are multiple records for the same resource in the warehouse of a city, merge them
+                    using (var command = _connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+                        -- Create a temporary table to store aggregated results
+                        CREATE TEMPORARY TABLE warehouse_temp AS
+                        SELECT CityName, CargoType, SUM(Amount) AS TotalAmount
+                        FROM warehouse
+                        GROUP BY CityName, CargoType;
+                        -- Delete the original data from the `warehouse` table
+                        DELETE FROM warehouse;
+                        --Insert the aggregated data back into the `warehouse` table
+                        INSERT INTO warehouse (CityName, CargoType, Amount)
+                        SELECT CityName, CargoType, TotalAmount
+                        FROM warehouse_temp;
+                        --Drop the temporary table
+                        DROP TABLE warehouse_temp;";
+                        command.ExecuteNonQuery();
+
+
+                    }
+                    // Commit the transaction if both commands succeed
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"An error making a purchase: {ex.Message}");
+
+                    // Rollback the transaction on error
+                    transaction.Rollback();
+                }
             }
+
+
+
         }
         public DataTable loadWarehouse(String city)
         {
             cleanupWarehouse();
-            
+
             DataTable dataTable = new DataTable();
 
             using (var command = _connection.CreateCommand())
             {
-              
+
                 command.CommandText = @"
             SELECT CargoType, Amount
             FROM warehouse 
@@ -128,7 +206,7 @@ namespace Capital_and_Cargo
                 {
                     dataTable.Load(reader);
                 }
-               
+
             }
 
             return dataTable;
@@ -154,7 +232,7 @@ namespace Capital_and_Cargo
                     //Pay
                     using (var command = _connection.CreateCommand())
                     {
-                        
+
                         Double totalPrice = amount * price;
                         Debug.WriteLine("Paying " + totalPrice);
                         command.CommandText = @"
@@ -250,7 +328,7 @@ namespace Capital_and_Cargo
                         command.Parameters.AddWithValue("@amount", amount);
                         recordsAffected = command.ExecuteNonQuery();
                     }
-                    
+
 
 
                     // Commit the transaction if both commands succeed
@@ -272,12 +350,12 @@ namespace Capital_and_Cargo
 
             using (var command = _connection.CreateCommand())
             {
-                command.CommandText= sql;
+                command.CommandText = sql;
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);
                 }
-                
+
             }
 
             return dataTable;

@@ -275,6 +275,46 @@ namespace Capital_and_Cargo
                 }
             }
         }
+        public DataTable GetPrices(string cityName, string cargoType)
+        {
+            DataTable dataTable = new DataTable();
+            using (var command = _connection.CreateCommand())
+            {
+                // Prepare the SQL query to select goods for the specified city
+                // This assumes your city_market table has a 'CityName' column and references 'cargoTypes' by 'CargoTypeID'
+                command.CommandText = @"
+            SELECT CargoType, SupplyAmount, BuyPrice, SellPrice
+            FROM city_market 
+            WHERE CityName = @CityName AND cargoType = @cargoType
+            ORDER BY CargoType;";
+
+                // Use parameters to prevent SQL injection
+                command.Parameters.AddWithValue("@CityName", cityName);
+                command.Parameters.AddWithValue("@cargoType", cargoType);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    // Check for DBNull values to avoid formatting null data
+                    if (row["BuyPrice"] != DBNull.Value)
+                    {
+                        decimal buyPrice = Convert.ToDecimal(row["BuyPrice"]);
+                        row["BuyPrice"] = Math.Round(buyPrice, 3).ToString("F3");
+                    }
+
+                    if (row["SellPrice"] != DBNull.Value)
+                    {
+                        decimal sellPrice = Convert.ToDecimal(row["SellPrice"]);
+                        row["SellPrice"] = Math.Round(sellPrice, 3).ToString("F3");
+                    }
+                }
+            }
+
+            return dataTable;
+        }
         public DataTable GetGoodsForCity(string cityName)
         {
             DataTable dataTable = new DataTable();

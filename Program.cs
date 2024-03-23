@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Timers;
 using System.Runtime.CompilerServices;
 using System.Net.Http.Headers;
+using System.Reflection.Emit;
 
 
 
@@ -22,8 +23,14 @@ class Program
     static Terminal.Gui.TableView cityMarketListView;
     static Terminal.Gui.TableView cityGoodsListView;
     static Terminal.Gui.TableView transitListView;
+    static Boolean startPopupDisplayed = false;
+    static ColorScheme ColorScheme = new ColorScheme
+    {
+        Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black)
+    };
     static void Main(string[] args)
     {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
         //dataManager.init();
         dataManager = new GameDataManager();
         Application.Init();
@@ -35,6 +42,9 @@ class Program
             new MenuBarItem("_File", new MenuItem[] {
                 new MenuItem("_Quit", "", () => { Application.RequestStop(); })
             }),
+            new MenuBarItem("_Info", new MenuItem[] {
+                new MenuItem("_History", "", () => {  })
+            })
         });
         top.Add(menu);
         var topContainer =
@@ -220,7 +230,7 @@ class Program
             Height = 1,
             Y = 0
         };
-        var transportLabel = new Label("")
+        var transportLabel = new Terminal.Gui.Label("")
         {
             X = 20,
             Height = 1,
@@ -264,7 +274,7 @@ class Program
             System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
             double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
             //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
-            var numberLabel = new Label()
+            var numberLabel = new Terminal.Gui.Label()
             {
                 X = 1,
                 Y = 1,
@@ -276,25 +286,25 @@ class Program
                 Y = 1,
                 Width = 40,
             };
-            var unitPriceLabel = new Label()
+            var unitPriceLabel = new Terminal.Gui.Label()
             {
                 X = 1,
                 Y = 2,
                 Text = "Unit Price"
             };
-            var unitPriceValue = new Label()
+            var unitPriceValue = new Terminal.Gui.Label()
             {
                 X = 20,
                 Y = 2,
                 Text = SellPrice.ToString()
             };
-            var totalPriceLabel = new Label()
+            var totalPriceLabel = new Terminal.Gui.Label()
             {
                 X = 1,
                 Y = 3,
                 Text = "Total Price"
             };
-            var totalPriceValue = new Label()
+            var totalPriceValue = new Terminal.Gui.Label()
             {
                 X = 20,
                 Y = 3,
@@ -405,13 +415,46 @@ class Program
             Debug.WriteLine("Key pressed : " + key.ToString());
         };
         timer = new System.Timers.Timer(loopIntervalSeconds * 1000);
-        timer.Elapsed += gameLoop;
+        //timer.Elapsed += gameLoop;
         timer.AutoReset = true;
         timer.Enabled = true;
-        Application.Run();
-       
-    }
+        Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
 
+        Application.Run();
+        
+    }
+    private static void startPopup()
+    {
+        
+        var dialog = new Dialog("Welcome")
+        {
+            X = 60,
+            Y = 40,
+            Width = 120,
+            Height = 30,
+            ColorScheme = ColorScheme,
+        };
+        string ascii = @"
+           ___                              _               _     ___               _  _          _ 
+          / __\ __ _  _ __  __ _   ___     /_\   _ __    __| |   / __\ __ _  _ __  (_)| |_  __ _ | |
+         / /   / _` || '__|/ _` | / _ \   //_\\ | '_ \  / _` |  / /   / _` || '_ \ | || __|/ _` || |
+        / /___| (_| || |  | (_| || (_) | /  _  \| | | || (_| | / /___| (_| || |_) || || |_| (_| || |
+        \____/ \__,_||_|   \__, | \___/  \_/ \_/|_| |_| \__,_| \____/ \__,_|| .__/ |_| \__|\__,_||_|
+                           |___/                                            |_|                     
+        ";
+        var label = new Terminal.Gui.Label(ascii)
+        {
+            Height = 6
+        };
+        
+        label.ColorScheme = ColorScheme;
+        var buttonCancel = new Button("Ok", is_default: false);
+        buttonCancel.ColorScheme = ColorScheme;
+        dialog.Add(label);
+        dialog.AddButton(buttonCancel);
+        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        Application.Run(dialog);
+    }
     private static void populateMarket(string city,TableView cityMarketListView)
     {
         System.Data.DataTable marketTable = dataManager.cities.GetGoodsForCity(city);
@@ -436,30 +479,46 @@ class Program
         System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
         transitListView.Table = transitTable;
     }
-    private static void gameLoop(Object source, ElapsedEventArgs e)
+    //private static void gameLoop(Object source, ElapsedEventArgs e)
+    private static bool gameLoop(MainLoop mainLoop)
     {
-        dataManager.gameUpdateLoop();
-        //Update Date and Money
-        populatePlayerData();
-        //Update Market for Selected City
-        populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"],cityMarketListView);
-        populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
-        populateTransitTable();
-        try
+        Debug.WriteLine("gameloop");
+        Application.MainLoop.Invoke(() =>
         {
-            Application.Refresh();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("Gameloop Refresh error : "+ ex.GetBaseException().ToString());
-        }
-        
+            pause();//pause timer
+            if (!startPopupDisplayed)
+            {
+                startPopupDisplayed = true;
+                startPopup();
+
+            }
+            dataManager.gameUpdateLoop();
+            //Update Date and Money
+            populatePlayerData();
+            //Update Market for Selected City
+            populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
+            populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
+            populateTransitTable();
+            try
+            {
+                Application.Refresh();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
+            }
+            resume();//resume timer
+        });
+        return true;
+
     }
     private static void sellDialog()
     {
         pause();//pause game loop when in dialog
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+        double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
+        //int maxAmount = (int)dataManager.transits.
         var dialog = new Dialog("Sell " + CargoType + " from " + city)
         {
             X = 60,
@@ -468,14 +527,59 @@ class Program
         };
         var buttonSell= new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
-        dialog.AddButton(buttonSell);
-        dialog.AddButton(buttonCancel); 
+        var sellPriceLabel = new Terminal.Gui.Label("Price: " + price + "€")
+        {
+            X = 1,
+            Y = 1
+        };
+        var amountLabel = new Terminal.Gui.Label("Amount:")
+        {
+            X = 1,
+            Y = 3
+        };
+        var amountField = new TextField("0")
+        {
+            X = 10,
+            Y = 3,
+            Height = 1,
+            Width = 10
+        };
+        var totalSellPriceLabel = new Terminal.Gui.Label("Total :")
+        {
+            X = 1,
+            Y = 5
+        };
 
-        buttonSell.Clicked += () => { 
-            
+
+
+        dialog.AddButton(buttonSell);
+        dialog.AddButton(buttonCancel);
+        dialog.Add(amountLabel);
+        dialog.Add(amountField);
+        dialog.Add(sellPriceLabel);
+        dialog.Add(totalSellPriceLabel);
+
+        int amount = 0;
+        amountField.TextChanged += (args) =>
+        {
+            if (amountField.Text != "") 
+            { 
+                amount = Convert.ToInt32(amountField.Text);
+                totalSellPriceLabel.Text = "Total :" + amount * price + "€";
+            }
+
+        };
+
+        buttonSell.Clicked += () => {
+
             //TODO Kobe: verkopen
-           // functie :  dataManager.player.sell
-            
+            // functie :  dataManager.player.sell
+            /*if (amount <= maxAmount)
+            {
+                dataManager.player.sell(city, CargoType, amount, price); 
+            }*/
+            dataManager.player.sell(city, CargoType, amount, price);
+
             resume(); Application.RequestStop(); };
 
         buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
@@ -504,17 +608,17 @@ class Program
             
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
-        var transportToLabel = new Label("Transport to:")
+        var transportToLabel = new Terminal.Gui.Label("Transport to:")
         { 
             X = 1,
             Y = 1
         };
-        var distanceLabel = new Label("Distance:")
+        var distanceLabel = new Terminal.Gui.Label("Distance:")
         {
             X = 1,
             Y = 6
         };
-        var costLabel = new Label()
+        var costLabel = new Terminal.Gui.Label()
         {
             X = 1,
             Y = 7
