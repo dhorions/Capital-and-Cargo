@@ -233,6 +233,18 @@ namespace Capital_and_Cargo
 
                         command.ExecuteNonQuery();
                     }
+
+
+                    //Ensure there is some supply
+                    using (var command = _connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+                           update city_market set SUpplyAmount = SUpplyAmount + 500 where SUpplyAmount< 100";
+
+
+                        command.ExecuteNonQuery();
+                    }
+                    
                     //Now calculate new prices for each city
 
                     foreach (DataRow city in cities.Rows)

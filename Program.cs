@@ -702,14 +702,25 @@ class Program
             X = 0,
             Y = 0,
             Height = Dim.Percent(100),
-            Width = Dim.Percent(100)
+            Width = Dim.Percent(100),
+            ColorScheme = ColorScheme
         };
+        ScrollBarView scrollView = new ScrollBarView()
+        {
+            X = 0,
+            Y = 0,
+            Height = Dim.Percent(100),
+            Width = Dim.Percent(100),
+            ColorScheme = ColorScheme
+        };
+
         GraphView graphView= new GraphView() {
                 X = 1,
 				Y = 1,
 				Width = Dim.Percent(100),
-				Height = Dim.Percent(100),
-			};
+				Height = Dim.Percent(75),
+            ColorScheme = ColorScheme
+        };
         graphView.Reset();
 
         
@@ -722,38 +733,58 @@ class Program
 
         graphView.GraphColor = black;
 
-        var series = new MultiBarSeries(3, 1, 0.25f, new[] { red });
+        var series = new MultiBarSeries(1, 1, 0.50f, new[] { red });
 
         var stiple = Application.Driver.Stipple;
+        float max = 1;
+        int rowindex = 0;
         foreach(DataRow row in playerHistory.Rows)
         {
-            series.AddBars((String)row["Date"], stiple, (float)row["Money"]);
+            rowindex++;
+            string convertedDate = " ";
+            //Only show dates every 5 columns
+            if (rowindex%5 == 0)
+            {
+                string[] parts = ((String)row["Date"]).Split('-');
+                 convertedDate = $"{parts[0]}/{parts[1]}";
+            }
+            float money = Convert.ToSingle(row["Money"])/1000;
+            series.AddBars(convertedDate, stiple, money);
+            if (money > max)
+            {
+                max = money;
+            }
         }
-        
-        
 
-        graphView.CellSize = new PointF(0.25f, 1000);
+
+        int cellSize = (int)max / 25;
+        cellSize = 100000;
+        graphView.CellSize = new PointF(0.50f, cellSize);
         graphView.Series.Add(series);
         graphView.SetNeedsDisplay();
 
-        graphView.MarginLeft = 3;
-        graphView.MarginBottom = 1;
+        graphView.MarginLeft = 20;
+        graphView.MarginBottom = 2;
 
-        graphView.AxisY.LabelGetter = (v) => '$' + (v.Value / 1000f).ToString("N0") + 'k';
+        graphView.AxisY.LabelGetter = (v) => '€' + (v.Value ).ToString("N0") + 'k';
 
         // Do not show x axis labels (bars draw their own labels)
         graphView.AxisX.Increment = 0;
-        graphView.AxisX.ShowLabelsEvery = 0;
+        graphView.AxisX.ShowLabelsEvery = 3;
         graphView.AxisX.Minimum = 0;
 
-
         graphView.AxisY.Minimum = 0;
+        graphView.AxisY.ShowLabelsEvery = 10;
 
         /*var legend = new LegendAnnotation(new Rect(graphView.Bounds.Width - 20, 0, 20, 5));
         legend.AddEntry(new GraphCellToRender(stiple, series.SubSeries.ElementAt(0).OverrideBarColor), "Lower Third");
         legend.AddEntry(new GraphCellToRender(stiple, series.SubSeries.ElementAt(1).OverrideBarColor), "Middle Third");
         legend.AddEntry(new GraphCellToRender(stiple, series.SubSeries.ElementAt(2).OverrideBarColor), "Upper Third");
+        scrollVie
         graphView.Annotations.Add(legend);*/
+        //scrollView.Add(graphView);  
+        //dialog.Add(scrollView);
+            dialog.Add(graphView);
         var okButton = new Button("OK", is_default: true);
         dialog.AddButton(okButton);
         okButton.Clicked += () => { Application.RequestStop(); };

@@ -108,7 +108,7 @@ namespace Capital_and_Cargo
                     VALUES (@Date, @Money);";
 
                 command.Parameters.AddWithValue("@Date", "1900-01-01");
-                command.Parameters.AddWithValue("@Money", 1000000000);
+                command.Parameters.AddWithValue("@Money", 1000000);
 
                 command.ExecuteNonQuery();
             }

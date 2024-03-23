@@ -15,8 +15,8 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private GameDataManager dataManager;
-        private Double kmPriceTruck = 0.01;
-        private Double kmPricePlane = 0.06;
+        private Double kmPriceTruck = 0.002;
+        private Double kmPricePlane = 0.009;
         private Double speedTruck = 100;
         private Double speedPlane = 500;
         public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager)
