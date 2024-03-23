@@ -282,6 +282,23 @@ namespace Capital_and_Cargo
 
             return dataTable;
         }
+        public DataTable LoadPlayerHistory()
+        {
+            DataTable dataTable = new DataTable();
+            string sql = "SELECT Date, Money from MoneyHistory";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+
+            }
+
+            return dataTable;
+        }
         public void nextDay()
         {
             using (var command = _connection.CreateCommand())
