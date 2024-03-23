@@ -6,6 +6,7 @@
     <RootNamespace>Capital_and_Cargo</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>CapitalAndCargo</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
