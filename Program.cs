@@ -9,6 +9,8 @@ using System.Timers;
 using System.Runtime.CompilerServices;
 using System.Net.Http.Headers;
 using System.Reflection.Emit;
+using NLog.Layouts;
+using Terminal.Gui.Graphs;
 
 
 
@@ -43,7 +45,7 @@ class Program
                 new MenuItem("_Quit", "", () => { Application.RequestStop(); })
             }),
             new MenuBarItem("_Info", new MenuItem[] {
-                new MenuItem("_History", "", () => {  })
+                new MenuItem("_History", "", () => { playerHistoryDialog(); })
             })
         });
         top.Add(menu);
@@ -691,5 +693,71 @@ class Program
     private static void resume()
     {
         timer.Enabled = true;
+    }
+    private static void playerHistoryDialog()
+    {
+        DataTable playerHistory = dataManager.player.LoadPlayerHistory();
+        var dialog = new Dialog("History")
+        {
+            X = 0,
+            Y = 0,
+            Height = Dim.Percent(100),
+            Width = Dim.Percent(100)
+        };
+        GraphView graphView= new GraphView() {
+                X = 1,
+				Y = 1,
+				Width = Dim.Percent(100),
+				Height = Dim.Percent(100),
+			};
+        graphView.Reset();
+
+        
+
+        var fore = graphView.ColorScheme.Normal.Foreground == Color.Black ? Color.White : graphView.ColorScheme.Normal.Foreground;
+        var black = Application.Driver.MakeAttribute(fore, Color.Black);
+        var cyan = Application.Driver.MakeAttribute(Color.BrightCyan, Color.Black);
+        var magenta = Application.Driver.MakeAttribute(Color.BrightMagenta, Color.Black);
+        var red = Application.Driver.MakeAttribute(Color.BrightRed, Color.Black);
+
+        graphView.GraphColor = black;
+
+        var series = new MultiBarSeries(3, 1, 0.25f, new[] { red });
+
+        var stiple = Application.Driver.Stipple;
+        foreach(DataRow row in playerHistory.Rows)
+        {
+            series.AddBars((String)row["Date"], stiple, (float)row["Money"]);
+        }
+        
+        
+
+        graphView.CellSize = new PointF(0.25f, 1000);
+        graphView.Series.Add(series);
+        graphView.SetNeedsDisplay();
+
+        graphView.MarginLeft = 3;
+        graphView.MarginBottom = 1;
+
+        graphView.AxisY.LabelGetter = (v) => '$' + (v.Value / 1000f).ToString("N0") + 'k';
+
+        // Do not show x axis labels (bars draw their own labels)
+        graphView.AxisX.Increment = 0;
+        graphView.AxisX.ShowLabelsEvery = 0;
+        graphView.AxisX.Minimum = 0;
+
+
+        graphView.AxisY.Minimum = 0;
+
+        /*var legend = new LegendAnnotation(new Rect(graphView.Bounds.Width - 20, 0, 20, 5));
+        legend.AddEntry(new GraphCellToRender(stiple, series.SubSeries.ElementAt(0).OverrideBarColor), "Lower Third");
+        legend.AddEntry(new GraphCellToRender(stiple, series.SubSeries.ElementAt(1).OverrideBarColor), "Middle Third");
+        legend.AddEntry(new GraphCellToRender(stiple, series.SubSeries.ElementAt(2).OverrideBarColor), "Upper Third");
+        graphView.Annotations.Add(legend);*/
+        var okButton = new Button("OK", is_default: true);
+        dialog.AddButton(okButton);
+        okButton.Clicked += () => { Application.RequestStop(); };
+        Application.Run(dialog);
+
     }
 }
