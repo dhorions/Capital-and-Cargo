@@ -211,6 +211,25 @@ namespace Capital_and_Cargo
 
             return dataTable;
         }
+        public DataTable getMaxSellAmount(string city, string cargoType)
+        {
+            DataTable maxSellAmount = new DataTable();
+            string sql = "SELECT Amount FROM warehouse WHERE CityName = @city AND CargoType = @cargoType;";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                command.Parameters.AddWithValue("@cargoType", cargoType);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    maxSellAmount.Load(reader);
+                }
+
+            }
+            return maxSellAmount;
+        }
         public void purchase(String city, String CargoType, int amount, Double price)
         {
             using (var transaction = _connection.BeginTransaction())
