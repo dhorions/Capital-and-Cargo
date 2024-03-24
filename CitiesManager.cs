@@ -173,7 +173,7 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
-        public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice)> cargoTypes)
+        public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice, double minPrice, double maxPrice)> cargoTypes)
         {
             // var cities = dataManager.cities.LoadCities(); // Adjusted to get city names
             // var cargoTypes = dataManager.cargoTypes.GetAllCargoTypesAndBasePrices();
@@ -182,7 +182,7 @@ namespace Capital_and_Cargo
 
             foreach (DataRow city in cities.Rows)
             {
-                foreach (var (CargoType, BasePrice) in cargoTypes)
+                foreach (var (CargoType, BasePrice,MinPrice, MaxPrice) in cargoTypes)
                 {
                     var economicModifier = random.NextDouble() * 0.4 - 0.2; // Generate a modifier between -0.2 and +0.2
                     var buyPrice = BasePrice * (1 + economicModifier);
@@ -275,8 +275,59 @@ namespace Capital_and_Cargo
                             }
                         }
                     }
-                    // Commit the transaction if both commands succeed
-                    transaction.Commit();
+                    //Ensure the prices are between minPrice and MaxPrice
+                    DataTable badPrices = new DataTable();
+                    using (var command = _connection.CreateCommand())
+                    {
+
+                        command.CommandText = @"
+            SELECT cm.cityName, ct.cargoType, cm.buyPrice, cm.sellPrice, ct.basePrice, ct.minPrice, ct.maxPrice
+FROM city_market AS cm
+JOIN cargoTypes AS ct ON cm.CargoType = ct.cargoType
+WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
+   OR cm.sellPrice NOT BETWEEN ct.minPrice AND ct.maxPrice order by cm.cityName, ct.CargoType
+";
+
+
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            badPrices.Load(reader);
+                        }
+                    }
+                        foreach (DataRow badPrice in badPrices.Rows)
+                        {
+                        //correct the price to be between min and max
+                        Double buyPrice = (Double)badPrice["BuyPrice"];
+                        Double sellPrice = (Double)badPrice["SellPrice"];
+                        Double maxPrice = (Double)badPrice["MaxPrice"];
+                        Double minPrice = (Double)badPrice["MinPrice"];
+                        String city = (String)badPrice["cityName"];
+                        String cargo = (String)badPrice["cargoType"];
+                        (buyPrice,sellPrice ) = adjustPriceToRange(buyPrice,sellPrice,minPrice,maxPrice);
+                        Debug.WriteLine("Adjusting incorrect price : " + city + "\t " + cargo + "\t" + badPrice["SellPrice"] + "\t->" + sellPrice);
+                        using (var command = _connection.CreateCommand())
+                        {
+                            command.CommandText = @"
+                               UPDATE city_market
+                               SET 
+                                    
+                                    BuyPrice = @buyPrice,
+                                    SellPrice = @sellPrice
+                                    where cityName = @city and cargoType = @cargoType;";
+
+                            command.Parameters.AddWithValue("@buyPrice", buyPrice);
+                            command.Parameters.AddWithValue("@sellPrice", sellPrice);
+                            command.Parameters.AddWithValue("@city", city);
+                            command.Parameters.AddWithValue("@cargoType", cargo);
+
+                            command.ExecuteNonQuery();
+                        }
+
+                    }
+
+                        // Commit the transaction if both commands succeed
+                        transaction.Commit();
                 }
                 catch (Exception ex)
                 {
@@ -286,6 +337,25 @@ namespace Capital_and_Cargo
                     transaction.Rollback();
                 }
             }
+        }
+        private (Double,Double) adjustPriceToRange(Double buyPrice, Double sellPrice, Double minPrice, Double maxPrice)
+        {
+            //this can be improved to add some randomnessr instead of the actual min or max
+            //we'll have to see how often this happens
+            if(sellPrice < minPrice )
+            {
+                sellPrice =  minPrice + (minPrice * RandomDoubleBetween(.01, .05));//add some variation
+               
+
+            }
+            else if(sellPrice > maxPrice )
+            {
+                sellPrice =  maxPrice - (maxPrice * RandomDoubleBetween(.01, .05));//add some variation
+
+            }
+            buyPrice = sellPrice - (sellPrice * RandomDoubleBetween(.02,.08));//Make the buyPrice slightly Less than the sellPrice
+            return (buyPrice, sellPrice);
+
         }
         public DataTable GetPrices(string cityName, string cargoType)
         {
@@ -354,13 +424,13 @@ namespace Capital_and_Cargo
                     if (row["BuyPrice"] != DBNull.Value)
                     {
                         decimal buyPrice = Convert.ToDecimal(row["BuyPrice"]);
-                        row["BuyPrice"] = Math.Round(buyPrice, 3).ToString("F3");
+                        row["BuyPrice"] = Math.Round(buyPrice, 2).ToString("F2");
                     }
 
                     if (row["SellPrice"] != DBNull.Value)
                     {
                         decimal sellPrice = Convert.ToDecimal(row["SellPrice"]);
-                        row["SellPrice"] = Math.Round(sellPrice, 3).ToString("F3");
+                        row["SellPrice"] = Math.Round(sellPrice, 2).ToString("F2");
                     }
                 }
             }

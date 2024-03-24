@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using System.Reflection.Emit;
 using NLog.Layouts;
 using Terminal.Gui.Graphs;
+using System.Globalization;
 
 
 
@@ -461,11 +462,21 @@ class Program
     {
         System.Data.DataTable marketTable = dataManager.cities.GetGoodsForCity(city);
         cityMarketListView.Table = marketTable;
+        TableView.ColumnStyle style = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["buyPrice"]);
+        style.Format = "N";// "#.##0,00";
+        style.Alignment = TextAlignment.Right;
+        TableView.ColumnStyle styleSell = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["sellPrice"]);
+        styleSell.Format = "N";// "#.##0,00";
+        styleSell.Alignment = TextAlignment.Right;
+
+
+
     }
     private static void populateWarehouse(string city, TableView cityGoodsListView)
     {
         System.Data.DataTable warehouseTable = dataManager.player.loadWarehouse(city);
         cityGoodsListView.Table = warehouseTable;
+        
     }
     private static void populatePlayerData()
     {
