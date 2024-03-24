@@ -314,20 +314,31 @@ PurchasePrice REAL NOT NULL
                             command.Parameters.AddWithValue("@PurchasePrice", row["PurchasePrice"]);
                             Debug.WriteLine("\t " + row["DestinationCity"] + "\t" + row["CargoAmount"] + "\t" + row["CargoAmount"]);
                             command.ExecuteNonQuery();
+                            //Manage Reputation
+                            
+                        }
+                        using (var command = _connection.CreateCommand())
+                        {
+
+                            command.CommandText = @"
+                               UPDATE cities SET Imported = Imported + @amount where city = @city
+                        ";
+                            command.Parameters.AddWithValue("@amount", row["CargoAmount"]);
+                            command.Parameters.AddWithValue("@city", row["DestinationCity"]);
+                            command.ExecuteNonQuery();
                         }
                         
-                        using (var cmdDelete = _connection.CreateCommand())
-                        {
-                            //Debug.WriteLine("Deleting all finished transports");
-                            cmdDelete.CommandText = @"delete from city_transit where progress >= 100;";
-
-                            cmdDelete.ExecuteNonQuery();
-                        }
 
 
                     }
+                    using (var cmdDelete = _connection.CreateCommand())
+                    {
+                        //Debug.WriteLine("Deleting all finished transports");
+                        cmdDelete.CommandText = @"delete from city_transit where progress >= 100;";
 
-                    
+                        cmdDelete.ExecuteNonQuery();
+                    }
+
 
 
 
@@ -380,6 +391,17 @@ PurchasePrice REAL NOT NULL
                         command.Parameters.AddWithValue("@city", originCity);
                         command.Parameters.AddWithValue("@amount", amount);
 
+                        command.ExecuteNonQuery();
+                    }
+                    //Manage Reputation
+                    using (var command = _connection.CreateCommand())
+                    {
+
+                        command.CommandText = @"
+                               UPDATE cities SET Exported = Exported + @amount where city = @city
+                        ";
+                        command.Parameters.AddWithValue("@amount", amount);
+                        command.Parameters.AddWithValue("@city", originCity);
                         command.ExecuteNonQuery();
                     }
                     //Pay

@@ -502,6 +502,16 @@ class Program
         
     }
     //private static void gameLoop(Object source, ElapsedEventArgs e)
+    private static void populateCities()
+    {
+        citiesListView.Table = dataManager.cities.LoadCities();
+        TableView.ColumnStyle style = citiesListView.Style.GetOrCreateColumnStyle(citiesListView.Table.Columns["Reputation"]);
+        style.Format = "N0";
+        style.Alignment = TextAlignment.Right;
+        TableView.ColumnStyle styleInv = citiesListView.Style.GetOrCreateColumnStyle(citiesListView.Table.Columns["Inventory"]);
+        styleInv.Format = "N0";
+        styleInv.Alignment = TextAlignment.Right;
+    }
     private static bool gameLoop(MainLoop mainLoop)
     {
         Debug.WriteLine("gameloop");
@@ -518,6 +528,7 @@ class Program
             //Update Date and Money
             populatePlayerData();
             //Update Market for Selected City
+            populateCities();
             populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
             populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
             populateTransitTable();

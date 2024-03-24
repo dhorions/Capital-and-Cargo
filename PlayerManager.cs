@@ -249,6 +249,19 @@ namespace Capital_and_Cargo
                         command.Parameters.AddWithValue("@amount", amount);
                         command.ExecuteNonQuery();
                     }
+                    //Manage Reputation
+                    using (var command = _connection.CreateCommand())
+                    {
+
+
+                        
+                        command.CommandText = @"
+                               UPDATE cities SET Bought = Bought + @amount where city = @city
+                        ";
+                        command.Parameters.AddWithValue("@amount", amount);
+                        command.Parameters.AddWithValue("@city", city);
+                        command.ExecuteNonQuery();
+                    }
                     //Pay
                     Double totalPrice = amount * price;
                     using (var command = _connection.CreateCommand())
@@ -331,12 +344,25 @@ namespace Capital_and_Cargo
                     using (var command = _connection.CreateCommand())
                     {
 
-                       
+
+
+
                         Debug.WriteLine("Getting Payed " + totalPrice);
                         command.CommandText = @"
                                UPDATE player SET money = money + @price 
                         ";
                         command.Parameters.AddWithValue("@price", totalPrice);
+                        command.ExecuteNonQuery();
+                    }
+                    //Manage Reputation
+                    using (var command = _connection.CreateCommand())
+                    {
+
+                        command.CommandText = @"
+                               UPDATE cities SET SOld = Sold + @amount where city = @city
+                        ";
+                        command.Parameters.AddWithValue("@amount", amount);
+                        command.Parameters.AddWithValue("@city", city);
                         command.ExecuteNonQuery();
                     }
                     //Remove from to Warehouse

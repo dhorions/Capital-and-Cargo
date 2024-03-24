@@ -15,6 +15,11 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private GameDataManager dataManager = null;
+        private static Double importReputation = .50;
+        private static Double exportReputation = .25;
+        private static Double sellReputation = .15;
+        private static Double buyReputation = .10;
+
         public CitiesManager(ref SqliteConnection connection, ref GameDataManager dataManager)
         {
             _connection = connection;
@@ -63,7 +68,11 @@ namespace Capital_and_Cargo
                 Latitude REAL NOT NULL,
                 Longitude REAL NOT NULL,
                 Continent TEXT NOT NULL,
-                Country TEXT NOT NULL
+                Country TEXT NOT NULL,
+                Imported INTEGER NOT NULL DEFAULT 0,
+                Exported INTEGER NOT NULL DEFAULT 0,
+                Bought INTEGER NOT NULL DEFAULT 0,
+                Sold INTEGER NOT NULL DEFAULT 0
             );";
 
             using (var command = _connection.CreateCommand())
@@ -109,11 +118,25 @@ namespace Capital_and_Cargo
         public DataTable LoadCities()
         {
             DataTable dataTable = new DataTable();
-            string sql = "SELECT continent,country,city FROM cities order by continent, country, city;";
+            string sql = @"SELECT continent,country,city,
+                case 
+                    when sum(amount) is null then 0
+                    else  sum(amount)
+                end as Inventory,
+                ( Bought * @buyReputation) + (Sold * @sellReputation) + (Imported * @importReputation) + ( Exported * @exportReputation) as Reputation
+                  
+                FROM cities left join warehouse on cities.city = warehouse.CityName
+                group by city
+                order by continent, country, city
+                ";
 
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText= sql;
+                command.Parameters.AddWithValue("@buyReputation", buyReputation);
+                command.Parameters.AddWithValue("@sellReputation", sellReputation);
+                command.Parameters.AddWithValue("@importReputation", importReputation);
+                command.Parameters.AddWithValue("@exportReputation", exportReputation);
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);
@@ -175,6 +198,12 @@ namespace Capital_and_Cargo
         }
         public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice, double minPrice, double maxPrice)> cargoTypes)
         {
+            DataTable market = GetGoodsForCity("Beijing");
+            if(market.Rows.Count> 0)
+            {
+                //already populated
+                return;
+            }
             // var cities = dataManager.cities.LoadCities(); // Adjusted to get city names
             // var cargoTypes = dataManager.cargoTypes.GetAllCargoTypesAndBasePrices();
             DeleteAllFromCityMarket();
@@ -251,23 +280,21 @@ namespace Capital_and_Cargo
                     {
                         
                         {
-                            var economicModifier = RandomDoubleBetween(.2, 2.0);
-                            var buyPriceModifier = RandomDoubleBetween(.01, .50); ;
-                            var sellPriceModifier = economicModifier / 2;
+                            var economicModifier = RandomDoubleBetween(0.8, 2.0);
                             var supplyModifier = RandomDoubleBetween(0.8, 1.2);
-                            Debug.WriteLine($"market Update : {city["City"]}\t supplyModifier : {supplyModifier}\t buyPriceModifier : {buyPriceModifier}\t sellPriceModifier: {sellPriceModifier}");
+                            Debug.WriteLine($"market Update : {city["City"]}\t supplyModifier : {supplyModifier}\t economyModifier : {economicModifier}");
                             using (var command = _connection.CreateCommand())
                             {
                                 command.CommandText = @"
                                UPDATE city_market
                                SET 
                                     SupplyAmount = round(SupplyAmount * @supplyModifier),
-                                    BuyPrice = (SellPrice * @sellPriceModifier)  - ((SellPrice * @sellPriceModifier) * @buyPriceModifier),
-                                    SellPrice = SellPrice * @sellPriceModifier
+                                    BuyPrice = BuyPrice * @economicModifier,
+                                    SellPrice = SellPrice * @economicModifier
                                     where cityName = @city;";
 
-                                command.Parameters.AddWithValue("@buyPriceModifier", buyPriceModifier);
-                                command.Parameters.AddWithValue("@sellPriceModifier", sellPriceModifier);
+                                command.Parameters.AddWithValue("@economicModifier", economicModifier);
+                                //command.Parameters.AddWithValue("@sellPriceModifier", economicModifier);
                                 command.Parameters.AddWithValue("@supplyModifier", supplyModifier);
                                 command.Parameters.AddWithValue("@city", city["City"]);
 
