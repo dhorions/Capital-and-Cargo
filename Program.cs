@@ -20,6 +20,7 @@ using System.Globalization;
 class Program
 {
     static int loopIntervalSeconds = 2;
+    static int FFloopIntervalSeconds = 1;
     static GameDataManager dataManager = null;
     static Terminal.Gui.Label dateField;
     static Terminal.Gui.Label moneyField;
@@ -29,9 +30,12 @@ class Program
     static Terminal.Gui.TableView cityGoodsListView;
     static Terminal.Gui.TableView transitListView;
     static Boolean startPopupDisplayed = false;
-    static ColorScheme ColorScheme = new ColorScheme
+    static Object loopTimeout;
+    static ColorScheme myColorScheme = new ColorScheme
     {
-        Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black)
+        Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black),
+        Focus = Terminal.Gui.Attribute.Make(Color.Brown, Color.Black),
+        
     };
     static void Main(string[] args)
     {
@@ -86,13 +90,59 @@ class Program
             Y = 0,
             Text = "€ 0.000.000.000"
         };
+        var fastForwardButton = new Button(">>")
+        {
+            X = Pos.Percent(75),
+            Y = 0,
+            ColorScheme = myColorScheme
+        };
+        var normalSpeedButton = new Button(">")
+        {
+            X = Pos.Percent(70),
+            Y = 0,
+            ColorScheme = myColorScheme
+        };
+        var pauseButton = new Button("||") 
+        {
+            X = Pos.Percent(81),
+            Y = 0,
+            ColorScheme = myColorScheme
+        };
+
         populatePlayerData();
 
+        bool pauseToggle = true;
+        pauseButton.Clicked += () =>
+        {
+            if (pauseToggle == true)
+            {
+                
+            }
+            else
+            {
+                
+            }
 
 
+        };
+        fastForwardButton.Clicked += () =>
+        {
+            Application.MainLoop.RemoveTimeout(loopTimeout);
+            loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(FFloopIntervalSeconds * 1000), gameLoop);
+        };
+        normalSpeedButton.Clicked += () =>
+        {
+            Application.MainLoop.RemoveTimeout(loopTimeout);
+            loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
+        };
+
+        titleContainer.Add(pauseButton);
+        titleContainer.Add(fastForwardButton);
+        titleContainer.Add(normalSpeedButton);
         titleContainer.Add(dateField);
         titleContainer.Add(moneyField);
         topContainer.Add(titleContainer);
+        
         // Main container for two-column layout
         var mainContainer = new Terminal.Gui.View()
         {
@@ -423,7 +473,7 @@ class Program
         //timer.Elapsed += gameLoop;
         timer.AutoReset = true;
         timer.Enabled = true;
-        Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
+        loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
 
         Application.Run();
         
@@ -437,7 +487,7 @@ class Program
             Y = 40,
             Width = 120,
             Height = 30,
-            ColorScheme = ColorScheme,
+            ColorScheme = myColorScheme,
         };
         string ascii = @"
            ___                              _               _     ___               _  _          _ 
@@ -452,9 +502,9 @@ class Program
             Height = 6
         };
         
-        label.ColorScheme = ColorScheme;
+        label.ColorScheme = myColorScheme;
         var buttonCancel = new Button("Ok", is_default: false);
-        buttonCancel.ColorScheme = ColorScheme;
+        buttonCancel.ColorScheme = myColorScheme;
         dialog.Add(label);
         dialog.AddButton(buttonCancel);
         buttonCancel.Clicked += () => {  Application.RequestStop(); };
@@ -740,7 +790,7 @@ class Program
             Y = 0,
             Height = Dim.Percent(100),
             Width = Dim.Percent(100),
-            ColorScheme = ColorScheme
+            ColorScheme = myColorScheme
         };
         ScrollBarView scrollView = new ScrollBarView()
         {
@@ -748,7 +798,7 @@ class Program
             Y = 0,
             Height = Dim.Percent(100),
             Width = Dim.Percent(100),
-            ColorScheme = ColorScheme
+            ColorScheme = myColorScheme
         };
 
         GraphView graphView= new GraphView() {
@@ -756,7 +806,7 @@ class Program
 				Y = 1,
 				Width = Dim.Percent(100),
 				Height = Dim.Percent(75),
-            ColorScheme = ColorScheme
+            ColorScheme = myColorScheme
         };
         graphView.Reset();
 
