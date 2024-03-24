@@ -123,7 +123,8 @@ namespace Capital_and_Cargo
                 CREATE TABLE IF NOT EXISTS warehouse (
                     CityName TEXT NOT NULL,
                     CargoType String NOT NULL,
-                    Amount INTEGER NOT NULL
+                    Amount INTEGER NOT NULL,
+                    PurchasePrice REAL NOT NULL
                 );";
                 command.ExecuteNonQuery();
             }
@@ -154,14 +155,14 @@ namespace Capital_and_Cargo
                         command.CommandText = @"
                         -- Create a temporary table to store aggregated results
                         CREATE TEMPORARY TABLE warehouse_temp AS
-                        SELECT CityName, CargoType, SUM(Amount) AS TotalAmount
+                        SELECT CityName, CargoType, SUM(Amount) AS TotalAmount, SUM(PurchasePrice) as PurchasePrice
                         FROM warehouse
                         GROUP BY CityName, CargoType;
                         -- Delete the original data from the `warehouse` table
                         DELETE FROM warehouse;
                         --Insert the aggregated data back into the `warehouse` table
-                        INSERT INTO warehouse (CityName, CargoType, Amount)
-                        SELECT CityName, CargoType, TotalAmount
+                        INSERT INTO warehouse (CityName, CargoType, Amount,PurchasePrice)
+                        SELECT CityName, CargoType, TotalAmount, PurchasePrice
                         FROM warehouse_temp;
                         --Drop the temporary table
                         DROP TABLE warehouse_temp;";
@@ -194,7 +195,7 @@ namespace Capital_and_Cargo
             {
 
                 command.CommandText = @"
-            SELECT CargoType, Amount
+            SELECT CargoType, Amount, (PurchasePrice / Amount) as [Purchase Price], PurchasePrice as Value
             FROM warehouse 
             WHERE CityName = @CityName
             ORDER BY CargoType;";
@@ -241,7 +242,7 @@ namespace Capital_and_Cargo
                     {
                         Debug.WriteLine("Removing " + amount + " of " + CargoType + " from " + city + " market");
                         command.CommandText = @"
-                               UPDATE city_market SET SupplyAmount = SupplyAmount - @amount WHERE CargoType = @cargoType and CityName = @city
+                               UPDATE city_market SET SupplyAmount = (SupplyAmount - @amount ) WHERE CargoType = @cargoType and CityName = @city
                         ";
                         command.Parameters.AddWithValue("@cargoType", CargoType);
                         command.Parameters.AddWithValue("@city", city);
@@ -249,10 +250,11 @@ namespace Capital_and_Cargo
                         command.ExecuteNonQuery();
                     }
                     //Pay
+                    Double totalPrice = amount * price;
                     using (var command = _connection.CreateCommand())
                     {
 
-                        Double totalPrice = amount * price;
+                       
                         Debug.WriteLine("Paying " + totalPrice);
                         command.CommandText = @"
                                UPDATE player SET money = money - @price 
@@ -264,14 +266,16 @@ namespace Capital_and_Cargo
                     int recordsAffected = 0;
                     using (var command = _connection.CreateCommand())
                     {
-                        Double totalPrice = amount * price;
+                        
                         Debug.WriteLine("Adding " + amount + " of " + CargoType + " to  " + city + " warehouse");
                         command.CommandText = @"
-                               UPDATE warehouse SET Amount = Amount + @amount WHERE CityName = @city AND CargoType = @cargoType
+                               UPDATE warehouse SET Amount = Amount + @amount, PurchasePrice = PurchasePrice + @Price WHERE CityName = @city AND CargoType = @cargoType
                         ";
                         command.Parameters.AddWithValue("@cargoType", CargoType);
                         command.Parameters.AddWithValue("@city", city);
                         command.Parameters.AddWithValue("@amount", amount);
+                        command.Parameters.AddWithValue("@Price", totalPrice);
+
                         recordsAffected = command.ExecuteNonQuery();
                     }
                     if (recordsAffected == 0)
@@ -280,11 +284,12 @@ namespace Capital_and_Cargo
                         using (var cmdInsert = _connection.CreateCommand())
                         {
                             cmdInsert.CommandText = @"
-                               INSERT INTO warehouse (CityName, CargoType, Amount) VALUES (@city, @cargoType, @amount)
+                               INSERT INTO warehouse (CityName, CargoType, Amount, PurchasePrice) VALUES (@city, @cargoType, @amount,@Price)
                         ";
                             cmdInsert.Parameters.AddWithValue("@cargoType", CargoType);
                             cmdInsert.Parameters.AddWithValue("@city", city);
                             cmdInsert.Parameters.AddWithValue("@amount", amount);
+                            cmdInsert.Parameters.AddWithValue("@Price", totalPrice);
                             cmdInsert.ExecuteNonQuery();
                         }
 
@@ -322,10 +327,11 @@ namespace Capital_and_Cargo
                         command.ExecuteNonQuery();
                     }
                     //Get Payed
+                    Double totalPrice = amount * price;
                     using (var command = _connection.CreateCommand())
                     {
 
-                        Double totalPrice = amount * price;
+                       
                         Debug.WriteLine("Getting Payed " + totalPrice);
                         command.CommandText = @"
                                UPDATE player SET money = money + @price 
@@ -337,14 +343,15 @@ namespace Capital_and_Cargo
                     int recordsAffected = 0;
                     using (var command = _connection.CreateCommand())
                     {
-                        Double totalPrice = amount * price;
+                        
                         Debug.WriteLine("Removing " + amount + " of " + CargoType + " from  " + city + " warehouse");
                         command.CommandText = @"
-                               UPDATE warehouse SET Amount = Amount - @amount WHERE CityName = @city AND CargoType = @cargoType
+                               UPDATE warehouse SET Amount = Amount - @amount, PurchasePrice = PurchasePrice - @price WHERE CityName = @city AND CargoType = @cargoType
                         ";
                         command.Parameters.AddWithValue("@cargoType", CargoType);
                         command.Parameters.AddWithValue("@city", city);
                         command.Parameters.AddWithValue("@amount", amount);
+                        command.Parameters.AddWithValue("@price", totalPrice);
                         recordsAffected = command.ExecuteNonQuery();
                     }
 

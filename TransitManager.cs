@@ -58,7 +58,8 @@ namespace Capital_and_Cargo
     CargoType TEXT NOT NULL,
     CargoAmount INTEGER NOT NULL, -- Assuming cargo amount is in units or kilograms, depending on cargo type
     TransportationMethod TEXT NOT NULL,
-    Price REAL NOT NULL
+    Price REAL NOT NULL,
+PurchasePrice REAL NOT NULL
 );
 ";
 
@@ -296,18 +297,21 @@ namespace Capital_and_Cargo
                             INSERT INTO warehouse (
                                   CityName,
                                   CargoType,
-                                  Amount
+                                  Amount,
+                                  PurchasePrice
                               )
                               VALUES (
                                   @city,
                                   @CargoType,
-                                  @Amount
+                                  @Amount,
+                                  @PurchasePrice
                               );
 
                                         ";
                             command.Parameters.AddWithValue("@city", row["DestinationCity"]);
                             command.Parameters.AddWithValue("@CargoType", row["CargoType"]);
                             command.Parameters.AddWithValue("@Amount", row["CargoAmount"]);
+                            command.Parameters.AddWithValue("@PurchasePrice", row["PurchasePrice"]);
                             Debug.WriteLine("\t " + row["DestinationCity"] + "\t" + row["CargoAmount"] + "\t" + row["CargoAmount"]);
                             command.ExecuteNonQuery();
                         }
@@ -347,16 +351,35 @@ namespace Capital_and_Cargo
             {
                 try
                 {
-                    //Decrease market supply
+                    Double cargoValue = 0;
+                    //Get current price from Warehouse
+                    using (var command = _connection.CreateCommand())
+                    {
+                        
+                        command.CommandText = @"
+                               select PurchasePrice / Amount as PurchaseUnitPrice from warehouse WHERE CargoType = @cargoType and CityName = @city
+                        ";
+                        command.Parameters.AddWithValue("@cargoType", CargoType);
+                        command.Parameters.AddWithValue("@city", originCity);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            DataTable ppTable = new DataTable();
+                            ppTable.Load(reader);
+                            cargoValue = (Double)ppTable.Rows[0]["PurchaseUnitPrice"] * amount;
+                        }
+
+                    }
+                    //Decrease warehouse supply
                     using (var command = _connection.CreateCommand())
                     {
                         Debug.WriteLine("Removing " + amount + " of " + CargoType + " from " + originCity + " warehouse");
                         command.CommandText = @"
-                               UPDATE warehouse SET Amount = Amount - @amount WHERE CargoType = @cargoType and CityName = @city
+                               UPDATE warehouse SET Amount = Amount - @amount, PurchasePrice = PurchasePrice - (PurchasePrice / Amount)  WHERE CargoType = @cargoType and CityName = @city
                         ";
                         command.Parameters.AddWithValue("@cargoType", CargoType);
                         command.Parameters.AddWithValue("@city", originCity);
                         command.Parameters.AddWithValue("@amount", amount);
+
                         command.ExecuteNonQuery();
                     }
                     //Pay
@@ -386,7 +409,8 @@ namespace Capital_and_Cargo
                              CargoType,
                              CargoAmount,
                              TransportationMethod,
-                             Price
+                             Price,
+                             PurchasePrice
                          )
                          VALUES (
                             
@@ -398,7 +422,8 @@ namespace Capital_and_Cargo
                              @CargoType,
                              @CargoAmount,
                              @TransportationMethod,
-                             @Price
+                             @Price,
+                            @PurchasePrice
                          );
                         ";
                         cmdInsert.Parameters.AddWithValue("@CargoType", CargoType);
@@ -410,6 +435,7 @@ namespace Capital_and_Cargo
                         cmdInsert.Parameters.AddWithValue("@Progress", 0);
                         cmdInsert.Parameters.AddWithValue("@ProgressKm", 0);
                         cmdInsert.Parameters.AddWithValue("@Price", price);
+                        cmdInsert.Parameters.AddWithValue("@PurchasePrice", cargoValue);
                         cmdInsert.ExecuteNonQuery();
                         }
 

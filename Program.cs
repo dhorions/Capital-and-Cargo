@@ -478,7 +478,13 @@ class Program
     {
         System.Data.DataTable warehouseTable = dataManager.player.loadWarehouse(city);
         cityGoodsListView.Table = warehouseTable;
-        
+        TableView.ColumnStyle styleSell = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Purchase Price"]);
+        styleSell.Format = "N";// "#.##0,00";
+        styleSell.Alignment = TextAlignment.Right;
+        TableView.ColumnStyle styleValue = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Value"]);
+        styleValue.Format = "N";// "#.##0,00";
+        styleValue.Alignment = TextAlignment.Right;
+
     }
     private static void populatePlayerData()
     {
@@ -493,6 +499,7 @@ class Program
     {
         System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
         transitListView.Table = transitTable;
+        
     }
     //private static void gameLoop(Object source, ElapsedEventArgs e)
     private static bool gameLoop(MainLoop mainLoop)
