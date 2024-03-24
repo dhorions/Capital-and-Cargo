@@ -11,6 +11,8 @@ using System.Net.Http.Headers;
 using System.Reflection.Emit;
 using NLog.Layouts;
 using Terminal.Gui.Graphs;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Data.Common;
 using System.Globalization;
 
 
@@ -531,7 +533,8 @@ class Program
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
-        //int maxAmount = (int)dataManager.transits.
+        long maxAmount = (long)dataManager.player.getMaxSellAmount(city, CargoType).Rows[0]["Amount"];
+        
         var dialog = new Dialog("Sell " + CargoType + " from " + city)
         {
             X = 60,
@@ -573,6 +576,7 @@ class Program
         dialog.Add(totalSellPriceLabel);
 
         int amount = 0;
+        string lastValidValue = "0";
         amountField.TextChanged += (args) =>
         {
             if (amountField.Text != "") 
@@ -580,17 +584,20 @@ class Program
                 amount = Convert.ToInt32(amountField.Text);
                 totalSellPriceLabel.Text = "Total :" + amount * price + "€";
             }
+            if (amount <= maxAmount)
+            {
+                lastValidValue = Convert.ToString(amountField.Text);
+            } else
+            {
+                amountField.Text = lastValidValue;
+                amount = Convert.ToInt32(lastValidValue);
+            }
 
         };
 
         buttonSell.Clicked += () => {
+            
 
-            //TODO Kobe: verkopen
-            // functie :  dataManager.player.sell
-            /*if (amount <= maxAmount)
-            {
-                dataManager.player.sell(city, CargoType, amount, price); 
-            }*/
             dataManager.player.sell(city, CargoType, amount, price);
 
             resume(); Application.RequestStop(); };
@@ -705,6 +712,7 @@ class Program
     {
         timer.Enabled = true;
     }
+    
     private static void playerHistoryDialog()
     {
         DataTable playerHistory = dataManager.player.LoadPlayerHistory();
