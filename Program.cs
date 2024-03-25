@@ -24,7 +24,7 @@ class Program
     static GameDataManager dataManager = null;
     static Terminal.Gui.Label dateField;
     static Terminal.Gui.Label moneyField;
-    private static System.Timers.Timer timer;
+    //private static System.Timers.Timer timer;
     static Terminal.Gui.TableView citiesListView;
     static Terminal.Gui.TableView cityMarketListView;
     static Terminal.Gui.TableView cityGoodsListView;
@@ -37,6 +37,8 @@ class Program
     static Terminal.Gui.Button fastForwardButton;
     static Terminal.Gui.Button normalSpeedButton;
     static Terminal.Gui.Button pauseButton;
+    static Terminal.Gui.FrameView cityMarketView;
+    static Terminal.Gui.View rightColumn;
     static ColorScheme myColorScheme = new ColorScheme
     {
         Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black),
@@ -196,7 +198,7 @@ class Program
         mainContainer.Add(leftColumn);
 
         // Right column container
-        var rightColumn = new View()
+        rightColumn = new View()
         {
             X = Pos.Right(leftColumn),
             Y = 0,
@@ -257,7 +259,7 @@ class Program
 
 
         // Right column split into two views vertically for list views
-        var cityMarketView = new FrameView()
+         cityMarketView = new FrameView()
         {
             X = 0,
             Y = 0,
@@ -265,28 +267,9 @@ class Program
             Height = Dim.Percent(50),
             Title = "Market"
         };
-        rightColumn.Add(cityMarketView);
+        
 
-        var cityGoodsView = new FrameView()
-        {
-            X = 0,
-            Y = Pos.Bottom(cityMarketView),
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            Title = "Warehouse"
-        };
-        rightColumn.Add(cityGoodsView);
-
-        // Example ListViews for the two areas in the right column
-        // You would populate these similar to the listView with relevant data
-        cityGoodsListView = new TableView()
-        {
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = Dim.Percent(90),
-            FullRowSelect = true,
-        };
+        
        
 
         cityMarketListView = new TableView()
@@ -306,6 +289,73 @@ class Program
             Y = 0
         };
         cityMarketView.Add(buyButton);
+
+        rightColumn.Add(cityMarketView);
+
+        //Market View
+        buildPlayerCityView();
+        
+
+        //cityGoodsView.Add(cityGoodsListView);
+        // Add an action for the button click
+        buyButton.Clicked += () =>
+        {
+            buyButtonDialog();
+            
+        };
+
+        //Events
+        // - Select City
+        citiesListView.SelectedCellChanged += (Action) => {
+            String city = (string)Action.Table.Rows[Action.NewRow]["city"];
+            Debug.WriteLine("Selected city : " + city);
+            populateMarket(city, cityMarketListView);
+            populateWarehouse(city, cityGoodsListView);
+        };
+        // - Buy/Sell Goods
+        //cityMarketListView.AddKeyBinding(Key.Enter,)
+        //cityMarketListView.KeyDown += ( key) =>{
+        //    Debug.WriteLine("Key pressed : " + key.ToString());
+        //};
+        //timer = new System.Timers.Timer(loopIntervalSeconds * 1000);
+        //timer.Elapsed += gameLoop;
+        //timer.AutoReset = true;
+        //timer.Enabled = true;
+        loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
+
+        Application.Run();
+        
+    }
+
+    private static void buildPlayerCityView()
+    {
+        var playerCityView = new Terminal.Gui.TabView()
+        {
+            X = 0,
+            Y= Pos.Bottom(cityMarketView),
+            Width = Dim.Fill(),
+            Height = Dim.Percent(50),
+        };
+        
+        //Warehouse Tab Controls
+        var cityGoodsView = new FrameView()
+        {
+            X = 0,
+            Y =0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            Title = "Warehouse"
+        };
+        // Warehouse Goods
+        cityGoodsListView = new TableView()
+        {
+            X = 0,
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = Dim.Percent(90),
+            FullRowSelect = true,
+        };
+        //Warehouse buttons
         var sellButton = new Button("Sell")
         {
             X = 1,
@@ -321,21 +371,16 @@ class Program
         };
         var transportButtonPlane = new Button("By _Plane ✈")
         {
-            X =30, 
+            X = 30,
             Height = 1,
             Y = 0
         };
         var transportButtonTruck = new Button("By _Truck ⛍")
         {
-            X = 44, 
+            X = 44,
             Height = 1,
             Y = 0
         };
-
-        
-
-
-        cityMarketView.Add(buyButton);
         cityGoodsView.Add(sellButton);
         cityGoodsView.Add(transportLabel);
         cityGoodsView.Add(transportButtonPlane);
@@ -343,168 +388,167 @@ class Program
         transportButtonPlane.Clicked += () => { transportDialog("plane"); };
         transportButtonTruck.Clicked += () => { transportDialog("truck"); };
         sellButton.Clicked += () => { sellDialog(); };
-        cityGoodsView.Add(cityGoodsListView);
 
-        cityGoodsView.Add(cityGoodsListView);
-        // Add an action for the button click
-        buyButton.Clicked += () =>
+        //Factory Tab Controls
+        var cityFactoryView = new FrameView()
         {
-            pause();//pause game loop when in dialog
-            String CargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
-            Double SellPrice = (Double)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SellPrice"];
-            Int64 SupplyAmount = (Int64)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SupplyAmount"];
-            System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
-            double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
-            //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
-            var numberLabel = new Terminal.Gui.Label()
-            {
-                X = 1,
-                Y = 1,
-                Text = "Amount"
-            };
-            var numberField = new TextField("0")
-            {
-                X = 20,
-                Y = 1,
-                Width = 40,
-            };
-            var unitPriceLabel = new Terminal.Gui.Label()
-            {
-                X = 1,
-                Y = 2,
-                Text = "Unit Price"
-            };
-            var unitPriceValue = new Terminal.Gui.Label()
-            {
-                X = 20,
-                Y = 2,
-                Text = SellPrice.ToString()
-            };
-            var totalPriceLabel = new Terminal.Gui.Label()
-            {
-                X = 1,
-                Y = 3,
-                Text = "Total Price"
-            };
-            var totalPriceValue = new Terminal.Gui.Label()
-            {
-                X = 20,
-                Y = 3,
-                Text = "0"
-            };
-
-            var dialog = new Dialog("Purchase " + CargoType, 60, 10 );
-            var buttonBuy = new Button("OK", is_default: true);
-            var buttonCancel = new Button("Cancel", is_default: false);
-            var buttonBuyMax = new Button("Max")
-            {
-                X = 1,
-                Y = 4,
-               
-            };
-
-            buttonBuy.Clicked += () => {
-                
-                var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
-                dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
-                resume();
-                Application.RequestStop(); 
-            };
-            buttonCancel.Clicked += () => { resume();  Application.RequestStop(); };
-            buttonBuyMax.Clicked += () => {
-                
-                
-                Debug.WriteLine("buy max button pressed");
-                var maxAmount = SupplyAmount;
-                double minMoney = SupplyAmount * SellPrice;
-                if (minMoney <= totalMoney)
-                {
-                    Debug.WriteLine("Can buy whole stock");
-                    numberField.Text = SupplyAmount.ToString();
-                }
-                else
-                {
-                    Debug.WriteLine("Can NOT buy whole stock");
-                    numberField.Text = (Math.Floor(totalMoney/SupplyAmount)).ToString();
-                }
-
-            };
-
-            
-
-            string lastValidValue = "0";
-            numberField.TextChanged += (e) =>
-            {
-                //System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
-                //double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
-                var maxBuy = Math.Floor(totalMoney / SupplyAmount);
-                if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount && value <= maxBuy)
-                {
-                    
-                    lastValidValue = numberField.Text.ToString();
-
-                }
-                else if (numberField.Text == "")
-                {
-                    lastValidValue = numberField.Text.ToString();
-                }
-                else
-                {
-                    numberField.Text = lastValidValue;
-                }
-                //do we have enough money
-                if(value > maxBuy  )
-                {
-                    numberField.Text = lastValidValue;
-                }
-                if (numberField.Text != "")
-                {
-                    totalPriceValue.Text = (int.Parse(numberField.Text.ToString()) * SellPrice).ToString();
-                }
-                else
-                {
-                    totalPriceValue.Text = "";
-
-
-                }
-            };
-            dialog.Add(numberLabel);
-            dialog.Add(numberField);
-            dialog.Add(unitPriceLabel);
-            dialog.Add(unitPriceValue);
-            dialog.Add(totalPriceLabel);
-            dialog.Add(totalPriceValue);
-            dialog.Add(buttonBuyMax);
-            //dialog.Add(button);
-            dialog.AddButton(buttonBuy);
-            dialog.AddButton(buttonCancel);
-
-            // Display the modal dialog
-            Application.Run(dialog);
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            Title = "Factories"
         };
 
-        //Events
-        // - Select City
-        citiesListView.SelectedCellChanged += (Action) => {
-            String city = (string)Action.Table.Rows[Action.NewRow]["city"];
-            Debug.WriteLine("Selected city : " + city);
-            populateMarket(city, cityMarketListView);
-            populateWarehouse(city, cityGoodsListView);
-        };
-        // - Buy/Sell Goods
-        //cityMarketListView.AddKeyBinding(Key.Enter,)
-        cityMarketListView.KeyDown += ( key) =>{
-            Debug.WriteLine("Key pressed : " + key.ToString());
-        };
-        timer = new System.Timers.Timer(loopIntervalSeconds * 1000);
-        //timer.Elapsed += gameLoop;
-        timer.AutoReset = true;
-        timer.Enabled = true;
-        loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
 
-        Application.Run();
-        
+
+        cityGoodsView.Add(cityGoodsListView);
+
+        var warehouseTab = new Terminal.Gui.TabView.Tab("Warehouse", cityGoodsView);
+        var factoryTab = new Terminal.Gui.TabView.Tab("Factories", cityFactoryView);
+
+        playerCityView.AddTab(warehouseTab, true);
+        playerCityView.AddTab(factoryTab, false);
+        rightColumn.Add(playerCityView);
+
+       
     }
+
+    private static void buyButtonDialog()
+    {
+        //pause();//pause game loop when in dialog
+        String CargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
+        Double SellPrice = (Double)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SellPrice"];
+        Int64 SupplyAmount = (Int64)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SupplyAmount"];
+        System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+        double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+        //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
+        var numberLabel = new Terminal.Gui.Label()
+        {
+            X = 1,
+            Y = 1,
+            Text = "Amount"
+        };
+        var numberField = new TextField("0")
+        {
+            X = 20,
+            Y = 1,
+            Width = 40,
+        };
+        var unitPriceLabel = new Terminal.Gui.Label()
+        {
+            X = 1,
+            Y = 2,
+            Text = "Unit Price"
+        };
+        var unitPriceValue = new Terminal.Gui.Label()
+        {
+            X = 20,
+            Y = 2,
+            Text = SellPrice.ToString()
+        };
+        var totalPriceLabel = new Terminal.Gui.Label()
+        {
+            X = 1,
+            Y = 3,
+            Text = "Total Price"
+        };
+        var totalPriceValue = new Terminal.Gui.Label()
+        {
+            X = 20,
+            Y = 3,
+            Text = "0"
+        };
+
+        var dialog = new Dialog("Purchase " + CargoType, 60, 10);
+        var buttonBuy = new Button("OK", is_default: true);
+        var buttonCancel = new Button("Cancel", is_default: false);
+        var buttonBuyMax = new Button("Max")
+        {
+            X = 1,
+            Y = 4,
+
+        };
+
+        buttonBuy.Clicked += () => {
+
+            var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+            dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
+            
+            Application.RequestStop();
+        };
+        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        buttonBuyMax.Clicked += () => {
+
+
+            Debug.WriteLine("buy max button pressed");
+            var maxAmount = SupplyAmount;
+            double minMoney = SupplyAmount * SellPrice;
+            if (minMoney <= totalMoney)
+            {
+                Debug.WriteLine("Can buy whole stock");
+                numberField.Text = SupplyAmount.ToString();
+            }
+            else
+            {
+                Debug.WriteLine("Can NOT buy whole stock");
+                numberField.Text = (Math.Floor(totalMoney / SupplyAmount)).ToString();
+            }
+
+        };
+
+
+
+        string lastValidValue = "0";
+        numberField.TextChanged += (e) =>
+        {
+            //System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+            //double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
+            var maxBuy = Math.Floor(totalMoney / SupplyAmount);
+            if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount && value <= maxBuy)
+            {
+
+                lastValidValue = numberField.Text.ToString();
+
+            }
+            else if (numberField.Text == "")
+            {
+                lastValidValue = numberField.Text.ToString();
+            }
+            else
+            {
+                numberField.Text = lastValidValue;
+            }
+            //do we have enough money
+            if (value > maxBuy)
+            {
+                numberField.Text = lastValidValue;
+            }
+            if (numberField.Text != "")
+            {
+                totalPriceValue.Text = (int.Parse(numberField.Text.ToString()) * SellPrice).ToString();
+            }
+            else
+            {
+                totalPriceValue.Text = "";
+
+
+            }
+        };
+        dialog.Add(numberLabel);
+        dialog.Add(numberField);
+        dialog.Add(unitPriceLabel);
+        dialog.Add(unitPriceValue);
+        dialog.Add(totalPriceLabel);
+        dialog.Add(totalPriceValue);
+        dialog.Add(buttonBuyMax);
+        //dialog.Add(button);
+        dialog.AddButton(buttonBuy);
+        dialog.AddButton(buttonCancel);
+
+        // Display the modal dialog
+        Application.Run(dialog);
+    }
+
     private static void startPopup()
     {
         
@@ -594,7 +638,7 @@ class Program
         Debug.WriteLine("gameloop");
         Application.MainLoop.Invoke(() =>
         {
-            pause();//pause timer
+           
             if (!startPopupDisplayed)
             {
                 startPopupDisplayed = true;
@@ -617,14 +661,14 @@ class Program
             {
                 Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
             }
-            resume();//resume timer
+            //resume timer
         });
         return true;
 
     }
     private static void sellDialog()
     {
-        pause();//pause game loop when in dialog
+        //pause();//pause game loop when in dialog
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
@@ -695,14 +739,14 @@ class Program
 
             dataManager.player.sell(city, CargoType, amount, price);
 
-            resume(); Application.RequestStop(); };
+             Application.RequestStop(); };
 
-        buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
+        buttonCancel.Clicked += () => {  Application.RequestStop(); };
         Application.Run(dialog);
     }
     private static void transportDialog(String transportationMode)
     {
-        pause();//pause game loop when in dialog
+        //pause();//pause game loop when in dialog
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         double distance = 0;
@@ -782,13 +826,13 @@ class Program
             if (transportOk && enoughMoney)
             {
                 dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
-                resume();
+                
                 Application.RequestStop();
             }
            
 
         };
-        buttonCancel.Clicked += () => { resume(); Application.RequestStop(); };
+        buttonCancel.Clicked += () => {  Application.RequestStop(); };
 
         
         // Display the modal dialog
@@ -799,14 +843,14 @@ class Program
     {
         throw new NotImplementedException();
     }
-    private static void pause()
+    /*private static void pause()
     {
         timer.Enabled = false;
     }
     private static void resume()
     {
         timer.Enabled = true;
-    }
+    }*/
     
     private static void playerHistoryDialog()
     {
