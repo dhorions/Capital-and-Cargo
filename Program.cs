@@ -31,11 +31,22 @@ class Program
     static Terminal.Gui.TableView transitListView;
     static Boolean startPopupDisplayed = false;
     static Object loopTimeout;
+    static bool pauseToggle = false;
+    static bool fastForward = false;
+    static bool normalSpeed = true;
+    static Terminal.Gui.Button fastForwardButton;
+    static Terminal.Gui.Button normalSpeedButton;
+    static Terminal.Gui.Button pauseButton;
     static ColorScheme myColorScheme = new ColorScheme
     {
         Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black),
         Focus = Terminal.Gui.Attribute.Make(Color.Brown, Color.Black),
         
+    };
+    static ColorScheme enabledColorScheme = new ColorScheme
+    {
+        Normal = Terminal.Gui.Attribute.Make(Color.Blue, Color.Black),
+        Focus = Terminal.Gui.Attribute.Make(Color.Blue, Color.Black),
     };
     static void Main(string[] args)
     {
@@ -90,19 +101,19 @@ class Program
             Y = 0,
             Text = "€ 0.000.000.000"
         };
-        var fastForwardButton = new Button(">>")
+         fastForwardButton = new Button(">>")
         {
             X = Pos.Percent(75),
             Y = 0,
             ColorScheme = myColorScheme
         };
-        var normalSpeedButton = new Button(">")
+        normalSpeedButton = new Button(">")
         {
             X = Pos.Percent(70),
             Y = 0,
-            ColorScheme = myColorScheme
+            ColorScheme = enabledColorScheme
         };
-        var pauseButton = new Button("||") 
+         pauseButton = new Button("||") 
         {
             X = Pos.Percent(81),
             Y = 0,
@@ -111,29 +122,45 @@ class Program
 
         populatePlayerData();
 
-        bool pauseToggle = true;
+         pauseToggle = false;
+        
         pauseButton.Clicked += () =>
         {
             if (pauseToggle == true)
             {
-                
+                loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
+                pauseToggle = false;
+                fastForwardButton.ColorScheme = myColorScheme;
+                normalSpeedButton.ColorScheme = enabledColorScheme;
+                pauseButton.ColorScheme = myColorScheme;
             }
             else
             {
-                
+                Application.MainLoop.RemoveTimeout(loopTimeout);
+                pauseToggle = true;
+                fastForwardButton.ColorScheme = myColorScheme;
+                normalSpeedButton.ColorScheme = myColorScheme;
+                pauseButton.ColorScheme = enabledColorScheme;
+
             }
-
-
         };
         fastForwardButton.Clicked += () =>
         {
             Application.MainLoop.RemoveTimeout(loopTimeout);
             loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(FFloopIntervalSeconds * 1000), gameLoop);
+            fastForwardButton.ColorScheme = enabledColorScheme;
+            normalSpeedButton.ColorScheme = myColorScheme;
+            pauseButton.ColorScheme = myColorScheme;
+            pauseToggle = false;
         };
         normalSpeedButton.Clicked += () =>
         {
             Application.MainLoop.RemoveTimeout(loopTimeout);
             loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
+            fastForwardButton.ColorScheme = myColorScheme;
+            normalSpeedButton.ColorScheme = enabledColorScheme;
+            pauseButton.ColorScheme = myColorScheme;
+            pauseToggle = false;
         };
 
         titleContainer.Add(pauseButton);
