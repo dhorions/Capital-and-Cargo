@@ -21,7 +21,13 @@ namespace Capital_and_Cargo
         public CargoTypesManager? cargoTypes;
         public PlayerManager? player;
         public GameDataManager? dm;
+        public FactoryManager ? factory;
         private SqliteConnection connection = new SqliteConnection("Data Source=CandC.db");
+        private String reputationCalculation = "";
+        private static Double importReputation = .50;
+        private static Double exportReputation = .25;
+        private static Double sellReputation = .15;
+        private static Double buyReputation = .10;
         public GameDataManager()
         {
             EnsureDatabaseCreated();
@@ -30,12 +36,15 @@ namespace Capital_and_Cargo
 
         private void initData()
         {
+            reputationCalculation = $"(Bought * {buyReputation.ToString(CultureInfo.InvariantCulture)}) + (Sold * {sellReputation.ToString(CultureInfo.InvariantCulture)}) + (Imported * {importReputation.ToString(CultureInfo.InvariantCulture)}) + (Exported * {exportReputation.ToString(CultureInfo.InvariantCulture)})";
             this.dm = this;
-            cities = new CitiesManager(ref this.connection,ref dm);
+            cities = new CitiesManager(ref this.connection,ref dm, reputationCalculation);
             transits = new TransitManager(ref this.connection,ref dm);
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
             player = new PlayerManager(ref this.connection);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
+            factory = new FactoryManager(ref this.connection, reputationCalculation);
+
         }
 
         public void EnsureDatabaseCreated()

@@ -15,15 +15,13 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private GameDataManager dataManager = null;
-        private static Double importReputation = .50;
-        private static Double exportReputation = .25;
-        private static Double sellReputation = .15;
-        private static Double buyReputation = .10;
-
-        public CitiesManager(ref SqliteConnection connection, ref GameDataManager dataManager)
+        
+        private String reputationCalculation;
+        public CitiesManager(ref SqliteConnection connection, ref GameDataManager dataManager,String reputationCalculation)
         {
             _connection = connection;
             this.dataManager = dataManager;
+            this.reputationCalculation = reputationCalculation;
             EnsureTableExistsAndIsPopulated();
         }
 
@@ -118,12 +116,12 @@ namespace Capital_and_Cargo
         public DataTable LoadCities()
         {
             DataTable dataTable = new DataTable();
-            string sql = @"SELECT continent,country,city,
+            string sql = $@"SELECT continent,country,city,
                 case 
                     when sum(amount) is null then 0
                     else  sum(amount)
                 end as Inventory,
-                ( Bought * @buyReputation) + (Sold * @sellReputation) + (Imported * @importReputation) + ( Exported * @exportReputation) as Reputation
+                {reputationCalculation} as Reputation
                   
                 FROM cities left join warehouse on cities.city = warehouse.CityName
                 group by city
@@ -133,10 +131,10 @@ namespace Capital_and_Cargo
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText= sql;
-                command.Parameters.AddWithValue("@buyReputation", buyReputation);
+                /*command.Parameters.AddWithValue("@buyReputation", buyReputation);
                 command.Parameters.AddWithValue("@sellReputation", sellReputation);
                 command.Parameters.AddWithValue("@importReputation", importReputation);
-                command.Parameters.AddWithValue("@exportReputation", exportReputation);
+                command.Parameters.AddWithValue("@exportReputation", exportReputation);*/
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);
@@ -196,7 +194,7 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
-        public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice, double minPrice, double maxPrice)> cargoTypes)
+        public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice, double minPrice, double maxPrice,double BaseFactoryprice, double BaseFactoryProduction)> cargoTypes)
         {
             DataTable market = GetGoodsForCity("Beijing");
             if(market.Rows.Count> 0)
@@ -211,7 +209,7 @@ namespace Capital_and_Cargo
 
             foreach (DataRow city in cities.Rows)
             {
-                foreach (var (CargoType, BasePrice,MinPrice, MaxPrice) in cargoTypes)
+                foreach (var (CargoType, BasePrice,MinPrice, MaxPrice,  BaseFactoryprice,  BaseFactoryProduction) in cargoTypes)
                 {
                     var economicModifier = random.NextDouble() * 0.4 - 0.2; // Generate a modifier between -0.2 and +0.2
                     var buyPrice = BasePrice * (1 + economicModifier);
