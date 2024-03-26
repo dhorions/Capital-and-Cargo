@@ -494,9 +494,18 @@ class Program
         buttonBuy.Clicked += () => {
 
             var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
-            dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
+            if ((SupplyAmount * SellPrice) > totalMoney)
+            {
+                MessageBox.ErrorQuery("Insufficient money for this purchase", "Ok");
+            }
+            else
+            {
+                dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
+                Application.RequestStop();
+            }
             
-            Application.RequestStop();
+            
+            
         };
         buttonCancel.Clicked += () => {  Application.RequestStop(); };
         buttonBuyMax.Clicked += () => {
@@ -513,7 +522,7 @@ class Program
             else
             {
                 Debug.WriteLine("Can NOT buy whole stock");
-                numberField.Text = (Math.Floor(totalMoney / SupplyAmount)).ToString();
+                numberField.Text = (Math.Floor(totalMoney / SellPrice)).ToString();
             }
 
         };
@@ -525,7 +534,7 @@ class Program
         {
             //System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
             //double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
-            var maxBuy = Math.Floor(totalMoney / SupplyAmount);
+            var maxBuy = Math.Floor(totalMoney / SellPrice);
             if (int.TryParse(numberField.Text.ToString(), out int value) && value >= 0 && value <= SupplyAmount && value <= maxBuy)
             {
 
@@ -543,7 +552,8 @@ class Program
             //do we have enough money
             if (value > maxBuy)
             {
-                numberField.Text = lastValidValue;
+                // numberField.Text = lastValidValue;
+                numberField.Text = maxBuy.ToString();
             }
             if (numberField.Text != "")
             {
@@ -726,7 +736,15 @@ class Program
             X = 1,
             Y = 5
         };
+        var sellMax = new Button("Max")
+        {
+            X = 1,
+            Y = 6,
 
+        };
+        sellMax.Clicked += () => {
+            amountField.Text = maxAmount.ToString();
+        };
 
 
         dialog.AddButton(buttonSell);
@@ -735,6 +753,7 @@ class Program
         dialog.Add(amountField);
         dialog.Add(sellPriceLabel);
         dialog.Add(totalSellPriceLabel);
+        dialog.Add(sellMax);
 
         int amount = 0;
         string lastValidValue = "0";
