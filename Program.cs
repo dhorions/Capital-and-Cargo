@@ -404,8 +404,24 @@ class Program
             Y = Pos.Percent(5)
 
         };
+        //TODO : load the factories for the selected city
+        //  get selected city
+        //  String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+        //  load datatable with factories of city
+        //  dataManager.factory.LoadFactories(city);
 
         cityFactoryView.Add(BuyFactory);
+        //TODO create new factory when this button is clicked.  Need to get a specific cargoType
+        //(Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
+        //if(canBuild)
+        //{
+        //    dataManager.factory.buildFactory(city, cargoType);
+        //}
+        //else
+        //{
+        //    //display message.
+        //}
+
 
         cityGoodsView.Add(cityGoodsListView);
 

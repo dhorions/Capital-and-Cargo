@@ -107,5 +107,27 @@ namespace Capital_and_Cargo
                 return (0,0);
             
         }
+        public DataTable LoadFactories(String city)
+        {
+            DataTable dataTable = new DataTable();
+            string sql = @"SELECT 
+                   CargoType as [Resource],
+                   Level as [Factory Level],
+                   AmountProduced as [Daily Production]
+              FROM factories where CityName = @city;
+            ";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+
+            }
+            return dataTable;
+        }
     }
 }
