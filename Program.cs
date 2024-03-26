@@ -328,20 +328,20 @@ class Program
     }
 
     private static void buildPlayerCityView()
-    { 
+    {
         var playerCityView = new Terminal.Gui.TabView()
         {
             X = 0,
-            Y= Pos.Bottom(cityMarketView),
+            Y = Pos.Bottom(cityMarketView),
             Width = Dim.Fill(),
             Height = Dim.Percent(50),
         };
-        
+
         //Warehouse Tab Controls
         var cityGoodsView = new FrameView()
         {
             X = 0,
-            Y =0,
+            Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
             Title = "Warehouse"
@@ -399,28 +399,35 @@ class Program
             Title = "Factories"
         };
         var BuyFactory = new Button("Buy Factory")
-        { 
+        {
             X = Pos.Center(),
             Y = Pos.Percent(5)
 
         };
         //TODO : load the factories for the selected city
         //  get selected city
-        //  String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+        String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+        String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
         //  load datatable with factories of city
-        //  dataManager.factory.LoadFactories(city);
+        dataManager.factory.LoadFactories(city);
+
+        BuyFactory.Clicked += () =>
+        {
+            (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
+            if (canBuild)
+            {
+                dataManager.factory.buildFactory(city, cargoType);
+            }
+            else
+            {
+                
+            }
+
+        };
 
         cityFactoryView.Add(BuyFactory);
         //TODO create new factory when this button is clicked.  Need to get a specific cargoType
-        //(Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
-        //if(canBuild)
-        //{
-        //    dataManager.factory.buildFactory(city, cargoType);
-        //}
-        //else
-        //{
-        //    //display message.
-        //}
+
 
 
         cityGoodsView.Add(cityGoodsListView);
@@ -432,9 +439,9 @@ class Program
         playerCityView.AddTab(factoryTab, false);
         rightColumn.Add(playerCityView);
 
-       
-    }
 
+
+    }
     private static void buyButtonDialog()
     {
         //pause();//pause game loop when in dialog
