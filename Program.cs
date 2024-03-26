@@ -328,7 +328,7 @@ class Program
     }
 
     private static void buildPlayerCityView()
-    {
+    { 
         var playerCityView = new Terminal.Gui.TabView()
         {
             X = 0,
