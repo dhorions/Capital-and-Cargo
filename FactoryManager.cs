@@ -64,6 +64,7 @@ namespace Capital_and_Cargo
             Int64 Reputation;
             (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
             //TODO : check if the player has enough money and reputation
+
             String message = @"You cannot build a factory yet.
             Your reputation in {cityName} is {cityReputation} and you need at least {requiredReputation}.
             You can get more reputation by importing, exporting, selling and buying goods in {cityName}.

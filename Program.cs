@@ -398,8 +398,14 @@ class Program
             Height = Dim.Fill(),
             Title = "Factories"
         };
+        var BuyFactory = new Button("Buy Factory")
+        { 
+            X = Pos.Center(),
+            Y = Pos.Percent(5)
 
+        };
 
+        cityFactoryView.Add(BuyFactory);
 
         cityGoodsView.Add(cityGoodsListView);
 
