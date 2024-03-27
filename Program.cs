@@ -39,6 +39,7 @@ class Program
     static Terminal.Gui.Button pauseButton;
     static Terminal.Gui.FrameView cityMarketView;
     static Terminal.Gui.View rightColumn;
+    static Terminal.Gui.TableView factoryTableView;
     static ColorScheme myColorScheme = new ColorScheme
     {
         Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black),
@@ -390,6 +391,9 @@ class Program
         sellButton.Clicked += () => { sellDialog(); };
 
         //Factory Tab Controls
+        String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+        DataTable Factorys = dataManager.factory.LoadFactories(city);
+
         var cityFactoryView = new FrameView()
         {
             X = 0,
@@ -398,21 +402,30 @@ class Program
             Height = Dim.Fill(),
             Title = "Factories"
         };
+        factoryTableView = new TableView()
+        {
+            X = 0,
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            Table = Factorys
+        };
         var BuyFactory = new Button("Buy Factory")
         {
             X = Pos.Center(),
-            Y = Pos.Percent(5)
+            Y = 0
 
         };
         //TODO : load the factories for the selected city
         //  get selected city
-        String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
-        String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
+       
+        
         //  load datatable with factories of city
-        dataManager.factory.LoadFactories(city);
+        
 
         BuyFactory.Clicked += () =>
         {
+            String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
             (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
             if (canBuild)
             {
@@ -420,11 +433,12 @@ class Program
             }
             else
             {
-                
+                MessageBox.ErrorQuery("Unable to build factory", message);
             }
 
         };
 
+        cityFactoryView.Add(factoryTableView);
         cityFactoryView.Add(BuyFactory);
         //TODO create new factory when this button is clicked.  Need to get a specific cargoType
 
@@ -672,6 +686,17 @@ class Program
         styleInv.Format = "N0";
         styleInv.Alignment = TextAlignment.Right;
     }
+    private static void populateFactorys()
+    {
+        var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
+        factoryTableView.Table = dataManager.factory.LoadFactories(city);
+        TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Factory Level"]);
+        levelStyle.Format = "N0";
+        levelStyle.Alignment = TextAlignment.Right;
+        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Daily Production"]);
+        productionStyle.Format = "N0";
+        productionStyle.Alignment = TextAlignment.Right;
+    }
     private static bool gameLoop(MainLoop mainLoop)
     {
         Debug.WriteLine("gameloop");
@@ -689,6 +714,7 @@ class Program
             populatePlayerData();
             //Update Market for Selected City
             populateCities();
+            populateFactorys();
             populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
             populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
             populateTransitTable();

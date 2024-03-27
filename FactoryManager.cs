@@ -64,12 +64,20 @@ namespace Capital_and_Cargo
             Int64 Reputation;
             (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
             //TODO : check if the player has enough money and reputation
-
-            String message = @"You cannot build a factory yet.
-            Your reputation in {cityName} is {cityReputation} and you need at least {requiredReputation}.
-            You can get more reputation by importing, exporting, selling and buying goods in {cityName}.
-            ";
-            return (false, message);
+            String message = "";
+            if (cityReputation >= requiredReputation)
+            {
+                return (true, message);
+            }
+            else
+            {
+                message = $@"You cannot build a factory yet.
+                Your reputation in {CityName} is {cityReputation} and you need at least {requiredReputation}.
+                You can get more reputation by importing, exporting, selling and buying goods in {CityName}.
+                ";
+                return (false, message);
+            }
+            
         }
 
         private bool TableExists(string tableName)
@@ -86,7 +94,7 @@ namespace Capital_and_Cargo
         {
            
                 DataTable dataTable = new DataTable();
-                string sql = $"SELECT Money, {reputationCalculation} as reputation from player inner join cities    where cityName = @city";
+                string sql = $"SELECT Money, {reputationCalculation} as reputation from player inner join cities    where city = @city";
 
                 using (var command = _connection.CreateCommand())
                 {
