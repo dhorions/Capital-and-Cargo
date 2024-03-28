@@ -50,7 +50,7 @@ namespace Capital_and_Cargo
             (Boolean canBuild,String message) = canBuildFactory(CityName, CargoType);
             if(canBuild) {
                 createFactory(CityName, CargoType);
-                //TODO: subtract money
+                //TODO: subtract money from player money
             }
             else
             {
@@ -60,12 +60,13 @@ namespace Capital_and_Cargo
         }
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
+            //TODO : get city reputation for player and get required reputation to build the factory
             int cityReputation = 0;
             int requiredReputation = 0;
             Double Money;
             Int64 Reputation;
             (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
-            //TODO : check if the player has enough money and reputation
+            
             String message = "";
             if (cityReputation >= requiredReputation)
             {
