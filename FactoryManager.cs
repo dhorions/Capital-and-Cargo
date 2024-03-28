@@ -48,7 +48,8 @@ namespace Capital_and_Cargo
         {
             (Boolean canBuild,String message) = canBuildFactory(CityName, CargoType);
             if(canBuild) {
-                Debug.WriteLine("Build factory : TODO, NOT IMPLEMENTED");
+                createFactory(CityName, CargoType);
+                //TODO: subtract money
             }
             else
             {
@@ -136,6 +137,39 @@ namespace Capital_and_Cargo
 
             }
             return dataTable;
+        }
+        public void createFactory(String city, String cargoType) 
+        {
+            DataTable dataTable = new DataTable();
+
+            string SelectSQL = @"SELECT BaseFactoryProduction FROM cargoTypes WHERE CargoType = @cargoType;";
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = SelectSQL;
+                command.Parameters.AddWithValue("@cargoType", cargoType);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+
+            }
+            string insertSQL = @"INSERT INTO factories (CityName, CargoType, Level, AmountProduced)
+                         VALUES (@cityName, @cargoType, @level, @production);";
+            int production = Convert.ToInt32(dataTable.Rows[0]["BaseFactoryProduction"]);
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = insertSQL;
+                command.Parameters.AddWithValue("@cityName", city);
+                command.Parameters.AddWithValue("@cargoType", cargoType);
+                command.Parameters.AddWithValue("@level", 1);
+                command.Parameters.AddWithValue("@production", production);
+
+                command.ExecuteNonQuery();
+
+            }
+            
         }
     }
 }
