@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -138,6 +139,28 @@ namespace Capital_and_Cargo
             }
             return dataTable;
         }
+        public DataTable LoadAllFactories()
+        {
+            DataTable dataTable = new DataTable();
+            string sql = @"SELECT 
+                   CargoType as [Resource],
+                   Level as [Factory Level],
+                   AmountProduced as [Daily Production]
+              FROM factories;
+            ";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+
+            }
+            return dataTable;
+        }
         public void createFactory(String city, String cargoType) 
         {
             DataTable dataTable = new DataTable();
@@ -169,7 +192,53 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
 
             }
-            
+        }
+        public void updateProduction()
+        {
+            Debug.WriteLine("Updating Production");
+            //DataTable factories = LoadAllFactories();
+            String sql = @"
+                --Update records where there is already something in the inventory of the city for this cargotype
+               UPDATE warehouse
+                SET 
+                    Amount = Amount + (
+                        SELECT f.AmountProduced
+                        FROM factories f
+                        WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
+                    ),
+                    PurchasePrice = PurchasePrice + (
+                        SELECT f.AmountProduced * cm.BuyPrice
+                        FROM factories f
+                        JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
+                        WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
+                    )
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM factories f
+                    WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
+                );
+                --Insert records where there is NOT already something in the inventory of the city for this cargotype
+               INSERT INTO warehouse (CityName, CargoType, Amount, PurchasePrice)
+                SELECT 
+                    f.CityName, 
+                    f.CargoType, 
+                    f.AmountProduced, 
+                    (f.AmountProduced * cm.BuyPrice) AS PurchasePrice
+                FROM factories f
+                JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
+                WHERE NOT EXISTS (
+                    SELECT 1 
+                    FROM warehouse w
+                    WHERE w.CityName = f.CityName AND w.CargoType = f.CargoType
+                );
+               ";
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.ExecuteNonQuery();
+
+            }
+
         }
     }
 }

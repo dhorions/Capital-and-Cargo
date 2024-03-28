@@ -95,6 +95,7 @@ namespace Capital_and_Cargo
                 player.UpdateMoneyHistoryTable();
             }
             transits.updateTransits();
+            factory.updateProduction();
         }
         public void purchase(String city, String CargoType, int amount, Double price)
         {
