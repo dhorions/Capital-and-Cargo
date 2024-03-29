@@ -38,12 +38,16 @@ namespace Capital_and_Cargo
         {
             reputationCalculation = $"(Bought * {buyReputation.ToString(CultureInfo.InvariantCulture)}) + (Sold * {sellReputation.ToString(CultureInfo.InvariantCulture)}) + (Imported * {importReputation.ToString(CultureInfo.InvariantCulture)}) + (Exported * {exportReputation.ToString(CultureInfo.InvariantCulture)})";
             this.dm = this;
-            cities = new CitiesManager(ref this.connection,ref dm, reputationCalculation);
-            transits = new TransitManager(ref this.connection,ref dm);
-            cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
             player = new PlayerManager(ref this.connection);
+            cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
+            cities = new CitiesManager(ref this.connection, ref dm, reputationCalculation, ref player, ref factory);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
             factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player);
+            
+            transits = new TransitManager(ref this.connection,ref dm);
+            
+            
+            
 
         }
 

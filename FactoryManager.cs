@@ -196,7 +196,7 @@ namespace Capital_and_Cargo
             string sql = @"SELECT 
                    CargoType as [Resource],
                    Level as [Factory Level],
-                   AmountProduced as [Weekly Production]
+                   (AmountProduced * Level)  as [Weekly Production]
               FROM factories where CityName = @city;
             ";
 
@@ -309,12 +309,12 @@ namespace Capital_and_Cargo
                UPDATE warehouse
                 SET 
                     Amount = Amount + (
-                        SELECT f.AmountProduced
+                        SELECT ( f.AmountProduced * f.level)
                         FROM factories f
                         WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
                     ),
                     PurchasePrice = PurchasePrice + (
-                        SELECT f.AmountProduced * cm.BuyPrice
+                        SELECT ( f.AmountProduced * f.level * cm.BuyPrice )
                         FROM factories f
                         JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
                         WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
@@ -330,7 +330,7 @@ namespace Capital_and_Cargo
                     f.CityName, 
                     f.CargoType, 
                     f.AmountProduced, 
-                    (f.AmountProduced * cm.BuyPrice) AS PurchasePrice
+                    (f.AmountProduced * cm.BuyPrice * f.level) AS PurchasePrice
                 FROM factories f
                 JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
                 WHERE NOT EXISTS (

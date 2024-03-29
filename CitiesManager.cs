@@ -15,11 +15,15 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private GameDataManager dataManager = null;
-        
+        private FactoryManager factory;
+        private PlayerManager player;
+
         private String reputationCalculation;
-        public CitiesManager(ref SqliteConnection connection, ref GameDataManager dataManager,String reputationCalculation)
+        public CitiesManager(ref SqliteConnection connection, ref GameDataManager dataManager,String reputationCalculation, ref PlayerManager player, ref FactoryManager factory)
         {
             _connection = connection;
+            this.player = player;
+            this.factory = factory;
             this.dataManager = dataManager;
             this.reputationCalculation = reputationCalculation;
             EnsureTableExistsAndIsPopulated();
@@ -426,15 +430,31 @@ WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
         {
             DataTable dataTable = new DataTable();
 
+           
             using (var command = _connection.CreateCommand())
             {
                 // Prepare the SQL query to select goods for the specified city
                 // This assumes your city_market table has a 'CityName' column and references 'cargoTypes' by 'CargoTypeID'
+                /*    command.CommandText = @"
+                SELECT CargoType, SupplyAmount, BuyPrice, SellPrice
+                FROM city_market 
+                WHERE CityName = @CityName
+                ORDER BY CargoType;";
+                */
+
                 command.CommandText = @"
-            SELECT CargoType, SupplyAmount, BuyPrice, SellPrice
-            FROM city_market 
-            WHERE CityName = @CityName
-            ORDER BY CargoType;";
+                    SELECT cm.CargoType,
+                           cm.SupplyAmount,
+                           cm.BuyPrice,
+                           cm.SellPrice,
+                           ct.BaseFactoryPrice as [Factory Price per Level],
+                           ct.BaseFactoryProduction AS [Production Per Level]
+       
+                    FROM city_market cm
+                    JOIN cargoTypes ct ON cm.CargoType = ct.CargoType
+                    WHERE cm.CityName = @CityName
+                    ORDER BY cm.CargoType;
+                ";
 
                 // Use parameters to prevent SQL injection
                 command.Parameters.AddWithValue("@CityName", cityName);
@@ -457,6 +477,16 @@ WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
                         decimal sellPrice = Convert.ToDecimal(row["SellPrice"]);
                         row["SellPrice"] = Math.Round(sellPrice, 2).ToString("F2");
                     }
+                    if (row["Factory Price per Level"] != DBNull.Value)
+                    {
+                        decimal sellPrice = Convert.ToDecimal(row["Factory Price per Level"]);
+                        row["Factory Price per Level"] = Math.Round(sellPrice, 2).ToString("F2");
+                    }
+                    else
+                    {
+
+                    }
+
                 }
             }
 

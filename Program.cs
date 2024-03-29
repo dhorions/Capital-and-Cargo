@@ -425,6 +425,7 @@ class Program
             if (canBuild)
             {
                 dataManager.factory.buildFactory(city, cargoType);
+                updateScreen();
             }
             else
             {
@@ -640,6 +641,13 @@ class Program
         TableView.ColumnStyle styleSell = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["sellPrice"]);
         styleSell.Format = "N";// "#.##0,00";
         styleSell.Alignment = TextAlignment.Right;
+        TableView.ColumnStyle stylefp = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Factory Price per Level"]);
+        stylefp.Format = "N";// "#.##0,00";
+        stylefp.Alignment = TextAlignment.Right;
+        TableView.ColumnStyle stylefpr = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Production Per Level"]);
+        stylefpr.Format = "N0";// "#.##0,00";
+        stylefpr.Alignment = TextAlignment.Right;
+        
 
 
 
@@ -686,6 +694,7 @@ class Program
     {
         var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         factoryTableView.Table = dataManager.factory.LoadFactories(city);
+       
         TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Factory Level"]);
         levelStyle.Format = "N0";
         levelStyle.Alignment = TextAlignment.Right;
