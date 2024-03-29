@@ -43,7 +43,7 @@ namespace Capital_and_Cargo
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
             player = new PlayerManager(ref this.connection);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
-            factory = new FactoryManager(ref this.connection, reputationCalculation);
+            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes);
 
         }
 
@@ -78,6 +78,12 @@ namespace Capital_and_Cargo
         private bool IsFirstDayOfMonth(DateTime date)
         {
             return date.Day == 1;
+            
+        }
+        private bool IsFirstDayOfWeek(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Monday;
+
         }
         public void gameUpdateLoop()
         {
@@ -94,8 +100,12 @@ namespace Capital_and_Cargo
                 //Capture historical data
                 player.UpdateMoneyHistoryTable();
             }
+            if (IsFirstDayOfWeek(currentDay))
+            {
+                factory.updateProduction();
+            }
             transits.updateTransits();
-            factory.updateProduction();
+            
         }
         public void purchase(String city, String CargoType, int amount, Double price)
         {

@@ -425,6 +425,7 @@ class Program
 
         BuyFactory.Clicked += () =>
         {
+            String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
             String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
             (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
             if (canBuild)
@@ -440,7 +441,7 @@ class Program
 
         cityFactoryView.Add(factoryTableView);
         cityFactoryView.Add(BuyFactory);
-        //TODO create new factory when this button is clicked.  Need to get a specific cargoType
+        
 
 
 

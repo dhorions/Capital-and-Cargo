@@ -14,11 +14,14 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private String reputationCalculation;
+        private CargoTypesManager cargo;
+        private int requiredReputationPerLevel = 500;
         //add comment
 
-        public FactoryManager(ref SqliteConnection connection,String reputationCalculation)
+        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo)
         {
             _connection = connection;
+            this.cargo = cargo;
             this.reputationCalculation = reputationCalculation;
             EnsureTableExistsAndIsPopulated();
 
@@ -61,21 +64,22 @@ namespace Capital_and_Cargo
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
             //TODO : get city reputation for player and get required reputation to build the factory
-            int cityReputation = 0;
-            int requiredReputation = 0;
+            int requiredReputation = requiredReputationPerLevel;
+            
+            
             Double Money;
             Int64 Reputation;
             (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
             
             String message = "";
-            if (cityReputation >= requiredReputation)
+            if (Reputation >= requiredReputation)
             {
                 return (true, message);
             }
             else
             {
                 message = $@"You cannot build a factory yet.
-                Your reputation in {CityName} is {cityReputation} and you need at least {requiredReputation}.
+                Your reputation in {CityName} is {Reputation} and you need at least {requiredReputation}.
                 You can get more reputation by importing, exporting, selling and buying goods in {CityName}.
                 ";
                 return (false, message);
