@@ -66,8 +66,11 @@ namespace Capital_and_Cargo
         }
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
-            //TODO : get city reputation for player and get required reputation to build the factory
+           
             int requiredReputation = requiredReputationPerLevel;
+            //Todo : multiply the required reputation by the levels of factory the player already has in this town
+            int usedReputation = (Convert.ToInt32(Math.Floor(getExistingFactoryLevelCount(CityName))) * requiredReputationPerLevel);
+            requiredReputation = usedReputation + requiredReputation;
             double requiredMoney = getRequiredMoney(CargoType);
             
             Double Money;
@@ -113,6 +116,38 @@ namespace Capital_and_Cargo
 
             return requiredMoney;
         }
+        private double getExistingFactoryLevelCount(string City)
+        {
+            double existingLevels = 0;
+            DataTable dataTable = new DataTable();
+            string SelectSQL = @"SELECT 0 +sum(Level) as levels  FROM factories where cityName = @cityName;";
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = SelectSQL;
+                command.Parameters.AddWithValue("@cityName", City);
+
+                try
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            existingLevels = reader.GetDouble(0);
+                        }
+                    }
+                } catch {
+                    //no factories yet
+                    existingLevels = 0;
+
+                }
+
+            }
+
+
+
+            return existingLevels;
+        }
+
 
 
         private bool TableExists(string tableName)
@@ -156,7 +191,7 @@ namespace Capital_and_Cargo
             string sql = @"SELECT 
                    CargoType as [Resource],
                    Level as [Factory Level],
-                   AmountProduced as [Daily Production]
+                   AmountProduced as [Weekly Production]
               FROM factories where CityName = @city;
             ";
 

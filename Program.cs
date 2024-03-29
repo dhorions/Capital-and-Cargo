@@ -647,7 +647,7 @@ class Program
     {
         System.Data.DataTable warehouseTable = dataManager.player.loadWarehouse(city);
         cityGoodsListView.Table = warehouseTable;
-        TableView.ColumnStyle styleSell = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Purchase Price"]);
+        TableView.ColumnStyle styleSell = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Cost"]);
         styleSell.Format = "N";// "#.##0,00";
         styleSell.Alignment = TextAlignment.Right;
         TableView.ColumnStyle styleValue = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Value"]);
@@ -688,7 +688,7 @@ class Program
         TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Factory Level"]);
         levelStyle.Format = "N0";
         levelStyle.Alignment = TextAlignment.Right;
-        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Daily Production"]);
+        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Weekly Production"]);
         productionStyle.Format = "N0";
         productionStyle.Alignment = TextAlignment.Right;
     }
