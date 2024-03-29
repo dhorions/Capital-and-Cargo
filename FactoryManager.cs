@@ -53,6 +53,10 @@ namespace Capital_and_Cargo
         public void buildFactory(String CityName, String CargoType)
         {
             double requiredMoney = getRequiredMoney(CargoType);
+            //if (factoryExists(CargoType))
+            //{
+                
+            //}
             (Boolean canBuild,String message) = canBuildFactory(CityName, CargoType);
             if(canBuild) {
                 createFactory(CityName, CargoType);
@@ -82,6 +86,7 @@ namespace Capital_and_Cargo
             else
             {
                 message = $@"You cannot build a factory yet.
+                You have €{(Int32)Money} and you need €{requiredMoney}.
                 Your reputation in {CityName} is {Reputation} and you need at least {requiredReputation}.
                 You can get more reputation by importing, exporting, selling and buying goods in {CityName}.
                 ";
@@ -210,22 +215,56 @@ namespace Capital_and_Cargo
                 }
 
             }
-            string insertSQL = @"INSERT INTO factories (CityName, CargoType, Level, AmountProduced)
+            if(!factoryExists(cargoType))
+            {
+                string insertSQL = @"INSERT INTO factories (CityName, CargoType, Level, AmountProduced)
                          VALUES (@cityName, @cargoType, @level, @production);";
-            int production = Convert.ToInt32(dataTable.Rows[0]["BaseFactoryProduction"]);
+                int production = Convert.ToInt32(dataTable.Rows[0]["BaseFactoryProduction"]);
 
+                using (var command = _connection.CreateCommand())
+                {
+                    command.CommandText = insertSQL;
+                    command.Parameters.AddWithValue("@cityName", city);
+                    command.Parameters.AddWithValue("@cargoType", cargoType);
+                    command.Parameters.AddWithValue("@level", 1);
+                    command.Parameters.AddWithValue("@production", production);
+
+                    command.ExecuteNonQuery();
+
+                }
+            }
+            else
+            {
+                SelectSQL = "UPDATE factories SET Level = Level + 1 WHERE CargoType = @cargoType AND CityName = @CityName";
+                using (var command = _connection.CreateCommand())
+                {
+                    command.CommandText = SelectSQL;
+                    command.Parameters.AddWithValue("@cargoType", cargoType);
+                    command.Parameters.AddWithValue("@CityName", city);
+
+                    command.ExecuteNonQuery();
+
+                }
+            }
+
+        }
+
+        private bool factoryExists(string cargoType)
+        {
+            String sql = "SELECT CargoType FROM factories WHERE CargoType = @cargoType;";
             using (var command = _connection.CreateCommand())
             {
-                command.CommandText = insertSQL;
-                command.Parameters.AddWithValue("@cityName", city);
+                command.CommandText = sql;
                 command.Parameters.AddWithValue("@cargoType", cargoType);
-                command.Parameters.AddWithValue("@level", 1);
-                command.Parameters.AddWithValue("@production", production);
 
-                command.ExecuteNonQuery();
+                using (var reader = command.ExecuteReader())
+                {
+                    return reader.HasRows;
+                }
 
             }
         }
+
         public void updateProduction()
         {
             Debug.WriteLine("Updating Production");
