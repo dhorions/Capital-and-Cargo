@@ -517,6 +517,7 @@ class Program
             else
             {
                 dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
+                updateScreen();
                 Application.RequestStop();
             }
             
@@ -647,7 +648,7 @@ class Program
     {
         System.Data.DataTable warehouseTable = dataManager.player.loadWarehouse(city);
         cityGoodsListView.Table = warehouseTable;
-        TableView.ColumnStyle styleSell = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Purchase Price"]);
+        TableView.ColumnStyle styleSell = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Cost"]);
         styleSell.Format = "N";// "#.##0,00";
         styleSell.Alignment = TextAlignment.Right;
         TableView.ColumnStyle styleValue = cityGoodsListView.Style.GetOrCreateColumnStyle(warehouseTable.Columns["Value"]);
@@ -688,9 +689,28 @@ class Program
         TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Factory Level"]);
         levelStyle.Format = "N0";
         levelStyle.Alignment = TextAlignment.Right;
-        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Daily Production"]);
+        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Weekly Production"]);
         productionStyle.Format = "N0";
         productionStyle.Alignment = TextAlignment.Right;
+    }
+    private static void updateScreen()
+    {
+        //Update Date and Money
+        populatePlayerData();
+        //Update Market for Selected City
+        populateCities();
+        populateFactorys();
+        populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
+        populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
+        populateTransitTable();
+        try
+        {
+            Application.Refresh();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
+        }
     }
     private static bool gameLoop(MainLoop mainLoop)
     {
@@ -705,23 +725,8 @@ class Program
 
             }
             dataManager.gameUpdateLoop();
-            //Update Date and Money
-            populatePlayerData();
-            //Update Market for Selected City
-            populateCities();
-            populateFactorys();
-            populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
-            populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
-            populateTransitTable();
-            try
-            {
-                Application.Refresh();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
-            }
-            //resume timer
+
+            updateScreen();
         });
         return true;
 
@@ -733,7 +738,7 @@ class Program
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
         long maxAmount = (long)dataManager.player.getMaxSellAmount(city, CargoType).Rows[0]["Amount"];
-        
+        int amount = (int)maxAmount;
         var dialog = new Dialog("Sell " + CargoType + " from " + city)
         {
             X = 60,
@@ -752,7 +757,7 @@ class Program
             X = 1,
             Y = 3
         };
-        var amountField = new TextField("0")
+        var amountField = new TextField(maxAmount.ToString())
         {
             X = 10,
             Y = 3,
@@ -783,7 +788,7 @@ class Program
         dialog.Add(totalSellPriceLabel);
         dialog.Add(sellMax);
 
-        int amount = 0;
+        
         string lastValidValue = "0";
         amountField.TextChanged += (args) =>
         {
@@ -807,7 +812,7 @@ class Program
             
 
             dataManager.player.sell(city, CargoType, amount, price);
-
+            updateScreen();
              Application.RequestStop(); };
 
         buttonCancel.Clicked += () => {  Application.RequestStop(); };
@@ -895,7 +900,7 @@ class Program
             if (transportOk && enoughMoney)
             {
                 dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
-                
+                updateScreen();
                 Application.RequestStop();
             }
            

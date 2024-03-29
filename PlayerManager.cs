@@ -196,7 +196,7 @@ namespace Capital_and_Cargo
             {
 
                 command.CommandText = @"
-            SELECT CargoType, Amount, (PurchasePrice / Amount) as [Purchase Price], PurchasePrice as Value
+            SELECT CargoType, Amount, (PurchasePrice / Amount) as [Cost], PurchasePrice as Value
             FROM warehouse 
             WHERE CityName = @CityName
             ORDER BY CargoType;";
