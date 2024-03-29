@@ -517,6 +517,7 @@ class Program
             else
             {
                 dataManager.purchase(city, CargoType, (int)Convert.ToInt64(numberField.Text), Convert.ToDouble(SellPrice));
+                updateScreen();
                 Application.RequestStop();
             }
             
@@ -692,6 +693,25 @@ class Program
         productionStyle.Format = "N0";
         productionStyle.Alignment = TextAlignment.Right;
     }
+    private static void updateScreen()
+    {
+        //Update Date and Money
+        populatePlayerData();
+        //Update Market for Selected City
+        populateCities();
+        populateFactorys();
+        populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
+        populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
+        populateTransitTable();
+        try
+        {
+            Application.Refresh();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
+        }
+    }
     private static bool gameLoop(MainLoop mainLoop)
     {
         Debug.WriteLine("gameloop");
@@ -705,23 +725,8 @@ class Program
 
             }
             dataManager.gameUpdateLoop();
-            //Update Date and Money
-            populatePlayerData();
-            //Update Market for Selected City
-            populateCities();
-            populateFactorys();
-            populateMarket((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityMarketListView);
-            populateWarehouse((String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"], cityGoodsListView);
-            populateTransitTable();
-            try
-            {
-                Application.Refresh();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Gameloop Refresh error : " + ex.GetBaseException().ToString());
-            }
-            //resume timer
+
+            updateScreen();
         });
         return true;
 
@@ -807,7 +812,7 @@ class Program
             
 
             dataManager.player.sell(city, CargoType, amount, price);
-
+            updateScreen();
              Application.RequestStop(); };
 
         buttonCancel.Clicked += () => {  Application.RequestStop(); };
@@ -895,7 +900,7 @@ class Program
             if (transportOk && enoughMoney)
             {
                 dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
-                
+                updateScreen();
                 Application.RequestStop();
             }
            
