@@ -738,7 +738,7 @@ class Program
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         double price = (double)dataManager.cities.GetPrices(city, CargoType).Rows[0]["BuyPrice"];
         long maxAmount = (long)dataManager.player.getMaxSellAmount(city, CargoType).Rows[0]["Amount"];
-        
+        int amount = (int)maxAmount;
         var dialog = new Dialog("Sell " + CargoType + " from " + city)
         {
             X = 60,
@@ -757,7 +757,7 @@ class Program
             X = 1,
             Y = 3
         };
-        var amountField = new TextField("0")
+        var amountField = new TextField(maxAmount.ToString())
         {
             X = 10,
             Y = 3,
@@ -788,7 +788,7 @@ class Program
         dialog.Add(totalSellPriceLabel);
         dialog.Add(sellMax);
 
-        int amount = 0;
+        
         string lastValidValue = "0";
         amountField.TextChanged += (args) =>
         {
