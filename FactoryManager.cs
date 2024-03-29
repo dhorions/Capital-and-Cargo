@@ -15,13 +15,15 @@ namespace Capital_and_Cargo
         private SqliteConnection _connection;
         private String reputationCalculation;
         private CargoTypesManager cargo;
+        private PlayerManager player;
         private int requiredReputationPerLevel = 500;
         //add comment
 
-        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo)
+        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player)
         {
             _connection = connection;
             this.cargo = cargo;
+            this.player = player;
             this.reputationCalculation = reputationCalculation;
             EnsureTableExistsAndIsPopulated();
 
@@ -50,10 +52,11 @@ namespace Capital_and_Cargo
         }
         public void buildFactory(String CityName, String CargoType)
         {
+            double requiredMoney = getRequiredMoney(CargoType);
             (Boolean canBuild,String message) = canBuildFactory(CityName, CargoType);
             if(canBuild) {
                 createFactory(CityName, CargoType);
-                //TODO: subtract money from player money
+                player.pay(requiredMoney);
             }
             else
             {
@@ -65,14 +68,14 @@ namespace Capital_and_Cargo
         {
             //TODO : get city reputation for player and get required reputation to build the factory
             int requiredReputation = requiredReputationPerLevel;
-            
+            double requiredMoney = getRequiredMoney(CargoType);
             
             Double Money;
             Int64 Reputation;
             (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
             
             String message = "";
-            if (Reputation >= requiredReputation)
+            if (Reputation >= requiredReputation && Money >= requiredMoney)
             {
                 return (true, message);
             }
@@ -86,6 +89,31 @@ namespace Capital_and_Cargo
             }
             
         }
+        private double getRequiredMoney(string CargoType)
+        {
+            double requiredMoney = Double.MaxValue;
+            DataTable dataTable = new DataTable();
+            string SelectSQL = @"SELECT BaseFactoryPrice FROM cargoTypes WHERE CargoType = @cargoType;";
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = SelectSQL;
+                command.Parameters.AddWithValue("@cargoType", CargoType);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        requiredMoney = reader.GetDouble(0);
+                    }
+                }
+
+            }
+            
+
+
+            return requiredMoney;
+        }
+
 
         private bool TableExists(string tableName)
         {

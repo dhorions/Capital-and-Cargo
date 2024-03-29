@@ -9,6 +9,7 @@ using System.Data;
 using System.Diagnostics;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Terminal.Gui;
+using System.Data.Entity.Core.Metadata.Edm;
 
 namespace Capital_and_Cargo
 {
@@ -264,17 +265,7 @@ namespace Capital_and_Cargo
                     }
                     //Pay
                     Double totalPrice = amount * price;
-                    using (var command = _connection.CreateCommand())
-                    {
-
-                       
-                        Debug.WriteLine("Paying " + totalPrice);
-                        command.CommandText = @"
-                               UPDATE player SET money = money - @price 
-                        ";
-                        command.Parameters.AddWithValue("@price", totalPrice);
-                        command.ExecuteNonQuery();
-                    }
+                    pay(totalPrice);
                     //Add to Warehouse
                     int recordsAffected = 0;
                     using (var command = _connection.CreateCommand())
@@ -321,6 +312,22 @@ namespace Capital_and_Cargo
                 }
             }
         }
+
+        public void pay(double totalPrice)
+        {
+            using (var command = _connection.CreateCommand())
+            {
+
+
+                Debug.WriteLine("Paying " + totalPrice);
+                command.CommandText = @"
+                               UPDATE player SET money = money - @price 
+                        ";
+                command.Parameters.AddWithValue("@price", totalPrice);
+                command.ExecuteNonQuery();
+            }
+        }
+
         public void sell(String city, String CargoType, int amount, Double price)
         {
             using (var transaction = _connection.BeginTransaction())

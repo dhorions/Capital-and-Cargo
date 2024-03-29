@@ -416,12 +416,6 @@ class Program
             Y = 0
 
         };
-        //TODO : load the factories for the selected city
-        //  get selected city
-       
-        
-        //  load datatable with factories of city
-        
 
         BuyFactory.Clicked += () =>
         {

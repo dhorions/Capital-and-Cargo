@@ -43,7 +43,7 @@ namespace Capital_and_Cargo
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
             player = new PlayerManager(ref this.connection);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
-            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes);
+            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player);
 
         }
 
