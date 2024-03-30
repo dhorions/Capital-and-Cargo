@@ -65,11 +65,13 @@ class Program
         // Menu at the top
         var menu = new MenuBar(new MenuBarItem[] {
             new MenuBarItem("_File", new MenuItem[] {
-                new MenuItem("_Quit", "", () => { Application.RequestStop(); })
+                new MenuItem("_Quit", "", () => { Application.RequestStop(); }),
+                new MenuItem("_Settings", "", () => {settingsDialog(); })
             }),
             new MenuBarItem("_Info", new MenuItem[] {
                 new MenuItem("_History", "", () => { playerHistoryDialog(); })
-            })
+            }),
+            
         });
         top.Add(menu);
         var topContainer =
@@ -330,6 +332,15 @@ class Program
         
         Application.Run();
         
+    }
+
+    private static void settingsDialog()
+    {
+        // todo: do settings
+        var dialog = new Dialog("Settings");
+
+        var checkbox = new CheckBox();
+
     }
 
     private static void playMusic()
