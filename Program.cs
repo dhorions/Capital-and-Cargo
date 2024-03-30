@@ -58,6 +58,7 @@ class Program
         //dataManager.init();
         dataManager = new GameDataManager();
         Application.Init();
+        
         var top = Application.Top;
         
 
@@ -296,6 +297,7 @@ class Program
 
         //Market View
         buildPlayerCityView();
+        playMusic();
         
 
         //cityGoodsView.Add(cityGoodsListView);
@@ -324,8 +326,15 @@ class Program
         //timer.AutoReset = true;
         //timer.Enabled = true;
         loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
-
+        
+        
         Application.Run();
+        
+    }
+
+    private static void playMusic()
+    {
+        dataManager.SoundMananger.playMusic();
         
     }
 

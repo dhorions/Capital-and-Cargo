@@ -22,6 +22,7 @@ namespace Capital_and_Cargo
         public PlayerManager? player;
         public GameDataManager? dm;
         public FactoryManager ? factory;
+        public SoundMananger? SoundMananger;
         private SqliteConnection connection = new SqliteConnection("Data Source=CandC.db");
         private String reputationCalculation = "";
         private static Double importReputation = .50;
@@ -38,6 +39,7 @@ namespace Capital_and_Cargo
         {
             reputationCalculation = $"(Bought * {buyReputation.ToString(CultureInfo.InvariantCulture)}) + (Sold * {sellReputation.ToString(CultureInfo.InvariantCulture)}) + (Imported * {importReputation.ToString(CultureInfo.InvariantCulture)}) + (Exported * {exportReputation.ToString(CultureInfo.InvariantCulture)})";
             this.dm = this;
+            SoundMananger = new SoundMananger();
             player = new PlayerManager(ref this.connection);
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
             cities = new CitiesManager(ref this.connection, ref dm, reputationCalculation, ref player, ref factory);
