@@ -720,12 +720,25 @@ class Program
         var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         factoryTableView.Table = dataManager.factory.LoadFactories(city);
        
-        TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Factory Level"]);
+        TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Level"]);
         levelStyle.Format = "N0";
         levelStyle.Alignment = TextAlignment.Right;
-        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Weekly Production"]);
+        TableView.ColumnStyle productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Weekly Prod"]);
         productionStyle.Format = "N0";
         productionStyle.Alignment = TextAlignment.Right;
+
+        productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Upgrade Rep"]);
+        productionStyle.Format = "N0";
+        productionStyle.Alignment = TextAlignment.Right;
+
+        productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Upgrade Price"]);
+        productionStyle.Format = "N0";
+        productionStyle.Alignment = TextAlignment.Right;
+
+        productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Can Upgrade?"]);
+        
+        productionStyle.Alignment = TextAlignment.Centered;
+
     }
     private static void updateScreen()
     {

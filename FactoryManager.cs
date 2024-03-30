@@ -52,7 +52,9 @@ namespace Capital_and_Cargo
         }
         public void buildFactory(String CityName, String CargoType)
         {
-            double requiredMoney = getRequiredMoney(CargoType);
+            int nextLevel = (int)getExistingFactoryLevel(CityName, CargoType) + 1;
+
+            double requiredMoney = getRequiredMoney(CargoType, nextLevel);
             //if (factoryExists(CargoType))
             //{
                 
@@ -72,10 +74,11 @@ namespace Capital_and_Cargo
         {
            
             int requiredReputation = requiredReputationPerLevel;
-            //Todo : multiply the required reputation by the levels of factory the player already has in this town
+            
             int usedReputation = (Convert.ToInt32(Math.Floor(getExistingFactoryLevelCount(CityName))) * requiredReputationPerLevel);
             requiredReputation = usedReputation + requiredReputation;
-            double requiredMoney = getRequiredMoney(CargoType);
+            int nextLevel = (int)getExistingFactoryLevel(CityName, CargoType) + 1;
+            double requiredMoney = getRequiredMoney(CargoType, nextLevel);
             
             Double Money;
             Int64 Reputation;
@@ -97,15 +100,21 @@ namespace Capital_and_Cargo
             }
             
         }
-        private double getRequiredMoney(string CargoType)
+        private double getRequiredMoney(string CargoType, int level)
         {
+            /**
+             * Price increases per level, level 2 adds 20% to price, level 3 adds 30%, level 100 adds 1000%
+             * 
+             */
             double requiredMoney = Double.MaxValue;
             DataTable dataTable = new DataTable();
-            string SelectSQL = @"SELECT BaseFactoryPrice FROM cargoTypes WHERE CargoType = @cargoType;";
+            Double levelDbl = (double)level;
+            string SelectSQL = @"SELECT  (BaseFactoryPrice + (BaseFactoryPrice * ( @level / 10)))   FROM cargoTypes WHERE CargoType = @cargoType;";
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = SelectSQL;
                 command.Parameters.AddWithValue("@cargoType", CargoType);
+                command.Parameters.AddWithValue("@level", levelDbl);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -147,11 +156,40 @@ namespace Capital_and_Cargo
                 }
 
             }
-
-
-
             return existingLevels;
         }
+        private double getExistingFactoryLevel(string City,String cargoType)
+        {
+            double existingLevels = 0;
+            DataTable dataTable = new DataTable();
+            string SelectSQL = @"SELECT level FROM factories where cityName = @cityName and cargoType = @cargoType;";
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = SelectSQL;
+                command.Parameters.AddWithValue("@cityName", City);
+                command.Parameters.AddWithValue("@cargoType", cargoType);
+
+                try
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            existingLevels = reader.GetInt64(0);
+                        }
+                    }
+                }
+                catch
+                {
+                    //no factories yet
+                    existingLevels = 0;
+
+                }
+
+            }
+            return existingLevels;
+        }
+
 
 
 
@@ -193,12 +231,35 @@ namespace Capital_and_Cargo
         public DataTable LoadFactories(String city)
         {
             DataTable dataTable = new DataTable();
-            string sql = @"SELECT 
+            string sql =
+                /*@"SELECT 
                    CargoType as [Resource],
                    Level as [Factory Level],
                    (AmountProduced * Level)  as [Weekly Production]
               FROM factories where CityName = @city;
-            ";
+            ";*/
+                $@"
+                SELECT 
+                    f1.CargoType AS [Resource],
+                    f1.CityName as City,
+                    f1.Level AS [Level],
+                    (f1.AmountProduced * f1.Level) AS [Weekly Prod],
+                    (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500 AS [Upgrade Rep],
+                    (SELECT (BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))) FROM cargoTypes WHERE CargoType = f1.CargoType) AS [Upgrade Price],
+                    CASE 
+                        WHEN p.Money >= (SELECT (BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))) FROM cargoTypes WHERE CargoType = f1.CargoType)
+                             AND c.Reputation >= (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500
+                        THEN 'Yes'
+                        ELSE 'No'
+                    END AS [Can Upgrade?]
+                FROM 
+                    factories f1
+                JOIN 
+                    player p
+                JOIN 
+                    (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f1.CityName = c.City
+                WHERE c.City = @city
+";
 
             using (var command = _connection.CreateCommand())
             {
@@ -208,8 +269,19 @@ namespace Capital_and_Cargo
                 {
                     dataTable.Load(reader);
                 }
-
             }
+                foreach (DataRow factory in dataTable.Rows)
+                {
+                    switch(factory["Can Upgrade?"])
+                    {
+                        case "Yes":
+                            factory["Can Upgrade?"] = "☑";
+                            break;
+                        default:
+                            factory["Can Upgrade?"] = "";
+                            break;
+                    }
+                }
             return dataTable;
         }
         public DataTable LoadAllFactories()
