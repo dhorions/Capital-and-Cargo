@@ -447,8 +447,8 @@ WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
                            cm.SupplyAmount,
                            cm.BuyPrice,
                            cm.SellPrice,
-                           ct.BaseFactoryPrice as [Factory Price per Level],
-                           ct.BaseFactoryProduction AS [Production Per Level]
+                           ct.BaseFactoryPrice as [Factory Price],
+                           ct.BaseFactoryProduction AS [Factory Production]
        
                     FROM city_market cm
                     JOIN cargoTypes ct ON cm.CargoType = ct.CargoType
@@ -477,10 +477,10 @@ WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
                         decimal sellPrice = Convert.ToDecimal(row["SellPrice"]);
                         row["SellPrice"] = Math.Round(sellPrice, 2).ToString("F2");
                     }
-                    if (row["Factory Price per Level"] != DBNull.Value)
+                    if (row["Factory Price"] != DBNull.Value)
                     {
-                        decimal sellPrice = Convert.ToDecimal(row["Factory Price per Level"]);
-                        row["Factory Price per Level"] = Math.Round(sellPrice, 2).ToString("F2");
+                        decimal sellPrice = Convert.ToDecimal(row["Factory Price"]);
+                        row["Factory Price"] = Math.Round(sellPrice, 2).ToString("F2");
                     }
                     else
                     {

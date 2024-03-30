@@ -666,10 +666,10 @@ class Program
         TableView.ColumnStyle styleSell = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["sellPrice"]);
         styleSell.Format = "N";// "#.##0,00";
         styleSell.Alignment = TextAlignment.Right;
-        TableView.ColumnStyle stylefp = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Factory Price per Level"]);
+        TableView.ColumnStyle stylefp = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Factory Price"]);
         stylefp.Format = "N";// "#.##0,00";
         stylefp.Alignment = TextAlignment.Right;
-        TableView.ColumnStyle stylefpr = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Production Per Level"]);
+        TableView.ColumnStyle stylefpr = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Factory Production"]);
         stylefpr.Format = "N0";// "#.##0,00";
         stylefpr.Alignment = TextAlignment.Right;
         
