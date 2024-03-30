@@ -419,14 +419,15 @@ namespace Capital_and_Cargo
 
             return dataTable;
         }
-        public DataTable LoadPlayerHistory()
+        public DataTable LoadPlayerHistory(int limit)
         {
             DataTable dataTable = new DataTable();
-            string sql = "SELECT Date, Money from MoneyHistory";
+            string sql = "select * from (SELECT Date, Money from MoneyHistory order by Date desc limit 0,@limit ) a order by date asc";
 
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = sql;
+                command.Parameters.AddWithValue("@limit", limit);
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);

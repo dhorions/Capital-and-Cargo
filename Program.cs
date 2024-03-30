@@ -14,6 +14,7 @@ using Terminal.Gui.Graphs;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Data.Common;
 using System.Globalization;
+using System.Numerics;
 
 
 
@@ -961,7 +962,7 @@ class Program
     
     private static void playerHistoryDialog()
     {
-        DataTable playerHistory = dataManager.player.LoadPlayerHistory();
+        
         var dialog = new Dialog("History")
         {
             X = 0,
@@ -982,13 +983,14 @@ class Program
         GraphView graphView= new GraphView() {
                 X = 1,
 				Y = 1,
-				Width = Dim.Percent(100),
+			    Width = Dim.Percent(100),
 				Height = Dim.Percent(75),
+                AutoSize = true,
             ColorScheme = myColorScheme
         };
         graphView.Reset();
 
-        
+
 
         var fore = graphView.ColorScheme.Normal.Foreground == Color.Black ? Color.White : graphView.ColorScheme.Normal.Foreground;
         var black = Application.Driver.MakeAttribute(fore, Color.Black);
@@ -999,6 +1001,7 @@ class Program
         graphView.GraphColor = black;
 
         var series = new MultiBarSeries(1, 1, 0.50f, new[] { red });
+        DataTable playerHistory = dataManager.player.LoadPlayerHistory(75);
 
         var stiple = Application.Driver.Stipple;
         float max = 1;
@@ -1023,7 +1026,18 @@ class Program
 
 
         int cellSize = (int)max / 25;
-        cellSize = 100000;
+        //calculate the cellSize
+        if (max < 10)
+        {
+            cellSize = 1; // Handle single-digit numbers
+        }
+        else
+        {
+            int length = max.ToString().Length;
+            int rounded = (int)Math.Pow(10, length - 1); // Calculate the rounded number
+            max = rounded;
+        }
+        
         graphView.CellSize = new PointF(0.50f, cellSize);
         graphView.Series.Add(series);
         graphView.SetNeedsDisplay();
