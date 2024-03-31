@@ -83,9 +83,9 @@ namespace Capital_and_Cargo
         private void createPlayerAchievements()
         {
             InsertAchievement("rep/any/0000500", "rep/any","Trade Pioneer", "Achieve {target} reputation in any city.", "Factory Building Unlocked",500, "SELECT MIN(sum("+ reputationCalculation + "),{target})  FROM cities","");
-            InsertAchievement("rep/any/0005000", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "", 5000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
-            InsertAchievement("rep/any/0250000", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "", 250000 ,"SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
-            InsertAchievement("rep/any/1000000", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "", 1000000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
+            InsertAchievement("rep/any/0005000", "rep/any", "Master Trader", "Achieve {target} reputation in any city.", "", 5000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
+            InsertAchievement("rep/any/0250000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "", 250000 ,"SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
+            InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "", 1000000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
 
 
         }
