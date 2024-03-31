@@ -336,11 +336,36 @@ class Program
 
     private static void settingsDialog()
     {
-        // todo: do settings
-        var dialog = new Dialog("Settings");
+        var dialog = new Dialog("Settings", 60, 10);
 
-        var checkbox = new CheckBox();
+        var musicCheckBox = new CheckBox()
+        {
+            Checked = true,
+            Y = 3,
+            X = 20
+        };
+        var musicLabel = new Terminal.Gui.Label("Music")
+        {
+            X = 1,
+            Y = 3
+        };
 
+        musicCheckBox.Toggled += (e) =>
+        {
+            if (musicCheckBox.Checked)
+            {
+                dataManager.SoundMananger.playMusic();
+            }
+            else
+            {
+                dataManager.SoundMananger.stopMusic();
+            }
+        };
+
+        dialog.Add(musicLabel);
+        dialog.Add(musicCheckBox);
+
+        Application.Run(dialog);
     }
 
     private static void playMusic()

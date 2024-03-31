@@ -34,15 +34,23 @@ namespace Capital_and_Cargo
             {
                 Debug.WriteLine($"An error occurred: {ex.Message}");
             }
-        //    finally
-        //    {
-        //        // Dispose the SoundPlayer object to release resources
-        //        player.Dispose();
-        //    }
+        
         }
-        private void stopMusic()
+        public void stopMusic()
         {
             player.Stop();
         }
+        public void playSound(byte[] soundData)
+        {
+            using (MemoryStream memoryStream = new MemoryStream(soundData))
+            {
+                using (SoundPlayer player = new SoundPlayer(memoryStream))
+                {
+                    player.Play();
+                }
+            }
+        }
+
+
     }
 }
