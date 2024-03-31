@@ -23,6 +23,7 @@ namespace Capital_and_Cargo
         public GameDataManager? dm;
         public FactoryManager ? factory;
         public SoundMananger? SoundMananger;
+        public AchievementManager? achievements;
         private SqliteConnection connection = new SqliteConnection("Data Source=CandC.db");
         private String reputationCalculation = "";
         private static Double importReputation = .50;
@@ -45,7 +46,7 @@ namespace Capital_and_Cargo
             cities = new CitiesManager(ref this.connection, ref dm, reputationCalculation, ref player, ref factory);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
             factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player);
-            
+            achievements = new AchievementManager(ref this.connection, reputationCalculation);
             transits = new TransitManager(ref this.connection,ref dm);
             
             
