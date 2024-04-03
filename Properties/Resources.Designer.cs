@@ -63,6 +63,15 @@ namespace Capital_and_Cargo.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
         /// </summary>
+        internal static System.IO.UnmanagedMemoryStream buttonclick {
+            get {
+                return ResourceManager.GetStream("buttonclick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream gameMusic {
             get {
                 return ResourceManager.GetStream("gameMusic", resourceCulture);

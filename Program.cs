@@ -20,6 +20,7 @@ using System.Numerics;
 
 class Program
 {
+    static CheckBox musicCheckBox = new CheckBox() { Checked = true};
     static int loopIntervalSeconds = 2;
     static int FFloopIntervalSeconds = 1;
     static GameDataManager dataManager = null;
@@ -45,7 +46,7 @@ class Program
     {
         Normal = Terminal.Gui.Attribute.Make(Color.BrightGreen, Color.Black),
         Focus = Terminal.Gui.Attribute.Make(Color.Brown, Color.Black),
-        
+
     };
     static ColorScheme enabledColorScheme = new ColorScheme
     {
@@ -58,9 +59,9 @@ class Program
         //dataManager.init();
         dataManager = new GameDataManager();
         Application.Init();
-        
+
         var top = Application.Top;
-        
+
 
         // Menu at the top
         var menu = new MenuBar(new MenuBarItem[] {
@@ -71,7 +72,7 @@ class Program
             new MenuBarItem("_Info", new MenuItem[] {
                 new MenuItem("_History", "", () => { playerHistoryDialog(); })
             }),
-            
+
         });
         top.Add(menu);
         var topContainer =
@@ -94,21 +95,21 @@ class Program
             Width = Dim.Fill(),
             Height = 1, // Account for the menu bar
         };
-       
-         dateField = new Terminal.Gui.Label()
+
+        dateField = new Terminal.Gui.Label()
         {
             X = 1,
             Y = 0,
             Text = "Jan 1 1900"
         };
-        
+
         moneyField = new Terminal.Gui.Label()
         {
             X = Pos.Percent(50),
             Y = 0,
             Text = "€ 0.000.000.000"
         };
-         fastForwardButton = new Button(">>")
+        fastForwardButton = new Button(">>")
         {
             X = Pos.Percent(75),
             Y = 0,
@@ -120,7 +121,7 @@ class Program
             Y = 0,
             ColorScheme = enabledColorScheme
         };
-         pauseButton = new Button("||") 
+        pauseButton = new Button("||")
         {
             X = Pos.Percent(81),
             Y = 0,
@@ -129,8 +130,8 @@ class Program
 
         populatePlayerData();
 
-         pauseToggle = false;
-        
+        pauseToggle = false;
+
         pauseButton.Clicked += () =>
         {
             if (pauseToggle == true)
@@ -176,7 +177,7 @@ class Program
         titleContainer.Add(dateField);
         titleContainer.Add(moneyField);
         topContainer.Add(titleContainer);
-        
+
         // Main container for two-column layout
         var mainContainer = new Terminal.Gui.View()
         {
@@ -196,10 +197,10 @@ class Program
             Y = 0,
             Width = Dim.Percent(50),
             Height = Dim.Fill(),
-            
+
         };
 
-        
+
         mainContainer.Add(leftColumn);
 
         // Right column container
@@ -213,7 +214,7 @@ class Program
         mainContainer.Add(rightColumn);
 
 
-        
+
         var citiesView = new FrameView()
         {
             X = 0,
@@ -224,7 +225,7 @@ class Program
         };
         leftColumn.Add(citiesView);
         // ListView for continents and cities
-        
+
         System.Data.DataTable citiesTable = dataManager.cities.LoadCities();
         citiesListView = new TableView(citiesTable)
         {
@@ -235,7 +236,7 @@ class Program
             FullRowSelect = true,
             HotKey = Key.Space
         };
-        
+
         citiesView.Add(citiesListView);
         var transitView = new FrameView()
         {
@@ -246,12 +247,12 @@ class Program
             Title = "Transit"
         };
         leftColumn.Add(transitView);
-        
+
         System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
 
 
 
-         transitListView = new TableView(transitTable)
+        transitListView = new TableView(transitTable)
         {
             X = 0,
             Y = 0,
@@ -259,12 +260,12 @@ class Program
             Height = Dim.Fill(),
             FullRowSelect = true
         };
-        
+
         transitView.Add(transitListView);
 
 
         // Right column split into two views vertically for list views
-         cityMarketView = new FrameView()
+        cityMarketView = new FrameView()
         {
             X = 0,
             Y = 0,
@@ -272,10 +273,10 @@ class Program
             Height = Dim.Percent(50),
             Title = "Market"
         };
-        
 
-        
-       
+
+
+
 
         cityMarketListView = new TableView()
         {
@@ -300,14 +301,14 @@ class Program
         //Market View
         buildPlayerCityView();
         playMusic();
-        
+
 
         //cityGoodsView.Add(cityGoodsListView);
         // Add an action for the button click
         buyButton.Clicked += () =>
         {
             buyButtonDialog();
-            
+
         };
 
         //Events
@@ -317,6 +318,7 @@ class Program
             Debug.WriteLine("Selected city : " + city);
             populateMarket(city, cityMarketListView);
             populateWarehouse(city, cityGoodsListView);
+            dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
         };
         // - Buy/Sell Goods
         //cityMarketListView.AddKeyBinding(Key.Enter,)
@@ -328,25 +330,50 @@ class Program
         //timer.AutoReset = true;
         //timer.Enabled = true;
         loopTimeout = Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(loopIntervalSeconds * 1000), gameLoop);
-        
-        
+
+
         Application.Run();
-        
+
     }
 
     private static void settingsDialog()
     {
-        // todo: do settings
-        var dialog = new Dialog("Settings");
+        var dialog = new Dialog("Settings", 60, 10);
 
-        var checkbox = new CheckBox();
+        musicCheckBox = new CheckBox()
+        {
+            Checked = true,
+            Y = 3,
+            X = 20
+        };
+        var musicLabel = new Terminal.Gui.Label("Music")
+        {
+            X = 1,
+            Y = 3
+        };
 
+        musicCheckBox.Toggled += (e) =>
+        {
+            if (musicCheckBox.Checked)
+            {
+                dataManager.SoundMananger.playMusic();
+            }
+            else
+            {
+                dataManager.SoundMananger.stopMusic();
+            }
+        };
+
+        dialog.Add(musicLabel);
+        dialog.Add(musicCheckBox);
+
+        Application.Run(dialog);
     }
 
     private static void playMusic()
     {
         dataManager.SoundMananger.playMusic();
-        
+
     }
 
     private static void buildPlayerCityView()
@@ -457,7 +484,7 @@ class Program
 
         cityFactoryView.Add(factoryTableView);
         cityFactoryView.Add(BuyFactory);
-        
+
 
 
 
@@ -542,11 +569,11 @@ class Program
                 updateScreen();
                 Application.RequestStop();
             }
-            
-            
-            
+
+
+
         };
-        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); };
         buttonBuyMax.Clicked += () => {
 
 
@@ -622,7 +649,7 @@ class Program
 
     private static void startPopup()
     {
-        
+
         var dialog = new Dialog("Welcome")
         {
             X = 0,
@@ -667,16 +694,16 @@ class Program
         {
             Height = 6
         };
-        
+
         label.ColorScheme = myColorScheme;
         var buttonCancel = new Button("Ok", is_default: false);
         buttonCancel.ColorScheme = myColorScheme;
         dialog.Add(label);
         dialog.AddButton(buttonCancel);
-        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); };
         Application.Run(dialog);
     }
-    private static void populateMarket(string city,TableView cityMarketListView)
+    private static void populateMarket(string city, TableView cityMarketListView)
     {
         System.Data.DataTable marketTable = dataManager.cities.GetGoodsForCity(city);
         cityMarketListView.Table = marketTable;
@@ -692,7 +719,7 @@ class Program
         TableView.ColumnStyle stylefpr = cityMarketListView.Style.GetOrCreateColumnStyle(marketTable.Columns["Factory Production"]);
         stylefpr.Format = "N0";// "#.##0,00";
         stylefpr.Alignment = TextAlignment.Right;
-        
+
 
 
 
@@ -713,16 +740,16 @@ class Program
     {
         System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
         dateField.Text = playerTable.Rows[0]["Date"].ToString();
-        
-        var formatted_string = String.Format("{0:N2}", playerTable.Rows[0]["Money"]); 
-        moneyField.Text =  "€ " + formatted_string;
+
+        var formatted_string = String.Format("{0:N2}", playerTable.Rows[0]["Money"]);
+        moneyField.Text = "€ " + formatted_string;
 
     }
     private static void populateTransitTable()
     {
         System.Data.DataTable transitTable = dataManager.transits.LoadTransit();
         transitListView.Table = transitTable;
-        
+
     }
     //private static void gameLoop(Object source, ElapsedEventArgs e)
     private static void populateCities()
@@ -739,7 +766,7 @@ class Program
     {
         var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
         factoryTableView.Table = dataManager.factory.LoadFactories(city);
-       
+
         TableView.ColumnStyle levelStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Level"]);
         levelStyle.Format = "N0";
         levelStyle.Alignment = TextAlignment.Right;
@@ -756,7 +783,7 @@ class Program
         productionStyle.Alignment = TextAlignment.Right;
 
         productionStyle = factoryTableView.Style.GetOrCreateColumnStyle(factoryTableView.Table.Columns["Can Upgrade?"]);
-        
+
         productionStyle.Alignment = TextAlignment.Centered;
 
     }
@@ -784,7 +811,7 @@ class Program
         Debug.WriteLine("gameloop");
         Application.MainLoop.Invoke(() =>
         {
-           
+
             if (!startPopupDisplayed)
             {
                 startPopupDisplayed = true;
@@ -812,7 +839,7 @@ class Program
             Y = 10,
             Height = 15
         };
-        var buttonSell= new Button("OK", is_default: true);
+        var buttonSell = new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
         var sellPriceLabel = new Terminal.Gui.Label("Price: " + price + "€")
         {
@@ -855,12 +882,12 @@ class Program
         dialog.Add(totalSellPriceLabel);
         dialog.Add(sellMax);
 
-        
+
         string lastValidValue = "0";
         amountField.TextChanged += (args) =>
         {
-            if (amountField.Text != "") 
-            { 
+            if (amountField.Text != "")
+            {
                 amount = Convert.ToInt32(amountField.Text);
                 totalSellPriceLabel.Text = "Total :" + amount * price + "€";
             }
@@ -876,13 +903,13 @@ class Program
         };
 
         buttonSell.Clicked += () => {
-            
+
 
             dataManager.player.sell(city, CargoType, amount, price);
             updateScreen();
-             Application.RequestStop(); };
+            Application.RequestStop(); };
 
-        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); };
         Application.Run(dialog);
     }
     private static void transportDialog(String transportationMode)
@@ -902,14 +929,14 @@ class Program
         };
         var buttonTransport = new Button("OK", is_default: true);
 
-        
-        
 
-            
+
+
+
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
         var transportToLabel = new Terminal.Gui.Label("Transport to:")
-        { 
+        {
             X = 1,
             Y = 1
         };
@@ -931,12 +958,12 @@ class Program
             Height = 5
 
         };
-        
+
         cityListView.SelectedItemChanged += (ListViewItemEventArgs) =>
         {
             var targetCityId = cityListView.SelectedItem;
             var targetCity = cityListView.Text;
-            (distance,price ) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
+            (distance, price) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
             costLabel.Text = "Transport price:" + Convert.ToInt64(price) * amount;
             distanceLabel.Text = "Distance:" + Convert.ToInt64(distance) + " km";
         };
@@ -949,11 +976,11 @@ class Program
 
 
         buttonTransport.Clicked += () => {
-            
+
             //TODO transport registreren;
             var targetCity = cityListView.Text;
             Boolean transportOk = dataManager.transits.canBeTransported(transportationMode, city, (string)targetCity);
-            if(!transportOk)
+            if (!transportOk)
             {
                 MessageBox.ErrorQuery("Incompatible Transport Method", "Transporting with a truck to a different continent is not possible.", "Ok");
             }
@@ -970,12 +997,12 @@ class Program
                 updateScreen();
                 Application.RequestStop();
             }
-           
+
 
         };
-        buttonCancel.Clicked += () => {  Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); };
 
-        
+
         // Display the modal dialog
         Application.Run(dialog);
     }
@@ -992,10 +1019,10 @@ class Program
     {
         timer.Enabled = true;
     }*/
-    
+
     private static void playerHistoryDialog()
     {
-        
+
         var dialog = new Dialog("History")
         {
             X = 0,
@@ -1013,12 +1040,12 @@ class Program
             ColorScheme = myColorScheme
         };
 
-        GraphView graphView= new GraphView() {
-                X = 1,
-				Y = 1,
-			    Width = Dim.Percent(100),
-				Height = Dim.Percent(75),
-                AutoSize = true,
+        GraphView graphView = new GraphView() {
+            X = 1,
+            Y = 1,
+            Width = Dim.Percent(100),
+            Height = Dim.Percent(75),
+            AutoSize = true,
             ColorScheme = myColorScheme
         };
         graphView.Reset();
@@ -1039,17 +1066,17 @@ class Program
         var stiple = Application.Driver.Stipple;
         float max = 1;
         int rowindex = 0;
-        foreach(DataRow row in playerHistory.Rows)
+        foreach (DataRow row in playerHistory.Rows)
         {
             rowindex++;
             string convertedDate = " ";
             //Only show dates every 5 columns
-            if (rowindex%5 == 0)
+            if (rowindex % 5 == 0)
             {
                 string[] parts = ((String)row["Date"]).Split('-');
-                 convertedDate = $"{parts[0]}/{parts[1]}";
+                convertedDate = $"{parts[0]}/{parts[1]}";
             }
-            float money = Convert.ToSingle(row["Money"])/1000;
+            float money = Convert.ToSingle(row["Money"]) / 1000;
             series.AddBars(convertedDate, stiple, money);
             if (money > max)
             {
@@ -1070,7 +1097,7 @@ class Program
             int rounded = (int)Math.Pow(10, length - 1); // Calculate the rounded number
             max = rounded;
         }
-        
+
         graphView.CellSize = new PointF(0.50f, cellSize);
         graphView.Series.Add(series);
         graphView.SetNeedsDisplay();
@@ -1078,7 +1105,7 @@ class Program
         graphView.MarginLeft = 20;
         graphView.MarginBottom = 2;
 
-        graphView.AxisY.LabelGetter = (v) => '€' + (v.Value ).ToString("N0") + 'k';
+        graphView.AxisY.LabelGetter = (v) => '€' + (v.Value).ToString("N0") + 'k';
 
         // Do not show x axis labels (bars draw their own labels)
         graphView.AxisX.Increment = 0;
@@ -1096,11 +1123,21 @@ class Program
         graphView.Annotations.Add(legend);*/
         //scrollView.Add(graphView);  
         //dialog.Add(scrollView);
-            dialog.Add(graphView);
+        dialog.Add(graphView);
         var okButton = new Button("OK", is_default: true);
         dialog.AddButton(okButton);
         okButton.Clicked += () => { Application.RequestStop(); };
         Application.Run(dialog);
 
+    }
+    public bool musicPlays()
+    {
+        if (musicCheckBox.Checked)
+        {
+            return true;
+        } else
+        {
+            return false;
+        }
     }
 }

@@ -15,34 +15,35 @@ namespace Capital_and_Cargo
 
         // Create a new SoundPlayer instance with the path to the .wav audio file
         private SoundPlayer player;
+        private Program program;
         public SoundMananger() 
         {
             this.player = new SoundPlayer(Properties.Resources.gameMusic);
+            this.program = new Program();
         }
 
         public void playMusic()
         {
 
-            try
+            using (SoundPlayer SoundPlayer = new SoundPlayer(Properties.Resources.gameMusic))
             {
-                // Play the .wav audio file
-                //player.Play();
-                player.PlayLooping();
-                Debug.WriteLine("music plays");
+                SoundPlayer.Play();
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"An error occurred: {ex.Message}");
-            }
-        //    finally
-        //    {
-        //        // Dispose the SoundPlayer object to release resources
-        //        player.Dispose();
-        //    }
+
         }
-        private void stopMusic()
+        public void stopMusic()
         {
             player.Stop();
+        }
+        public void playSound(System.IO.UnmanagedMemoryStream soundData)
+        {
+            using (SoundPlayer SoundPlayer = new SoundPlayer(soundData))
+            {
+                SoundPlayer.Play();
+            }
+
+            
+
         }
     }
 }
