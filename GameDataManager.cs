@@ -112,7 +112,7 @@ namespace Capital_and_Cargo
                 factory.updateProduction();
             }
             transits.updateTransits();
-            achievements.checkAchievements();
+            achievements.checkAchievements(currentDay);
             
         }
         public void purchase(String city, String CargoType, int amount, Double price)

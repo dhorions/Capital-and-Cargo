@@ -84,14 +84,15 @@ namespace Capital_and_Cargo
         }
         private void createPlayerAchievements()
         {
-            InsertAchievement("rep/any/0000500", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "Factory Building Unlocked", 500, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
-            InsertAchievement("rep/any/0005000", "rep/any", "Master Trader", "Achieve {target} reputation in any city.", "", 5000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
-            InsertAchievement("rep/any/0250000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "", 250000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
-            InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "", 1000000, "SELECT MIN(sum(" + reputationCalculation + "),{target})  FROM cities", "");
+            String sql_rep_any = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities group by city order by target desc limit 1";
+            InsertAchievement("rep/any/0000500", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "Factory Building Unlocked", 500, sql_rep_any, "");
+            InsertAchievement("rep/any/0005000", "rep/any", "Master Trader", "Achieve {target} reputation in any city.", "", 5000, sql_rep_any, "");
+            InsertAchievement("rep/any/0250000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "", 250000, sql_rep_any, "");
+            InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "", 1000000, sql_rep_any, "");
 
 
         }
-        public void checkAchievements()
+        public void checkAchievements(DateTime currentDate)
         {
             DataTable dataTable = new DataTable();
 
@@ -109,12 +110,12 @@ namespace Capital_and_Cargo
                 {
                     row["checkSQL"] = SubstitutePlaceholder((String)row["checkSQL"], "{target}", "" + row["target"]);
                     row["Text"] = SubstitutePlaceholder((String)row["Text"], "{target}", "" + row["target"]);
-                    checkAchievement(row);
+                    checkAchievement(row,currentDate);
                 }
             }
 
         }
-        private void checkAchievement(DataRow row)
+        private void checkAchievement(DataRow row, DateTime currentDate)
         {
             using (var command = _connection.CreateCommand())
             {
@@ -130,6 +131,14 @@ namespace Capital_and_Cargo
                         if (result >= (Int64)row["Target"])
                         {
                             Debug.WriteLine("achievement unlocked " + row["Name"] + " " + row["Text"]);
+                            using (var updcommand = _connection.CreateCommand())
+                            {
+
+                                updcommand.CommandText = "UPDATE achievements SET achieved = 1, achievedDate = @achievedDate WHERE ID = @id";
+                                updcommand.Parameters.AddWithValue("@achievedDate", currentDate.ToString("yyyy-MM-dd HH:mm:ss"));
+                                updcommand.Parameters.AddWithValue("@id", row["id"]);
+                                updcommand.ExecuteNonQuery();
+                            }
                         }
                     }
                 }
@@ -140,7 +149,7 @@ namespace Capital_and_Cargo
 
 
         }
-        public static string SubstitutePlaceholder(string originalString, string placeholder, string substitution)
+        public  string SubstitutePlaceholder(string originalString, string placeholder, string substitution)
         {
             // Check if the original string contains the placeholder
             if (originalString.Contains(placeholder))
