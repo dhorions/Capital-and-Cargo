@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using System.Media;
 using System.Diagnostics;
 using System.Numerics;
+using NAudio.Wave;
+using System.Reflection;
+using System.IO;
+using Capital_and_Cargo.Properties;
 
 namespace Capital_and_Cargo
 {
@@ -16,6 +20,7 @@ namespace Capital_and_Cargo
         // Create a new SoundPlayer instance with the path to the .wav audio file
         private SoundPlayer player;
         private Program program;
+        
         public SoundMananger() 
         {
             this.player = new SoundPlayer(Properties.Resources.gameMusic);
@@ -37,12 +42,40 @@ namespace Capital_and_Cargo
         }
         public void playSound(System.IO.UnmanagedMemoryStream soundData)
         {
-            using (SoundPlayer SoundPlayer = new SoundPlayer(soundData))
+            Task.Run(() => soundThread(soundData));
+        }
+        private void soundThread(System.IO.UnmanagedMemoryStream soundData)
+        {
+            WaveOutEvent buttonSound = new WaveOutEvent();
+            WaveFileReader audioReader;
+            using (Stream stream = soundData)
             {
-                SoundPlayer.Play();
-            }
+                if (stream != null)
+                {
+                    using(audioReader = new WaveFileReader(stream))
+                    {
+                        try
+                        {
+                            buttonSound.Init(audioReader);
 
+
+                            buttonSound.Play();
+                            while (buttonSound.PlaybackState == PlaybackState.Playing)
+                            {
+                                Thread.Sleep(50);
+                            }
+
+                        }
+                        catch (Exception ex ){
+                            Debug.Write(ex);
+                        }
+                    }
+                    
+                }
+            }
             
+
+
 
         }
     }

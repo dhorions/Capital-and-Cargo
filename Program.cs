@@ -700,7 +700,9 @@ class Program
         buttonCancel.ColorScheme = myColorScheme;
         dialog.Add(label);
         dialog.AddButton(buttonCancel);
-        buttonCancel.Clicked += () => { Application.RequestStop(); };
+        buttonCancel.Clicked += () => {
+            dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
+            Application.RequestStop(); };
         Application.Run(dialog);
     }
     private static void populateMarket(string city, TableView cityMarketListView)

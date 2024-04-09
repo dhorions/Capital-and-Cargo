@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.3" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="8.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="8.0.3" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NLog" Version="5.2.8" />
     <PackageReference Include="SQLite" Version="3.13.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.8" />
