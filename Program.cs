@@ -25,6 +25,7 @@ class Program
     static int FFloopIntervalSeconds = 1;
     static GameDataManager dataManager = null;
     static Terminal.Gui.Label dateField;
+    static Terminal.Gui.Label achievementsField;
     static Terminal.Gui.Label moneyField;
     //private static System.Timers.Timer timer;
     static Terminal.Gui.TableView citiesListView;
@@ -102,6 +103,13 @@ class Program
             Y = 0,
             Text = "Jan 1 1900"
         };
+        achievementsField = new Terminal.Gui.Label()
+        {
+            X = Pos.Percent(50) - 12,
+            Y = 0,
+            Text = ""
+        };
+
 
         moneyField = new Terminal.Gui.Label()
         {
@@ -176,6 +184,7 @@ class Program
         titleContainer.Add(normalSpeedButton);
         titleContainer.Add(dateField);
         titleContainer.Add(moneyField);
+        titleContainer.Add(achievementsField);
         topContainer.Add(titleContainer);
 
         // Main container for two-column layout
@@ -745,6 +754,10 @@ class Program
 
         var formatted_string = String.Format("{0:N2}", playerTable.Rows[0]["Money"]);
         moneyField.Text = "€ " + formatted_string;
+        (Int64 achieved, Int64 total) = dataManager.achievements.getAchievementStatus();
+        var formatted_achievements = "⚐ " + achieved + " / " +  total ;
+        achievementsField.Text = formatted_achievements;
+        achievementsField.TextAlignment = TextAlignment.Right;
 
     }
     private static void populateTransitTable()

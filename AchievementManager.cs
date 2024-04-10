@@ -92,6 +92,28 @@ namespace Capital_and_Cargo
 
 
         }
+        public (Int64,Int64) getAchievementStatus()
+        {
+            Int64 achieved = 0;
+            Int64 total = 0;
+            using (var command = _connection.CreateCommand())
+            {
+
+                command.CommandText = "SELECT (select count(*) from achievements ) as total,\r\n(select count(*) from achievements where achieved = 1) as achieved";
+
+                Double result = 0;
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        total = reader.GetInt64(0);
+                        achieved = reader.GetInt64(1);
+                    }
+                }
+            }
+            return(achieved, total);
+
+        }
         public void checkAchievements(DateTime currentDate)
         {
             DataTable dataTable = new DataTable();
