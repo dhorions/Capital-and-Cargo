@@ -71,7 +71,8 @@ class Program
                 new MenuItem("_Settings", "", () => {settingsDialog(); })
             }),
             new MenuBarItem("_Info", new MenuItem[] {
-                new MenuItem("_History", "", () => { playerHistoryDialog(); })
+                new MenuItem("_History", "", () => { playerHistoryDialog(); }),
+                new MenuItem("_Achievements", "", () => { achievementsDialog(); }),
             }),
 
         });
@@ -185,7 +186,11 @@ class Program
         titleContainer.Add(dateField);
         titleContainer.Add(moneyField);
         titleContainer.Add(achievementsField);
-        topContainer.Add(titleContainer);
+        achievementsField.Clicked += () =>
+        {
+            achievementsDialog();
+        };
+            topContainer.Add(titleContainer);
 
         // Main container for two-column layout
         var mainContainer = new Terminal.Gui.View()
@@ -343,6 +348,36 @@ class Program
 
         Application.Run();
 
+    }
+
+    private static void achievementsDialog()
+    {
+        var dialog = new Dialog("Achievements")
+        {
+            X = 0,
+            Y = 0,
+            Height = Dim.Percent(100),
+            Width = Dim.Percent(100),
+            ColorScheme = myColorScheme
+        };
+      
+        var AchievementsView = new TableView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            FullRowSelect = true
+        };
+        AchievementsView.Table = dataManager.achievements.GetAchievements();
+        TableView.ColumnStyle targetStyle = AchievementsView.Style.GetOrCreateColumnStyle(AchievementsView.Table.Columns["Target"]);
+        targetStyle.Visible = false;
+
+        dialog.Add(AchievementsView);
+        var okButton = new Button("OK", is_default: true);
+        dialog.AddButton(okButton);
+        okButton.Clicked += () => { Application.RequestStop(); };
+        Application.Run(dialog);
     }
 
     private static void settingsDialog()

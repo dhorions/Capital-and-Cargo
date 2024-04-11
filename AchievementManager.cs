@@ -185,5 +185,43 @@ namespace Capital_and_Cargo
                 return originalString;
             }
         }
+        public DataTable GetAchievements()
+        {
+            DataTable dataTable = new DataTable();
+
+
+            using (var command = _connection.CreateCommand())
+            {
+               
+                command.CommandText = @"
+                    SELECT ID,
+                       Name,
+                       Text,
+                       RewardText,
+                       Target,
+                       case
+                            when achieved = 1 then '⚐'
+                            else ''
+                       end as achieved,
+                       achievedDate
+                  FROM achievements order by Key;
+                ";
+
+               
+
+                using (var reader = command.ExecuteReader())
+                {
+                    dataTable.Load(reader);
+                }
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    row["Text"] = SubstitutePlaceholder((String)row["Text"], "{target}", "" + row["target"]);
+                    
+                }
+
+            }
+
+            return dataTable;
+        }
     }
 }
