@@ -108,7 +108,7 @@ namespace Capital_and_Cargo
                     INSERT INTO Player (Date, Money)
                     VALUES (@Date, @Money);";
 
-                command.Parameters.AddWithValue("@Date", "1900-01-01");
+                command.Parameters.AddWithValue("@Date", "1910-11-07");//first cargo flight was on nov 7, 1910
                 command.Parameters.AddWithValue("@Money", 1000000);
 
                 command.ExecuteNonQuery();
