@@ -10,6 +10,8 @@ using System.Diagnostics;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Terminal.Gui;
 using System.Data.Entity.Core.Metadata.Edm;
+using System.Globalization;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Capital_and_Cargo
 {
@@ -40,7 +42,33 @@ namespace Capital_and_Cargo
             {
                 CreateMoneyHistoryTable();
             }
+            if(!TableExists("HistoryDetail"))
+            {
+                CreateHistoryDetailTable();
+            }
 
+        }
+
+        private void CreateHistoryDetailTable()
+        {
+           
+
+            var sql = @"CREATE TABLE HistoryDetail (
+                Date      TEXT,
+                Income    REAL default 0,
+                Spend     REAL default 0,
+                City      TEXT,
+                CargoType TEXT,
+                Import    INTEGER default 0,
+                Export    INTEGER default 0
+            );
+            CREATE UNIQUE INDEX idx_city_date_cargo ON HistoryDetail (City, Date, CargoType);
+            ";
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.ExecuteNonQuery();
+            }
         }
 
         private bool TableExists(string tableName)
@@ -98,6 +126,10 @@ namespace Capital_and_Cargo
 
                 command.ExecuteNonQuery();
             }
+        }
+        public DateTime firstOfMonth(DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, 1);
         }
         public void InitPlayerTable()
         {
@@ -265,7 +297,7 @@ namespace Capital_and_Cargo
                     }
                     //Pay
                     Double totalPrice = amount * price;
-                    pay(totalPrice);
+                    pay(totalPrice,city, CargoType);
                     //Add to Warehouse
                     int recordsAffected = 0;
                     using (var command = _connection.CreateCommand())
@@ -313,7 +345,7 @@ namespace Capital_and_Cargo
             }
         }
 
-        public void pay(double totalPrice)
+        public void pay(double totalPrice,String city, String CargoType)
         {
             using (var command = _connection.CreateCommand())
             {
@@ -324,6 +356,22 @@ namespace Capital_and_Cargo
                                UPDATE player SET money = money - @price 
                         ";
                 command.Parameters.AddWithValue("@price", totalPrice);
+                command.ExecuteNonQuery();
+            }
+            //Keep track of money paid
+            DateTime firstOfMonthDate = firstOfMonth(getCurrentDate());
+            var sql = @"INSERT INTO HistoryDetail (City, Date, CargoType, Spend)
+            VALUES (@city, @date, @CargoType, @Spend)
+            ON CONFLICT (City, Date, CargoType) 
+            DO UPDATE SET Spend = Spend + excluded.Spend;";
+            using (var command = _connection.CreateCommand())
+            {
+                Debug.WriteLine("Storing income history " + firstOfMonthDate + "\t" + totalPrice + "\t" + city + "\t" + CargoType);
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                command.Parameters.AddWithValue("@date", firstOfMonthDate);
+                command.Parameters.AddWithValue("@CargoType", CargoType);
+                command.Parameters.AddWithValue("@Spend", totalPrice);
                 command.ExecuteNonQuery();
             }
         }
@@ -348,7 +396,8 @@ namespace Capital_and_Cargo
                     }
                     //Get Payed
                     Double totalPrice = amount * price;
-                    using (var command = _connection.CreateCommand())
+                    receiveMoney(totalPrice, city, CargoType);
+                    /*using (var command = _connection.CreateCommand())
                     {
 
 
@@ -360,7 +409,7 @@ namespace Capital_and_Cargo
                         ";
                         command.Parameters.AddWithValue("@price", totalPrice);
                         command.ExecuteNonQuery();
-                    }
+                    }*/
                     //Manage Reputation
                     using (var command = _connection.CreateCommand())
                     {
@@ -401,6 +450,37 @@ namespace Capital_and_Cargo
                     transaction.Rollback();
                 }
             }
+        }
+        private void receiveMoney(Double money, String city, String CargoType)
+        {
+            //Handle receiving money
+            using (var command = _connection.CreateCommand())
+            {
+                Debug.WriteLine("Getting Payed " + money);
+                command.CommandText = @"
+                               UPDATE player SET money = money + @price 
+                        ";
+                command.Parameters.AddWithValue("@price", money);
+                command.ExecuteNonQuery();
+            }
+            //Keep track of money received
+            DateTime firstOfMonthDate = firstOfMonth(getCurrentDate());
+            var sql = @"INSERT INTO HistoryDetail (City, Date, CargoType, Income)
+            VALUES (@city, @date, @CargoType, @Income)
+            ON CONFLICT (City, Date, CargoType) 
+            DO UPDATE SET Income = Income + excluded.Income;";
+            using (var command = _connection.CreateCommand())
+            {
+                Debug.WriteLine("Storing income history " + firstOfMonthDate + "\t" + money + "\t" + city + "\t" + CargoType);
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                command.Parameters.AddWithValue("@date", firstOfMonthDate);
+                command.Parameters.AddWithValue("@CargoType", CargoType);
+                command.Parameters.AddWithValue("@Income", money);
+                command.ExecuteNonQuery();
+            }
+
+
         }
         public DataTable LoadPlayer()
         {
@@ -449,6 +529,22 @@ namespace Capital_and_Cargo
             }
             //
 
+        }
+        public DateTime getCurrentDate() {
+            DateTime currentDate = new DateTime();
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = "select Date from player";
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var eventDate = reader["Date"];
+                        currentDate = DateTime.ParseExact((String)reader["Date"], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    }
+                }
+            }
+            return currentDate;
         }
     }
 }

@@ -62,7 +62,7 @@ namespace Capital_and_Cargo
             (Boolean canBuild,String message) = canBuildFactory(CityName, CargoType);
             if(canBuild) {
                 createFactory(CityName, CargoType);
-                player.pay(requiredMoney);
+                player.pay(requiredMoney, CityName, CargoType+".factory");
             }
             else
             {

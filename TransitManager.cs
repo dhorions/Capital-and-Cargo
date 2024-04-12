@@ -15,15 +15,17 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private GameDataManager dataManager;
+        private PlayerManager player;
         private Double kmPriceTruck = 0.0002;
         private Double kmPricePlane = 0.001;
         private Double speedTruck = 100;
         private Double speedPlane = 500;
-        public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager)
+        public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager, ref PlayerManager player)
         {
             _connection = connection;
             EnsureTableExistsAndIsPopulated();
             this.dataManager = dataManager;
+            this.player = player;
         }
 
         public void EnsureTableExistsAndIsPopulated()
@@ -327,7 +329,23 @@ PurchasePrice REAL NOT NULL
                             command.Parameters.AddWithValue("@city", row["DestinationCity"]);
                             command.ExecuteNonQuery();
                         }
-                        
+                        //Keep track of cargo arrived received
+                        DateTime firstOfMonthDate = player.firstOfMonth(player.getCurrentDate());
+                        var sqlH = @"INSERT INTO HistoryDetail (City, Date, CargoType, Import)
+                        VALUES (@city, @date, @CargoType, @Import)
+                        ON CONFLICT (City, Date, CargoType) 
+                        DO UPDATE SET Import = Import + excluded.Import;";
+                        using (var command = _connection.CreateCommand())
+                        {
+                            Debug.WriteLine("Storing import history " + firstOfMonthDate + "\t" + row["CargoAmount"] + "\t" + row["DestinationCity"] + "\t" + row["CargoType"]);
+                            command.CommandText = sqlH;
+                            command.Parameters.AddWithValue("@city", row["DestinationCity"]);
+                            command.Parameters.AddWithValue("@date", firstOfMonthDate);
+                            command.Parameters.AddWithValue("@CargoType", row["CargoType"]);
+                            command.Parameters.AddWithValue("@Import", row["CargoAmount"]);
+                            command.ExecuteNonQuery();
+                        }
+
 
 
                     }
@@ -405,7 +423,7 @@ PurchasePrice REAL NOT NULL
                         command.ExecuteNonQuery();
                     }
                     //Pay
-                    using (var command = _connection.CreateCommand())
+                    /*using (var command = _connection.CreateCommand())
                     {
 
                         
@@ -415,7 +433,8 @@ PurchasePrice REAL NOT NULL
                         ";
                         command.Parameters.AddWithValue("@price", price * amount);
                         command.ExecuteNonQuery();
-                    }
+                    }*/
+                    player.pay(price * amount, originCity, CargoType + ".transport." + transportationMode);
                     
                    
                         
@@ -460,8 +479,24 @@ PurchasePrice REAL NOT NULL
                         cmdInsert.Parameters.AddWithValue("@PurchasePrice", cargoValue);
                         cmdInsert.ExecuteNonQuery();
                         }
+                        //Keep track of cargo export
+                        DateTime firstOfMonthDate = player.firstOfMonth(player.getCurrentDate());
+                        var sqlH = @"INSERT INTO HistoryDetail (City, Date, CargoType, Export)
+                            VALUES (@city, @date, @CargoType, @Export)
+                            ON CONFLICT (City, Date, CargoType) 
+                            DO UPDATE SET Export = Export + excluded.Export;";
+                        using (var command = _connection.CreateCommand())
+                        {
+                            Debug.WriteLine("Storing export history " + firstOfMonthDate + "\t" + amount + "\t" + originCity + "\t" + CargoType);
+                            command.CommandText = sqlH;
+                            command.Parameters.AddWithValue("@city", originCity);
+                            command.Parameters.AddWithValue("@date", firstOfMonthDate);
+                            command.Parameters.AddWithValue("@CargoType", CargoType);
+                            command.Parameters.AddWithValue("@Export", amount);
+                            command.ExecuteNonQuery();
+                        }
 
-                    
+
 
 
                     // Commit the transaction if both commands succeed
