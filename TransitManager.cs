@@ -139,7 +139,7 @@ PurchasePrice REAL NOT NULL
                 }
                 else
                 {
-                    result += "-";
+                    result += " ";
                 }
             }
 

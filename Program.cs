@@ -500,7 +500,8 @@ class Program
             Y = 1,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            Table = Factorys
+            Table = Factorys,
+            FullRowSelect = true,
         };
         var BuyFactory = new Button("Buy Factory")
         {
