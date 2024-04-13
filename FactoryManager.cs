@@ -100,6 +100,23 @@ namespace Capital_and_Cargo
             }
             
         }
+        public (Boolean canBuild, String message) haveFactory(String CityName, String CargoType)
+        {
+
+            string SelectSQL = @"SELECT 1  FROM factories where cargoType = @cargo and cityName = @city;";
+           
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = SelectSQL;
+                command.Parameters.AddWithValue("@cargo", CargoType);
+                command.Parameters.AddWithValue("@city", CityName);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) return (true,"You already have a " + CargoType + " factory in " + CityName);
+                }
+            }
+             return (false, "You don't yet have a " + CargoType + " factory in " + CityName);
+        }
         private double getRequiredMoney(string CargoType, int level)
         {
             /**

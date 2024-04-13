@@ -504,7 +504,13 @@ class Program
         };
         var BuyFactory = new Button("Buy Factory")
         {
-            X = Pos.Center(),
+            X = 0,
+            Y = 0
+
+        };
+        var UpgradeFactory = new Button("Upgrade Factory")
+        {
+            X = 20,
             Y = 0
 
         };
@@ -513,21 +519,57 @@ class Program
         {
             String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
             String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
-            (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
-            if (canBuild)
+            
+            (Boolean haveFactoryBuild, String haveMessage) = dataManager.factory.haveFactory(city, cargoType);
+            if(haveFactoryBuild)
             {
-                dataManager.factory.buildFactory(city, cargoType);
-                updateScreen();
+                MessageBox.ErrorQuery("Unable to build factory", haveMessage);
             }
             else
             {
-                MessageBox.ErrorQuery("Unable to build factory", message);
+                (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
+                if (canBuild)
+                {
+                    dataManager.factory.buildFactory(city, cargoType);
+                    updateScreen();
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Unable to build factory", message);
+                }
             }
+           
+
+        };
+        UpgradeFactory.Clicked += () =>
+        {
+            String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+            String cargoType = (String)factoryTableView.Table.Rows[factoryTableView.SelectedRow]["Resource"];
+            (Boolean haveFactoryBuild, String haveMessage) = dataManager.factory.haveFactory(city, cargoType);
+            if (haveFactoryBuild)
+            {
+                (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
+                if (canBuild)
+                {
+                    dataManager.factory.buildFactory(city, cargoType);
+                    updateScreen();
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Unable to upgrade factory", message);
+                }
+            }
+            else
+            {
+                MessageBox.ErrorQuery("Unable to upgrade factory", haveMessage);
+            }
+           
 
         };
 
         cityFactoryView.Add(factoryTableView);
         cityFactoryView.Add(BuyFactory);
+        cityFactoryView.Add(UpgradeFactory);
 
 
 
