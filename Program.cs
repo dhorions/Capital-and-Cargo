@@ -1027,6 +1027,7 @@ class Program
 
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
+        cityList.Remove(city);
         var transportToLabel = new Terminal.Gui.Label("Transport to:")
         {
             X = 1,
