@@ -1,12 +1,16 @@
 ﻿using Microsoft.Data.Sqlite;
+using NLog.Targets;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
+using System.Xml.Linq;
 
 namespace Capital_and_Cargo
 {
@@ -84,23 +88,61 @@ namespace Capital_and_Cargo
         }
         private void createPlayerAchievements()
         {
+            //Improvement sql
+            //-- Production bonus
+            String prodBonusSql = "UPDATE Player SET productionBonusPool = productionBonusPool + {bonus}";
+            //-- Unlock City
+            String cityUnlockSql = "UPDATE cities SET Unlocked = 1 where city =  '{city}'";
+            /*
+             * Unlocked cities
+             * default : 
+                Paris
+                Frankfurt
+                Moscow
+                Istanbul
+               
+            * achivements created
+                London
+
+                
+                Los Angeles
+                Houston
+                Mexico City
+                New York City
+            * No achievements yet
+                Buenos Aires
+                São Paulo
+                Bogota
+                Shanghai
+                Guangzhou
+                Shenzhen
+                Beijing
+                Mumbai
+                Delhi
+                Jakarta
+                Tokyo
+                Singapore
+                Seoul
+                Dubai
+             * */
+
             //Reputation in a single city
             String sql_rep_any = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities group by city order by target desc limit 1";
             InsertAchievement("rep/any/0000500", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "Factory Building Unlocked", 500, sql_rep_any, "");
-            InsertAchievement("rep/any/0005000", "rep/any", "Master Trader", "Achieve {target} reputation in any city.", "", 5000, sql_rep_any, "");
-            InsertAchievement("rep/any/0250000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "", 250000, sql_rep_any, "");
-            InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "", 1000000, sql_rep_any, "");
+            InsertAchievement("rep/any/0005000", "rep/any", "Master Trader", "Achieve {target} reputation in any city.", "Production Bonus Points +10", 5000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}","10"));
+            InsertAchievement("rep/any/0250000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "Production Bonus Points +20", 250000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "Production Bonus Points +50", 1000000, sql_rep_any,  SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
             //Total Import per month
             String sql_import_total = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
-            InsertAchievement("imp/any/month/0000500", "imp/any/month", "New Importer on the Dock", "Import {target} goods in 1 month.", "", 500, sql_import_total, "");
-            InsertAchievement("imp/any/month/0005000", "imp/any/month", "Container Rookie", "Import {target} goods in 1 month.", "", 5000, sql_import_total, "");
-            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Freight Forwarder", "Import {target} goods in 1 month.", "", 250000, sql_import_total, "");
-            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "", 1000000, sql_import_total, "");
+            InsertAchievement("imp/any/month/0000500", "imp/any/month", "New Importer on the Dock", "Import {target} goods in 1 month.", "Unlock new city : London", 500, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "London"));
+            InsertAchievement("imp/any/month/0005000", "imp/any/month", "Container Rookie", "Import {target} goods in 1 month.", "Unlock new city : Los Angeles", 5000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Los Angeles"));
+            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Freight Forwarder", "Import {target} goods in 1 month.", "Unlock new city : Houston", 250000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Houston"));
+            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "Unlock new city : Mexico City", 1000000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mexico City"));
             //Total Expoprt per month
             String sql_export_total = "  SELECT MIN(sum(Export),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
             InsertAchievement("imp/any/month/0000500", "imp/any/month", "First-Time Exporter", "Export {target} goods in 1 month.", "", 500, sql_export_total, "");
             InsertAchievement("imp/any/month/0005000", "imp/any/month", "Export Enthusiast", "Export {target} goods in 1 month.", "", 5000, sql_export_total, "");
-            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Captain of Commerce", "Export {target} goods in 1 month.", "", 250000, sql_export_total, "");
+            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Captain of Commerce", "Export {target} goods in 1 month.", "Unlock new city : New York City", 250000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "New York City"));
             InsertAchievement("imp/any/month/1000000", "imp/any/month", "Continental Connector", "Export {target} goods in 1 month.", "", 1000000, sql_export_total, "");
             //Total Import in a city
             String sql_import_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by city order by target desc limit 1";
@@ -186,6 +228,8 @@ namespace Capital_and_Cargo
                                 updcommand.Parameters.AddWithValue("@id", row["id"]);
                                 updcommand.ExecuteNonQuery();
                             }
+                            //Apply achievement
+                            applyAchievement((String)row["updateSql"],(String)row["RewardText"]);
                         }
                     }
                 }
@@ -196,6 +240,17 @@ namespace Capital_and_Cargo
 
 
         }
+
+        private void applyAchievement(string updateSql,String reward)
+        {
+            Debug.WriteLine("applying Achievement "+reward);
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = updateSql;
+                command.ExecuteNonQuery();
+            }
+        }
+
         public  string SubstitutePlaceholder(string originalString, string placeholder, string substitution)
         {
             // Check if the original string contains the placeholder
@@ -217,8 +272,8 @@ namespace Capital_and_Cargo
 
             using (var command = _connection.CreateCommand())
             {
-               
-                command.CommandText = @"
+
+                /*command.CommandText = @"
                     SELECT ID,
                        Name,
                        Text,
@@ -230,9 +285,74 @@ namespace Capital_and_Cargo
                        end as achieved,
                        achievedDate
                   FROM achievements order by Key;
-                ";
+                ";*/
+                //only show the achieved ones, and the first unachieved one per key
+                command.CommandText = @"WITH FilteredAchievements AS (
+    SELECT 
+        ID,
+        Name,
+        Text,
+        RewardText,
+        Target,
+        achieved,
+        achievedDate,
+        path,
+        key,
+        ROW_NUMBER() OVER (PARTITION BY path ORDER BY key ASC) as RowNum
+    FROM achievements
+    WHERE achieved = 0
+),
 
-               
+AllAchievements AS (
+    SELECT 
+        ID,
+        Name,
+        Text,
+        RewardText,
+        Target,
+        achieved,
+        achievedDate,
+        path,
+        key
+    FROM achievements
+    WHERE achieved = 1
+
+    UNION ALL
+
+    SELECT 
+        ID,
+        Name,
+        Text,
+        RewardText,
+        Target,
+        achieved,
+        achievedDate,
+        path,
+        key
+    FROM FilteredAchievements
+    WHERE RowNum = 1
+)
+
+SELECT
+    --ID,
+    Name,
+    Text as Info,
+    RewardText as Reward,
+    Target,
+    CASE
+        WHEN achieved = 1 THEN '⚐'
+        ELSE ''
+    END as AchievedFlag,
+    achievedDate as [Achieved On]
+    --,
+    --path,
+    --key
+FROM AllAchievements
+ORDER BY path ASC, key ASC, achieved DESC;
+";
+
+
+
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -240,7 +360,7 @@ namespace Capital_and_Cargo
                 }
                 foreach (DataRow row in dataTable.Rows)
                 {
-                    row["Text"] = SubstitutePlaceholder((String)row["Text"], "{target}", "" + row["target"]);
+                    row["Info"] = SubstitutePlaceholder((String)row["Info"], "{target}", "" + row["target"]);
                     
                 }
 

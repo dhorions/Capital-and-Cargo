@@ -86,8 +86,9 @@ namespace Capital_and_Cargo
         {
             string sql = @"
            CREATE TABLE Player (
-    Date TEXT NOT NULL,
-    Money REAL NOT NULL
+                Date TEXT NOT NULL,
+                Money REAL NOT NULL,
+                productionBonusPool INTEGER default 0
 );
 ";
 

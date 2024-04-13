@@ -74,7 +74,8 @@ namespace Capital_and_Cargo
                 Imported INTEGER NOT NULL DEFAULT 0,
                 Exported INTEGER NOT NULL DEFAULT 0,
                 Bought INTEGER NOT NULL DEFAULT 0,
-                Sold INTEGER NOT NULL DEFAULT 0
+                Sold INTEGER NOT NULL DEFAULT 0,
+                Unlocked INTEGER default 0
             );";
 
             using (var command = _connection.CreateCommand())
@@ -88,27 +89,39 @@ namespace Capital_and_Cargo
         {
             DeleteAllFromCityMarket();
             string sql = @"
-            INSERT INTO cities (City, Latitude, Longitude, Continent, Country) VALUES
-('Shanghai', 31.2304, 121.4737, 'Asia', 'China'),
-('Tokyo', 35.6895, 139.6917, 'Asia', 'Japan'),
-('New York City', 40.7128, -74.0060, 'North America', 'USA'),
-('Los Angeles', 34.0522, -118.2437, 'North America', 'USA'),
-('Seoul', 37.5665, 126.9780, 'Asia', 'South Korea'),
-('Beijing', 39.9042, 116.4074, 'Asia', 'China'),
-('Mumbai', 19.0760, 72.8777, 'Asia', 'India'),
-('Moscow', 55.7558, 37.6173, 'Europe/Asia', 'Russia'),
-('São Paulo', -23.5505, -46.6333, 'South America', 'Brazil'),
-('Guangzhou', 23.1291, 113.2644, 'Asia', 'China'),
-('Delhi', 28.7041, 77.1025, 'Asia', 'India'),
-('Mexico City', 19.4326, -99.1332, 'North America', 'Mexico'),
-('London', 51.5074, -0.1278, 'Europe', 'United Kingdom'),
-('Frankfurt', 50.1109, 8.6821, 'Europe', 'Germany'),
-('Singapore', 1.3521, 103.8198, 'Asia', 'Singapore'),
-('Shenzhen', 22.5431, 114.0579, 'Asia', 'China'),
-('Jakarta', -6.2088, 106.8456, 'Asia', 'Indonesia'),
-('Istanbul', 41.0082, 28.9784, 'Europe/Asia', 'Turkey'),
-('Dubai', 25.2048, 55.2708, 'Asia', 'United Arab Emirates'),
-('Houston', 29.7604, -95.3698, 'North America', 'USA');
+            INSERT INTO cities (City, Latitude, Longitude, Continent, Country,Unlocked) VALUES
+            
+            ('Frankfurt', 50.1109, 8.6821, 'Europe', 'Germany',1),
+            ('Paris', 48.8566, 2.3522, 'Europe', 'France',1),
+            ('Moscow', 55.7558, 37.6173, 'Europe', 'Russia',1),
+            ('Istanbul', 41.0082, 28.9784, 'Europe', 'Turkey',1),
+
+            ('London', 51.5074, -0.1278, 'Europe', 'United Kingdom',0),
+
+            ('Shanghai', 31.2304, 121.4737, 'Asia', 'China',0),
+            ('Guangzhou', 23.1291, 113.2644, 'Asia', 'China',0),
+            ('Singapore', 1.3521, 103.8198, 'Asia', 'Singapore',0),
+            ('Shenzhen', 22.5431, 114.0579, 'Asia', 'China',0),
+            ('Jakarta', -6.2088, 106.8456, 'Asia', 'Indonesia',0),
+            ('Tokyo', 35.6895, 139.6917, 'Asia', 'Japan',0),
+            ('Seoul', 37.5665, 126.9780, 'Asia', 'South Korea',0),
+            ('Beijing', 39.9042, 116.4074, 'Asia', 'China',0),
+            ('Mumbai', 19.0760, 72.8777, 'Asia', 'India',0),
+            ('Delhi', 28.7041, 77.1025, 'Asia', 'India',0),
+            ('Dubai', 25.2048, 55.2708, 'Asia', 'United Arab Emirates',0),
+
+            ('New York City', 40.7128, -74.0060, 'North America', 'USA',0),
+            ('Los Angeles', 34.0522, -118.2437, 'North America', 'USA',0),
+            ('Houston', 29.7604, -95.3698, 'North America', 'USA',0),
+            ('Mexico City', 19.4326, -99.1332, 'North America', 'Mexico',0),
+
+            
+            ('São Paulo', -23.5505, -46.6333, 'South America', 'Brazil',0),
+            ('Buenos Aires', -34.6037, -58.3816, 'South America', 'Argentina',0),
+            ('Bogota', 4.7110, -74.0721, 'South America', 'Colombia',0)
+            
+           
+           ;
         ";
 
             using (var command = _connection.CreateCommand())
@@ -128,6 +141,7 @@ namespace Capital_and_Cargo
                 {reputationCalculation} as Reputation
                   
                 FROM cities left join warehouse on cities.city = warehouse.CityName
+                where Unlocked = 1
                 group by city
                 order by continent, country, city
                 ";
@@ -135,10 +149,6 @@ namespace Capital_and_Cargo
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText= sql;
-                /*command.Parameters.AddWithValue("@buyReputation", buyReputation);
-                command.Parameters.AddWithValue("@sellReputation", sellReputation);
-                command.Parameters.AddWithValue("@importReputation", importReputation);
-                command.Parameters.AddWithValue("@exportReputation", exportReputation);*/
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);
