@@ -178,7 +178,8 @@ namespace Capital_and_Cargo
                     CargoType String NOT NULL,
                     SupplyAmount INTEGER NOT NULL,
                     BuyPrice REAL NOT NULL,
-                    SellPrice REAL NOT NULL
+                    SellPrice REAL NOT NULL,
+                    UNIQUE (CityName,CargoType)
                 );";
                    command.ExecuteNonQuery();
             }
@@ -210,15 +211,16 @@ namespace Capital_and_Cargo
         }
         public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice, double minPrice, double maxPrice,double BaseFactoryprice, double BaseFactoryProduction)> cargoTypes)
         {
-            DataTable market = GetGoodsForCity("Beijing");
+            /*DataTable market = GetGoodsForCity("Beijing");
             if(market.Rows.Count> 0)
             {
                 //already populated
                 return;
-            }
+            }*/
+
             // var cities = dataManager.cities.LoadCities(); // Adjusted to get city names
             // var cargoTypes = dataManager.cargoTypes.GetAllCargoTypesAndBasePrices();
-            DeleteAllFromCityMarket();
+            //DeleteAllFromCityMarket();
              var random = new Random();
 
             foreach (DataRow city in cities.Rows)
@@ -234,7 +236,7 @@ namespace Capital_and_Cargo
                     using (var command = _connection.CreateCommand())
                     {
                         command.CommandText = @"
-                    INSERT INTO city_market (CityName, CargoType, SupplyAmount, BuyPrice, SellPrice)
+                    INSERT OR IGNORE INTO city_market (CityName, CargoType, SupplyAmount, BuyPrice, SellPrice)
                     VALUES (@CityName, @CargoType, @SupplyAmount, @BuyPrice, @SellPrice);";
 
                         command.Parameters.AddWithValue("@CityName", city["City"]);

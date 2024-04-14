@@ -1101,18 +1101,7 @@ class Program
         Application.Run(dialog);
     }
 
-    private static void CitiesListView_SelectedCellChanged(TableView.SelectedCellChangedEventArgs obj)
-    {
-        throw new NotImplementedException();
-    }
-    /*private static void pause()
-    {
-        timer.Enabled = false;
-    }
-    private static void resume()
-    {
-        timer.Enabled = true;
-    }*/
+  
 
     private static void playerHistoryDialog()
     {

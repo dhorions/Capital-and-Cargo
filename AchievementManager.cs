@@ -18,10 +18,14 @@ namespace Capital_and_Cargo
     {
         private SqliteConnection _connection;
         private String reputationCalculation;
-        public AchievementManager(ref SqliteConnection connection, String reputationCalculation)
+        private CitiesManager cities;
+        private CargoTypesManager cargoTypes;
+        public AchievementManager(ref SqliteConnection connection, String reputationCalculation,ref CitiesManager cities,ref CargoTypesManager cargoTypes)
         {
             _connection = connection;
             this.reputationCalculation = reputationCalculation;
+            this.cities = cities;
+            this.cargoTypes = cargoTypes;
             EnsureTableExistsAndIsPopulated();
         }
 
@@ -93,9 +97,12 @@ namespace Capital_and_Cargo
             String prodBonusSql = "UPDATE Player SET productionBonusPool = productionBonusPool + {bonus}";
             //-- Unlock City
             String cityUnlockSql = "UPDATE cities SET Unlocked = 1 where city =  '{city}'";
+            //-- Unlock CargoType
+            String cargoUnlockSql = "UPDATE cargoTypes SET Unlocked = 1 where CargoType =  '{CargoType}'";
+
             /*
-             * Unlocked cities
-             * default : 
+             * ----- CITIES -----
+              default : 
                 Paris
                 Frankfurt
                 Moscow
@@ -109,8 +116,9 @@ namespace Capital_and_Cargo
                 Houston
                 Mexico City
                 New York City
-            * No achievements yet
                 Buenos Aires
+            * No achievements yet
+                
                 São Paulo
                 Bogota
                 Shanghai
@@ -126,6 +134,40 @@ namespace Capital_and_Cargo
                 Dubai
              * */
 
+            /*
+            *  ----- GOODS -----
+           default : 
+                Paper Products
+                Coal
+                Cereals
+                Cosmetics
+                Livestock
+            * achievements created
+                 Food Products
+            * No Achievements Yet
+               
+                Agricultural Products
+                Plastics
+                Electronics
+                Footwear
+                Wood Products
+                Rubber
+                Beverages
+                Furniture
+                Toys
+                Oil & Gas
+                Construction Materials
+                Textiles
+                Chemicals
+                Metals
+                Glass Products
+                Machinery
+                Pharmaceuticals
+                Automobiles
+                Tobacco Products
+
+            */
+
             //Reputation in a single city
             String sql_rep_any = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities group by city order by target desc limit 1";
             InsertAchievement("rep/any/0000500", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "Factory Building Unlocked", 500, sql_rep_any, "");
@@ -140,10 +182,10 @@ namespace Capital_and_Cargo
             InsertAchievement("imp/any/month/1000000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "Unlock new city : Mexico City", 1000000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mexico City"));
             //Total Expoprt per month
             String sql_export_total = "  SELECT MIN(sum(Export),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
-            InsertAchievement("imp/any/month/0000500", "imp/any/month", "First-Time Exporter", "Export {target} goods in 1 month.", "", 500, sql_export_total, "");
-            InsertAchievement("imp/any/month/0005000", "imp/any/month", "Export Enthusiast", "Export {target} goods in 1 month.", "", 5000, sql_export_total, "");
+            InsertAchievement("imp/any/month/0000500", "imp/any/month", "First-Time Exporter", "Export {target} goods in 1 month.", "Unlock new cargo type : Food products", 500, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{CargoType}", "Food products"));
+            InsertAchievement("imp/any/month/0005000", "imp/any/month", "Export Enthusiast", "Export {target} goods in 1 month.", "Unlock new cargo type : Agricultural Products", 5000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{CargoType}", "Agricultural Products"));
             InsertAchievement("imp/any/month/0250000", "imp/any/month", "Captain of Commerce", "Export {target} goods in 1 month.", "Unlock new city : New York City", 250000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "New York City"));
-            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Continental Connector", "Export {target} goods in 1 month.", "", 1000000, sql_export_total, "");
+            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Continental Connector", "Export {target} goods in 1 month.", "Unlock new city : Buenos Aires", 1000000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Buenos Aires"));
             //Total Import in a city
             String sql_import_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by city order by target desc limit 1";
             InsertAchievement("imp/any/0000500", "imp/any", "Market Pioneer", "Import {target} goods into a city.", "", 500, sql_import_city, "");
@@ -249,6 +291,8 @@ namespace Capital_and_Cargo
                 command.CommandText = updateSql;
                 command.ExecuteNonQuery();
             }
+            //New goods could be unlocked, populate market
+            cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
         }
 
         public  string SubstitutePlaceholder(string originalString, string placeholder, string substitution)
