@@ -605,12 +605,13 @@ class Program
     {
         var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 70, 15);
         var buttonOk = new Button("OK", is_default: true);
-        var bonusPool = (Int64)dataManager.player.LoadPlayer().Rows[0]["productionBonusPool"];
+        var player = dataManager.player.LoadPlayer();
+        var bonusPool = (Int64)player.Rows[0]["productionBonusPool"];
         dialog.AddButton(buttonOk);
         buttonOk.Clicked += () => { Application.RequestStop(); };
         //var productionBonus = new ComboBox(createDropdownList(bonusPool));
 
-        var efficiency = 100;
+        var efficiency = dataManager.factory.getFactoryProductionBonus(city, cargoType);
         var efficiencyLabel = new Terminal.Gui.Label()
         {
             X = 1,
@@ -624,39 +625,51 @@ class Program
             Text =  efficiency + " %"
         };
 
+        if(bonusPool > 0) { 
+            var productionLabel= new Terminal.Gui.Label()
+            {
+                X = 1,
+                Y = 2,
+                Text = "Available Production Bonus Points"
+            };
 
-        var productionLabel= new Terminal.Gui.Label()
-        {
-            X = 1,
-            Y = 2,
-            Text = "Available Production Bonus Points"
-        };
+            var productionBonus = new Terminal.Gui.ComboBox(createDropdownList(bonusPool))
+            {
+                X = 35,
+                Y = 2,
+                Width = 5,
+                Height = 5
 
-        var productionBonus = new Terminal.Gui.ComboBox(createDropdownList(bonusPool))
-        {
-            X = 35,
-            Y = 2,
-            Width = 5,
-            Height = 5
+            };
+            productionBonus.SelectedItem = productionBonus.Source.Count-1;
+            var buttonApply = new Button("Apply")
+            {
+                X = 41,
+                Y = 2,
+            };
+            buttonApply.Clicked += () => {
+                //todo get value from dropdown
+                dataManager.factory.addProductionBonus(city, cargoType, int.Parse(productionBonus.Text.ToString()));
 
-        };
-        productionBonus.SelectedItem = productionBonus.Source.Count-1;
-        var buttonApply = new Button("Apply")
-        {
-            X = 41,
-            Y = 2,
-        };
+                //todo refresh screen
+                Application.RequestStop();
+                factorySettingsDialog(city, cargoType);
+
+
+            };
+            dialog.Add(productionLabel);
+            dialog.Add(productionBonus);
+            dialog.Add(buttonApply);
+        }
         dialog.Add(efficiencyLabel, efficiencyValue);
-        dialog.Add(productionLabel);
-        dialog.Add(productionBonus);
-        dialog.Add(buttonApply);
+        
         // Display the modal dialog
         Application.Run(dialog);
     }
     private static System.Collections.IList createDropdownList(Int64 max)
     {
         System.Collections.IList numbers = new List<String>();
-        for (int i = 1; i <= 10; i++)
+        for (int i = 1; i <= max; i++)
         {
             numbers.Add(""+i);
         }

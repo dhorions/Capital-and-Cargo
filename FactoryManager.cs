@@ -45,7 +45,8 @@ namespace Capital_and_Cargo
                     CityName TEXT NOT NULL,
                     CargoType String NOT NULL,
                     Level INTEGER NOT NULL,
-                    AmountProduced INTEGER not null
+                    AmountProduced INTEGER not null,
+                    productionBonus INTEGER default 0
                 );";
                 command.ExecuteNonQuery();
             }
@@ -69,6 +70,25 @@ namespace Capital_and_Cargo
                 Debug.WriteLine("Can't build factory : " + message);
             }
 
+        }
+        public void addProductionBonus(String CityName, String CargoType, int bonus)
+        {
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = "update factories set productionBonus = productionBonus + @bonus where CityName = @city and CargoType = @cargo";
+                command.Parameters.AddWithValue("@cargo", CargoType);
+                command.Parameters.AddWithValue("@city", CityName);
+                command.Parameters.AddWithValue("@bonus", bonus);
+                command.ExecuteNonQuery();
+            }
+            //Now remove the used production bonus from the player
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = "update player set productionBonusPool = productionBonusPool - @bonus";
+               
+                command.Parameters.AddWithValue("@bonus", bonus);
+                command.ExecuteNonQuery();
+            }
         }
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
@@ -268,7 +288,8 @@ namespace Capital_and_Cargo
                              AND c.Reputation >= (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500
                         THEN 'Yes'
                         ELSE 'No'
-                    END AS [Can Upgrade?]
+                    END AS [Can Upgrade?],
+                    (100 + productionBonus) || '%' as Efficiency
                 FROM 
                     factories f1
                 JOIN 
@@ -300,6 +321,29 @@ namespace Capital_and_Cargo
                     }
                 }
             return dataTable;
+        }
+        public int getFactoryProductionBonus(String city, String cargoType)
+        {
+            string sql = $"SELECT (100 + productionBonus) from factories  where cityName = @city and CargoType = @cargo";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                command.Parameters.AddWithValue("@cargo", cargoType);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        
+                        int eff = reader.GetInt16(0);
+                        return eff;
+                    }
+                }
+
+            }
+            return 100;
+
         }
         public DataTable LoadAllFactories()
         {
@@ -339,7 +383,7 @@ namespace Capital_and_Cargo
                 }
 
             }
-            if(!factoryExists(cargoType))
+            if(!factoryExists(cargoType,city))
             {
                 string insertSQL = @"INSERT INTO factories (CityName, CargoType, Level, AmountProduced)
                          VALUES (@cityName, @cargoType, @level, @production);";
@@ -373,13 +417,14 @@ namespace Capital_and_Cargo
 
         }
 
-        private bool factoryExists(string cargoType)
+        private bool factoryExists(string cargoType,String city)
         {
-            String sql = "SELECT CargoType FROM factories WHERE CargoType = @cargoType;";
+            String sql = "SELECT CargoType FROM factories WHERE CargoType = @cargoType and cityName = @city;";
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = sql;
                 command.Parameters.AddWithValue("@cargoType", cargoType);
+                command.Parameters.AddWithValue("@city", city);
 
                 using (var reader = command.ExecuteReader())
                 {
