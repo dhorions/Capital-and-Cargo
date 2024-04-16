@@ -225,6 +225,7 @@ namespace Capital_and_Cargo
         }
         public void checkAchievements(DateTime currentDate)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             DataTable dataTable = new DataTable();
 
             using (var command = _connection.CreateCommand())
@@ -244,6 +245,8 @@ namespace Capital_and_Cargo
                     checkAchievement(row,currentDate);
                 }
             }
+            stopwatch.Stop();
+            Debug.WriteLine($"Checking Achievements - {stopwatch.ElapsedMilliseconds} ms");
 
         }
         private void checkAchievement(DataRow row, DateTime currentDate)

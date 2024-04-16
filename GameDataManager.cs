@@ -94,11 +94,12 @@ namespace Capital_and_Cargo
         }
         public void gameUpdateLoop()
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             player.nextDay();
             System.Data.DataTable p = player.LoadPlayer();
             //Debug.WriteLine("->" + p.Rows[0]["Date"]);
             DateTime currentDay =  DateTime.ParseExact((String)p.Rows[0]["Date"], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            Debug.WriteLine("->"+currentDay);
+            
             if (IsFirstDayOfMonth(currentDay))
             {
                 Debug.WriteLine("First Day of new Month : " + currentDay);
@@ -113,7 +114,9 @@ namespace Capital_and_Cargo
             }
             transits.updateTransits();
             achievements.checkAchievements(currentDay);
-            
+            stopwatch.Stop();
+            Debug.WriteLine($"-> {currentDay} -  {stopwatch.ElapsedMilliseconds} ms"  );
+
         }
         public void purchase(String city, String CargoType, int amount, Double price)
         {

@@ -990,7 +990,7 @@ class Program
     }
     private static bool gameLoop(MainLoop mainLoop)
     {
-        Debug.WriteLine("gameloop");
+       // Debug.WriteLine("gameloop");
         Application.MainLoop.Invoke(() =>
         {
 
