@@ -76,7 +76,10 @@ namespace Capital_and_Cargo
                 Bought INTEGER NOT NULL DEFAULT 0,
                 Sold INTEGER NOT NULL DEFAULT 0,
                 Unlocked INTEGER default 0
-            );";
+            );
+            CREATE INDEX city ON cities (
+                    City
+                );";
 
             using (var command = _connection.CreateCommand())
             {
@@ -178,7 +181,8 @@ namespace Capital_and_Cargo
                     CargoType String NOT NULL,
                     SupplyAmount INTEGER NOT NULL,
                     BuyPrice REAL NOT NULL,
-                    SellPrice REAL NOT NULL
+                    SellPrice REAL NOT NULL,
+                    UNIQUE (CityName,CargoType)
                 );";
                    command.ExecuteNonQuery();
             }
@@ -210,15 +214,16 @@ namespace Capital_and_Cargo
         }
         public void PopulateCityMarketTable(DataTable cities, List<(String CargoType, double BasePrice, double minPrice, double maxPrice,double BaseFactoryprice, double BaseFactoryProduction)> cargoTypes)
         {
-            DataTable market = GetGoodsForCity("Beijing");
+            /*DataTable market = GetGoodsForCity("Beijing");
             if(market.Rows.Count> 0)
             {
                 //already populated
                 return;
-            }
+            }*/
+
             // var cities = dataManager.cities.LoadCities(); // Adjusted to get city names
             // var cargoTypes = dataManager.cargoTypes.GetAllCargoTypesAndBasePrices();
-            DeleteAllFromCityMarket();
+            //DeleteAllFromCityMarket();
              var random = new Random();
 
             foreach (DataRow city in cities.Rows)
@@ -234,7 +239,7 @@ namespace Capital_and_Cargo
                     using (var command = _connection.CreateCommand())
                     {
                         command.CommandText = @"
-                    INSERT INTO city_market (CityName, CargoType, SupplyAmount, BuyPrice, SellPrice)
+                    INSERT OR IGNORE INTO city_market (CityName, CargoType, SupplyAmount, BuyPrice, SellPrice)
                     VALUES (@CityName, @CargoType, @SupplyAmount, @BuyPrice, @SellPrice);";
 
                         command.Parameters.AddWithValue("@CityName", city["City"]);
@@ -255,6 +260,7 @@ namespace Capital_and_Cargo
         }
         public void UpdateCityMarketTable(DataTable cities, DateTime date)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             DateTime lastDayOfPreviousMonth = date.AddDays(-date.Day);
             using (var transaction = _connection.BeginTransaction())
             {
@@ -294,7 +300,7 @@ namespace Capital_and_Cargo
                         {
                             var economicModifier = RandomDoubleBetween(0.8, 2.0);
                             var supplyModifier = RandomDoubleBetween(0.8, 1.2);
-                            Debug.WriteLine($"market Update : {city["City"]}\t supplyModifier : {supplyModifier}\t economyModifier : {economicModifier}");
+                            //Debug.WriteLine($"market Update : {city["City"]}\t supplyModifier : {supplyModifier}\t economyModifier : {economicModifier}");
                             using (var command = _connection.CreateCommand())
                             {
                                 command.CommandText = @"
@@ -344,7 +350,7 @@ WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
                         String city = (String)badPrice["cityName"];
                         String cargo = (String)badPrice["cargoType"];
                         (buyPrice,sellPrice ) = adjustPriceToRange(buyPrice,sellPrice,minPrice,maxPrice);
-                        Debug.WriteLine("Adjusting incorrect price : " + city + "\t " + cargo + "\t" + badPrice["SellPrice"] + "\t->" + sellPrice);
+                        //Debug.WriteLine("Adjusting incorrect price : " + city + "\t " + cargo + "\t" + badPrice["SellPrice"] + "\t->" + sellPrice);
                         using (var command = _connection.CreateCommand())
                         {
                             command.CommandText = @"
@@ -376,6 +382,8 @@ WHERE cm.buyPrice NOT BETWEEN ct.minPrice AND ct.maxPrice
                     transaction.Rollback();
                 }
             }
+            stopwatch.Stop();
+            Debug.WriteLine($"Market Update: {stopwatch.ElapsedMilliseconds} ms");
         }
         private (Double,Double) adjustPriceToRange(Double buyPrice, Double sellPrice, Double minPrice, Double maxPrice)
         {

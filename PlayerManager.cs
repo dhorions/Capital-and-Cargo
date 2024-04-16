@@ -486,7 +486,7 @@ namespace Capital_and_Cargo
         public DataTable LoadPlayer()
         {
             DataTable dataTable = new DataTable();
-            string sql = "SELECT Date, Money from Player";
+            string sql = "SELECT Date, Money,productionBonusPool from Player";
 
             using (var command = _connection.CreateCommand())
             {

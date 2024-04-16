@@ -46,7 +46,7 @@ namespace Capital_and_Cargo
             cities = new CitiesManager(ref this.connection, ref dm, reputationCalculation, ref player, ref factory);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
             factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player);
-            achievements = new AchievementManager(ref this.connection, reputationCalculation);
+            achievements = new AchievementManager(ref this.connection, reputationCalculation,ref cities,ref cargoTypes);
             transits = new TransitManager(ref this.connection,ref dm,ref player);
             
             
@@ -94,11 +94,12 @@ namespace Capital_and_Cargo
         }
         public void gameUpdateLoop()
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             player.nextDay();
             System.Data.DataTable p = player.LoadPlayer();
             //Debug.WriteLine("->" + p.Rows[0]["Date"]);
             DateTime currentDay =  DateTime.ParseExact((String)p.Rows[0]["Date"], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            Debug.WriteLine("->"+currentDay);
+            
             if (IsFirstDayOfMonth(currentDay))
             {
                 Debug.WriteLine("First Day of new Month : " + currentDay);
@@ -113,7 +114,9 @@ namespace Capital_and_Cargo
             }
             transits.updateTransits();
             achievements.checkAchievements(currentDay);
-            
+            stopwatch.Stop();
+            Debug.WriteLine($"-> {currentDay} -  {stopwatch.ElapsedMilliseconds} ms"  );
+
         }
         public void purchase(String city, String CargoType, int amount, Double price)
         {

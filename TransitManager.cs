@@ -232,10 +232,11 @@ PurchasePrice REAL NOT NULL
         }
         public void updateTransits()
         {
-            
 
+            Stopwatch stopwatch = Stopwatch.StartNew();
             using (var transaction = _connection.BeginTransaction())
             {
+              
                 try
                 {
                     var sql = @"
@@ -370,7 +371,10 @@ PurchasePrice REAL NOT NULL
                     // Rollback the transaction on error
                     transaction.Rollback();
                 }
+               
             }
+            stopwatch.Stop();
+            Debug.WriteLine($"Update transports \t {stopwatch.ElapsedMilliseconds} ms");
         }
         public void transport(String transportationMode, String originCity, String targetCity, String CargoType, int amount)
         {

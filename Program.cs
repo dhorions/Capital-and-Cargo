@@ -15,6 +15,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Data.Common;
 using System.Globalization;
 using System.Numerics;
+using NStack;
 
 
 
@@ -515,8 +516,19 @@ class Program
             Y = 0
 
         };
+        var FactoryInfo = new Button("⚙️")
+        {
+            X = 40,
+            Y = 0
 
-        BuyFactory.Clicked += () =>
+        };
+        FactoryInfo.Clicked += () =>
+        {
+            String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+            String cargoType = (String)factoryTableView.Table.Rows[factoryTableView.SelectedRow]["Resource"];
+            factorySettingsDialog(city, cargoType);
+        };
+            BuyFactory.Clicked += () =>
         {
             String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
             String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
@@ -571,6 +583,7 @@ class Program
         cityFactoryView.Add(factoryTableView);
         cityFactoryView.Add(BuyFactory);
         cityFactoryView.Add(UpgradeFactory);
+        cityFactoryView.Add(FactoryInfo);
 
 
 
@@ -587,6 +600,82 @@ class Program
 
 
     }
+
+    private static void factorySettingsDialog(string city, string cargoType)
+    {
+        var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 70, 15);
+        var buttonOk = new Button("OK", is_default: true);
+        var player = dataManager.player.LoadPlayer();
+        var bonusPool = (Int64)player.Rows[0]["productionBonusPool"];
+        dialog.AddButton(buttonOk);
+        buttonOk.Clicked += () => { Application.RequestStop(); };
+        //var productionBonus = new ComboBox(createDropdownList(bonusPool));
+
+        var efficiency = dataManager.factory.getFactoryProductionBonus(city, cargoType);
+        var efficiencyLabel = new Terminal.Gui.Label()
+        {
+            X = 1,
+            Y = 1,
+            Text = "Factory Production Efficiency" 
+        };
+        var efficiencyValue = new Terminal.Gui.Label()
+        {
+            X = 35,
+            Y = 1,
+            Text =  efficiency + " %"
+        };
+
+        if(bonusPool > 0) { 
+            var productionLabel= new Terminal.Gui.Label()
+            {
+                X = 1,
+                Y = 2,
+                Text = "Available Production Bonus Points"
+            };
+
+            var productionBonus = new Terminal.Gui.ComboBox(createDropdownList(bonusPool))
+            {
+                X = 35,
+                Y = 2,
+                Width = 5,
+                Height = 5
+
+            };
+            productionBonus.SelectedItem = productionBonus.Source.Count-1;
+            var buttonApply = new Button("Apply")
+            {
+                X = 41,
+                Y = 2,
+            };
+            buttonApply.Clicked += () => {
+                //todo get value from dropdown
+                dataManager.factory.addProductionBonus(city, cargoType, int.Parse(productionBonus.Text.ToString()));
+
+                //todo refresh screen
+                Application.RequestStop();
+                factorySettingsDialog(city, cargoType);
+
+
+            };
+            dialog.Add(productionLabel);
+            dialog.Add(productionBonus);
+            dialog.Add(buttonApply);
+        }
+        dialog.Add(efficiencyLabel, efficiencyValue);
+        
+        // Display the modal dialog
+        Application.Run(dialog);
+    }
+    private static System.Collections.IList createDropdownList(Int64 max)
+    {
+        System.Collections.IList numbers = new List<String>();
+        for (int i = 1; i <= max; i++)
+        {
+            numbers.Add(""+i);
+        }
+        return numbers;
+    }
+
     private static void buyButtonDialog()
     {
         //pause();//pause game loop when in dialog
@@ -901,7 +990,7 @@ class Program
     }
     private static bool gameLoop(MainLoop mainLoop)
     {
-        Debug.WriteLine("gameloop");
+       // Debug.WriteLine("gameloop");
         Application.MainLoop.Invoke(() =>
         {
 
@@ -1105,18 +1194,7 @@ class Program
         Application.Run(dialog);
     }
 
-    private static void CitiesListView_SelectedCellChanged(TableView.SelectedCellChangedEventArgs obj)
-    {
-        throw new NotImplementedException();
-    }
-    /*private static void pause()
-    {
-        timer.Enabled = false;
-    }
-    private static void resume()
-    {
-        timer.Enabled = true;
-    }*/
+  
 
     private static void playerHistoryDialog()
     {

@@ -16,7 +16,11 @@ namespace Capital_and_Cargo
         private String reputationCalculation;
         private CargoTypesManager cargo;
         private PlayerManager player;
-        private int requiredReputationPerLevel = 500;
+        private static int requiredReputationPerLevel = 500;
+        private static String productionCalculation = "CAST(((f.AmountProduced * f.level) * (1 + f.productionBonus / 100.0)) + 0.99999 AS INTEGER)";
+        private static String upgradePriceCalculation = "BaseFactoryPrice + (BaseFactoryPrice * ((COALESCE(f.Level, 0) + 1) / 5.0))";
+        //private static String upgradeReputationCalculation = $"(SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}";
+        private static String upgradeReputationCalculation = $"((SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}) * (1+ (select level/2 from factories f3 where f3.CityName = f.CityName and f3.cargoType = f.cargoType))";
         //add comment
 
         public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player)
@@ -45,8 +49,14 @@ namespace Capital_and_Cargo
                     CityName TEXT NOT NULL,
                     CargoType String NOT NULL,
                     Level INTEGER NOT NULL,
-                    AmountProduced INTEGER not null
-                );";
+                    AmountProduced INTEGER not null,
+                    productionBonus INTEGER default 0
+                );
+                CREATE INDEX IF NOT EXISTS factory_citycargo ON factories (
+                    CityName,
+                    CargoType
+                );
+                ";
                 command.ExecuteNonQuery();
             }
         }
@@ -54,7 +64,7 @@ namespace Capital_and_Cargo
         {
             int nextLevel = (int)getExistingFactoryLevel(CityName, CargoType) + 1;
 
-            double requiredMoney = getRequiredMoney(CargoType, nextLevel);
+            double requiredMoney = getRequiredMoney(CargoType, CityName,nextLevel);
             //if (factoryExists(CargoType))
             //{
                 
@@ -70,6 +80,25 @@ namespace Capital_and_Cargo
             }
 
         }
+        public void addProductionBonus(String CityName, String CargoType, int bonus)
+        {
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = "update factories set productionBonus = productionBonus + @bonus where CityName = @city and CargoType = @cargo";
+                command.Parameters.AddWithValue("@cargo", CargoType);
+                command.Parameters.AddWithValue("@city", CityName);
+                command.Parameters.AddWithValue("@bonus", bonus);
+                command.ExecuteNonQuery();
+            }
+            //Now remove the used production bonus from the player
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = "update player set productionBonusPool = productionBonusPool - @bonus";
+               
+                command.Parameters.AddWithValue("@bonus", bonus);
+                command.ExecuteNonQuery();
+            }
+        }
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
            
@@ -78,7 +107,7 @@ namespace Capital_and_Cargo
             int usedReputation = (Convert.ToInt32(Math.Floor(getExistingFactoryLevelCount(CityName))) * requiredReputationPerLevel);
             requiredReputation = usedReputation + requiredReputation;
             int nextLevel = (int)getExistingFactoryLevel(CityName, CargoType) + 1;
-            double requiredMoney = getRequiredMoney(CargoType, nextLevel);
+            double requiredMoney = getRequiredMoney(CargoType, CityName,nextLevel);
             
             Double Money;
             Int64 Reputation;
@@ -117,20 +146,21 @@ namespace Capital_and_Cargo
             }
              return (false, "You don't yet have a " + CargoType + " factory in " + CityName);
         }
-        private double getRequiredMoney(string CargoType, int level)
+        private double getRequiredMoney(string CargoType, String city,int level)
         {
-            /**
-             * Price increases per level, level 2 adds 20% to price, level 3 adds 30%, level 100 adds 1000%
-             * 
-             */
+            
             double requiredMoney = Double.MaxValue;
             DataTable dataTable = new DataTable();
             Double levelDbl = (double)level;
-            string SelectSQL = @"SELECT  (BaseFactoryPrice + (BaseFactoryPrice * ( @level / 10)))   FROM cargoTypes WHERE CargoType = @cargoType;";
+            string SelectSQL = @$"SELECT  ({upgradePriceCalculation})   FROM cargoTypes 
+            left join factories f 
+            on f.cityName = @city and f.cargoType = cargoTypes.CargoType
+            WHERE cargoTypes.CargoType = @cargoType;";
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = SelectSQL;
                 command.Parameters.AddWithValue("@cargoType", CargoType);
+                command.Parameters.AddWithValue("@city", city);
                 command.Parameters.AddWithValue("@level", levelDbl);
 
                 using (var reader = command.ExecuteReader())
@@ -249,13 +279,37 @@ namespace Capital_and_Cargo
         {
             DataTable dataTable = new DataTable();
             string sql =
-                /*@"SELECT 
-                   CargoType as [Resource],
-                   Level as [Factory Level],
-                   (AmountProduced * Level)  as [Weekly Production]
-              FROM factories where CityName = @city;
-            ";*/
-                $@"
+               /*@"SELECT 
+                  CargoType as [Resource],
+                  Level as [Factory Level],
+                  (AmountProduced * Level)  as [Weekly Production]
+             FROM factories where CityName = @city;
+           ";*/
+               /* $@"
+                SELECT 
+                    f1.CargoType AS [Resource],
+                    f1.CityName as City,
+                    f1.Level AS [Level],
+                    (f1.AmountProduced * f1.Level) AS [Weekly Prod],
+                    (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500 AS [Upgrade Rep],
+                    (SELECT (BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))) FROM cargoTypes WHERE CargoType = f1.CargoType) AS [Upgrade Price],
+                    CASE 
+                        WHEN p.Money >= (SELECT ({BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))}) FROM cargoTypes WHERE CargoType = f1.CargoType)
+                             AND c.Reputation >= (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500
+                        THEN 'Yes'
+                        ELSE 'No'
+                    END AS [Can Upgrade?],
+                    (100 + productionBonus) || '%' as Efficiency
+                FROM 
+                    factories f1
+                JOIN 
+                    player p
+                JOIN 
+                    (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f1.CityName = c.City
+                WHERE c.City = @city
+             
+
+""$@"
                 SELECT 
                     f1.CargoType AS [Resource],
                     f1.CityName as City,
@@ -268,15 +322,39 @@ namespace Capital_and_Cargo
                              AND c.Reputation >= (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500
                         THEN 'Yes'
                         ELSE 'No'
-                    END AS [Can Upgrade?]
+                    END AS [Can Upgrade?],
+                    (100 + productionBonus) || '%' as Efficiency
                 FROM 
                     factories f1
                 JOIN 
                     player p
                 JOIN 
                     (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f1.CityName = c.City
+                WHERE c.City = @city*/
+               $@"
+                SELECT 
+                    f.CargoType AS [Resource],
+                    f.CityName as City,
+                    f.Level AS [Level],
+                    ({productionCalculation}) AS [Weekly Prod],
+                    {upgradeReputationCalculation} AS [Upgrade Rep],
+                    (SELECT ({upgradePriceCalculation}) FROM cargoTypes WHERE CargoType = f.CargoType) AS [Upgrade Price],
+                    CASE 
+                        WHEN p.Money >= (SELECT ({upgradePriceCalculation}) FROM cargoTypes WHERE CargoType = f.CargoType)
+                             AND c.Reputation >= {upgradeReputationCalculation}
+                        THEN 'Yes'
+                        ELSE 'No'
+                    END AS [Can Upgrade?],
+                    (100 + productionBonus) || '%' as Efficiency
+                FROM 
+                    factories f
+                JOIN 
+                    player p
+                JOIN 
+                    (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f.CityName = c.City
                 WHERE c.City = @city
 ";
+
 
             using (var command = _connection.CreateCommand())
             {
@@ -300,6 +378,29 @@ namespace Capital_and_Cargo
                     }
                 }
             return dataTable;
+        }
+        public int getFactoryProductionBonus(String city, String cargoType)
+        {
+            string sql = $"SELECT (100 + productionBonus) from factories  where cityName = @city and CargoType = @cargo";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                command.Parameters.AddWithValue("@cargo", cargoType);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        
+                        int eff = reader.GetInt16(0);
+                        return eff;
+                    }
+                }
+
+            }
+            return 100;
+
         }
         public DataTable LoadAllFactories()
         {
@@ -339,7 +440,7 @@ namespace Capital_and_Cargo
                 }
 
             }
-            if(!factoryExists(cargoType))
+            if(!factoryExists(cargoType,city))
             {
                 string insertSQL = @"INSERT INTO factories (CityName, CargoType, Level, AmountProduced)
                          VALUES (@cityName, @cargoType, @level, @production);";
@@ -373,13 +474,14 @@ namespace Capital_and_Cargo
 
         }
 
-        private bool factoryExists(string cargoType)
+        private bool factoryExists(string cargoType,String city)
         {
-            String sql = "SELECT CargoType FROM factories WHERE CargoType = @cargoType;";
+            String sql = "SELECT CargoType FROM factories WHERE CargoType = @cargoType and cityName = @city;";
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = sql;
                 command.Parameters.AddWithValue("@cargoType", cargoType);
+                command.Parameters.AddWithValue("@city", city);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -391,19 +493,22 @@ namespace Capital_and_Cargo
 
         public void updateProduction()
         {
-            Debug.WriteLine("Updating Production");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            //Debug.WriteLine("Updating Production");
             //DataTable factories = LoadAllFactories();
-            String sql = @"
+            String sql = @$"
                 --Update records where there is already something in the inventory of the city for this cargotype
                UPDATE warehouse
                 SET 
                     Amount = Amount + (
-                        SELECT ( f.AmountProduced * f.level)
+                        SELECT 
+                        --( f.AmountProduced * f.level)
+                        {productionCalculation}
                         FROM factories f
                         WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
                     ),
                     PurchasePrice = PurchasePrice + (
-                        SELECT ( f.AmountProduced * f.level * cm.BuyPrice )
+                        SELECT ( {productionCalculation} * cm.BuyPrice )
                         FROM factories f
                         JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
                         WHERE f.CityName = warehouse.CityName AND f.CargoType = warehouse.CargoType
@@ -419,7 +524,7 @@ namespace Capital_and_Cargo
                     f.CityName, 
                     f.CargoType, 
                     f.AmountProduced, 
-                    (f.AmountProduced * cm.BuyPrice * f.level) AS PurchasePrice
+                    ({productionCalculation} * cm.BuyPrice ) AS PurchasePrice
                 FROM factories f
                 JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
                 WHERE NOT EXISTS (
@@ -434,7 +539,8 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
 
             }
-
+            stopwatch.Stop();
+            Debug.WriteLine($"Updating production: {stopwatch.ElapsedMilliseconds} ms");
         }
     }
 }
