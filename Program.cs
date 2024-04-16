@@ -1021,11 +1021,6 @@ class Program
             Height = 15
         };
         var buttonTransport = new Button("OK", is_default: true);
-
-
-
-
-
         var buttonCancel = new Button("Cancel", is_default: false);
         var cityList = dataManager.cities.LoadCitiesList();
         cityList.Remove(city);
@@ -1090,6 +1085,15 @@ class Program
                 dataManager.transits.transport(transportationMode, city, (string)targetCity, CargoType, (int)amount);
                 updateScreen();
                 Application.RequestStop();
+            }
+
+            if (transportationMode == "plane")
+            {
+                dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.planeTransport);
+            }
+            else
+            {
+                dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.truckTransport);
             }
 
 

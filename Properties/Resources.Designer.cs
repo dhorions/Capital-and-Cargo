@@ -77,5 +77,23 @@ namespace Capital_and_Cargo.Properties {
                 return ResourceManager.GetStream("gameMusic", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream planeTransport {
+            get {
+                return ResourceManager.GetStream("planeTransport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream truckTransport {
+            get {
+                return ResourceManager.GetStream("truckTransport", resourceCulture);
+            }
+        }
     }
 }

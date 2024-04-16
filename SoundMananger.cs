@@ -32,7 +32,7 @@ namespace Capital_and_Cargo
 
             using (SoundPlayer SoundPlayer = new SoundPlayer(Properties.Resources.gameMusic))
             {
-                SoundPlayer.Play();
+                SoundPlayer.PlayLooping();
             }
 
         }

@@ -124,4 +124,10 @@
   <data name="gameMusic" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\sound\music\gameMusic.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="planeTransport" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\old-plane-183515.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="truckTransport" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\horn-hooter-94444.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>
