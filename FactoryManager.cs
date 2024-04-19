@@ -50,7 +50,11 @@ namespace Capital_and_Cargo
                     CargoType String NOT NULL,
                     Level INTEGER NOT NULL,
                     AmountProduced INTEGER not null,
-                    productionBonus INTEGER default 0
+                    productionBonus INTEGER default 0,
+                    AutoSellProduced INTEGER default 0,
+                    AutoSellImported INTEGER default 0,
+                    AutoExport INTEGER default 0,
+                    AutoExportDestination String 
                 );
                 CREATE INDEX IF NOT EXISTS factory_citycargo ON factories (
                     CityName,

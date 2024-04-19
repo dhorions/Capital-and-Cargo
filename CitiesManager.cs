@@ -75,11 +75,19 @@ namespace Capital_and_Cargo
                 Exported INTEGER NOT NULL DEFAULT 0,
                 Bought INTEGER NOT NULL DEFAULT 0,
                 Sold INTEGER NOT NULL DEFAULT 0,
-                Unlocked INTEGER default 0
+                Unlocked INTEGER default 0,
+                AutoSellProducedUnlocked INTEGER default 0,
+                AutoSellImportedUnlocked INTEGER default 0,
+                AutoExportUnlocked INTEGER default 0
+    
             );
             CREATE INDEX city ON cities (
                     City
-                );";
+                );
+            CREATE INDEX city_unlock ON cities(
+                   City,
+                   Unlocked
+               ); ";
 
             using (var command = _connection.CreateCommand())
             {

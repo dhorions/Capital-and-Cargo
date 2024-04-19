@@ -99,6 +99,12 @@ namespace Capital_and_Cargo
             String cityUnlockSql = "UPDATE cities SET Unlocked = 1 where city =  '{city}'";
             //-- Unlock CargoType
             String cargoUnlockSql = "UPDATE cargoTypes SET Unlocked = 1 where CargoType =  '{CargoType}'";
+            //--Unlock AutoSellProduced in city
+            String UnlockAutoSellProducedSql = "UPDATE cities SET AutoSellProducedUnlocked = 1 where  city = '{city}'";
+            //--Unlock AutoSellImported in city
+            String UnlockAutoSellImportedSql = "UPDATE cities SET AutoSellImportedUnlocked = 1 where city = '{city}'";
+            //--Unlock AutoExportUnlocked in city
+            String UnlockAutoExportUnlockedSql = "UPDATE cities SET AutoExportUnlocked = 1 where city = '{city}'";
 
             /*
              * ----- CITIES -----
