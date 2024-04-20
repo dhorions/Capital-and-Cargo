@@ -103,6 +103,20 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
+        public void setAutoSellProduction(String CityName, String CargoType, String bonusType, Boolean enabled)
+        {
+            int enabledInt = 0;
+            if (enabled) enabledInt = 1;
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = $"update factories set {bonusType} =  @enabledInt where CityName = @city and CargoType = @cargo";
+                command.Parameters.AddWithValue("@cargo", CargoType);
+                command.Parameters.AddWithValue("@city", CityName);
+                command.Parameters.AddWithValue("@enabledInt", enabledInt);
+                command.ExecuteNonQuery();
+            }
+        }
+
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
            

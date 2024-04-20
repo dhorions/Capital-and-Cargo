@@ -649,7 +649,6 @@ class Program
                 Y = 2,
             };
             buttonApply.Clicked += () => {
-                //todo get value from dropdown
                 dataManager.factory.addProductionBonus(city, cargoType, int.Parse(productionBonus.Text.ToString()));
 
                 //todo refresh screen
@@ -691,12 +690,12 @@ class Program
                 Debug.WriteLine("TODO - Store AutoSellProduced");
                 if (autoSellProducedCheckBox.Checked)
                 {
-                    //
                    
+                    dataManager.factory.setAutoSellProduction(city, cargoType, "AutoSellProduced",true);
                 }
                 else
                 {
-                    //
+                    dataManager.factory.setAutoSellProduction(city, cargoType, "AutoSellProduced", false);
                 }
             };
 
@@ -724,11 +723,11 @@ class Program
                     Debug.WriteLine("TODO - Store AutoSellImported");
                     if (autoSellImportedCheckBox.Checked)
                     {
-                        //
+                        dataManager.factory.setAutoSellProduction(city, cargoType, "AutoSellImported", true);
                     }
                     else
                     {
-                        //
+                        dataManager.factory.setAutoSellProduction(city, cargoType, "AutoSellImported", false);
                     }
                 };
 
