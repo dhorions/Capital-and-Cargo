@@ -216,18 +216,186 @@ namespace Capital_and_Cargo
                     //Unlock AutoSell Produced
                     String checkSql = SubstitutePlaceholder(sql_autosellproduced_city, "{city}", city);
                     String updateSql = SubstitutePlaceholder(UnlockAutoSellProducedSql, "{city}", city);
-                    InsertAchievement("autosellprod/"+ city+"/0_prod", "autosellprod/" + city, "Produced xxx", "Produce {target}  goods in " + city, "Unlocks Auto Sell Produced Goods in "+ city, 1000, checkSql, updateSql);
+                    InsertAchievement("autosellprod/"+ city+"/0_prod", "autosellprod/" + city, cityProductionAchievementName(city), "Produce {target}  goods in " + city, "Unlocks Auto Sell Produced Goods in "+ city, 1000, checkSql, updateSql);
                     //Unlock AutoSell Imported
                     checkSql = SubstitutePlaceholder(sql_autosellimported_city, "{city}", city);
                     updateSql = SubstitutePlaceholder(UnlockAutoSellImportedSql, "{city}", city);
-                    InsertAchievement("autosellimp/" + city + "/1_imp", "autosellimp/" + city, "Imported xxx", "Import {target}  goods in " + city, "Unlocks Auto Sell Imported Goods in " + city, 1000, checkSql, updateSql);
+                    InsertAchievement("autosellimp/" + city + "/1_imp", "autosellimp/" + city, cityImportAchievementName(city), "Import {target}  goods in " + city, "Unlocks Auto Sell Imported Goods in " + city, 1000, checkSql, updateSql);
                     //Unlock Auto Export 
                     checkSql = SubstitutePlaceholder(sql_autotransport_city, "{city}", city);
                     updateSql = SubstitutePlaceholder(UnlockAutoExportUnlockedSql, "{city}", city);
-                    InsertAchievement("autotransp/" + city + "/0_autotrans", "autotransp/" + city, "Exported xxx", "Export {target}  goods from " + city, "Unlocks Auto Transport Goods in " + city, 1000, checkSql, updateSql);
+                    InsertAchievement("autotransp/" + city + "/0_autotrans", "autotransp/" + city, cityExportAchievementName(city), "Export {target}  goods from " + city, "Unlocks Auto Transport Goods in " + city, 1000, checkSql, updateSql);
 
             }
 
+        }
+        private String cityProductionAchievementName(String city)
+        {
+            Dictionary<string, string> achievements = new Dictionary<string, string>()
+        {
+            {"Frankfurt", "Financial Fabricator"},
+            {"Paris", "Parisian Producer"},
+            {"Moscow", "Moscow Manufacturer"},
+            {"Istanbul", "Bosphorus Builder"},
+            {"London", "London's Loom Lord"},
+            {"Shanghai", "Shanghai Shipwright"},
+            {"Guangzhou", "Guangzhou Gear Maker"},
+            {"Singapore", "Singapore Synthesizer"},
+            {"Shenzhen", "Shenzhen Silicon Smith"},
+            {"Jakarta", "Jakarta Java Giant"},
+            {"Tokyo", "Tech Titan of Tokyo"},
+            {"Seoul", "Seoul Circuit Setter"},
+            {"Beijing", "Beijing Builder"},
+            {"Mumbai", "Mumbai Machinist"},
+            {"Delhi", "Delhi Developer"},
+            {"Dubai", "Dubai Dynamo"},
+            {"New York City", "New York Networker"},
+            {"Los Angeles", "LA Luminary"},
+            {"Houston", "Houston Heavy Industries"},
+            {"Mexico City", "Mexico City Maker"},
+            {"São Paulo", "São Paulo Station"},
+            {"Buenos Aires", "Buenos Aires Builder"},
+            {"Bogota", "Bogota Barricade Builder"}
+        };
+            List<string> generalAchievements = new List<string>()
+        {
+            "Master Manufacturer",
+            "Production Pioneer",
+            "Factory Foreman",
+            "Industrial Innovator",
+            "Assembly Ace",
+            "Manufacturing Mogul",
+            "Production Prodigy",
+            "Craftsmanship King",
+            "Industry Icon",
+            "Epic Producer",
+            "Production Wizard",
+            "Factory Phenom",
+            "Industrial Oracle",
+            "Manufacturing Mastermind",
+            "Workshop Warrior"
+        };
+            if (achievements.ContainsKey(city))
+            {
+                return achievements[city];
+            }
+            else
+            {
+                Random random = new Random();
+                return generalAchievements[random.Next(generalAchievements.Count)];
+            }
+        }
+        private String cityImportAchievementName(String city)
+        {
+            Dictionary<string, string> achievements = new Dictionary<string, string>()
+        {
+            {"Frankfurt", "Euro Stock Stacker"},
+            {"Paris", "Chic Supplier"},
+            {"Moscow", "Red Square Retailer"},
+            {"Istanbul", "Bazaar Boss"},
+            {"London", "Big Ben Broker"},
+            {"Shanghai", "Dragon Port Master"},
+            {"Guangzhou", "Canton King"},
+            {"Singapore", "Merlion Merchant"},
+            {"Shenzhen", "Silicon Shipper"},
+            {"Jakarta", "Archipelago Importer"},
+            {"Tokyo", "Gadget Guru"},
+            {"Seoul", "Kimchi Importer"},
+            {"Beijing", "Forbidden City Filler"},
+            {"Mumbai", "Bollywood Backer"},
+            {"Delhi", "Delhi Sultan of Spice"},
+            {"Dubai", "Desert Trade Sheikh"},
+            {"New York City", "Statue of Liberty Loader"},
+            {"Los Angeles", "Hollywood Handler"},
+            {"Houston", "Oil Empire Operator"},
+            {"Mexico City", "Aztec Trader"},
+            {"São Paulo", "Carnival Conductor"},
+            {"Buenos Aires", "Pampas Provider"},
+            {"Bogota", "Andean Importer"}
+        };
+            List<string> generalAchievements = new List<string>()
+        {
+            "Global Trader",
+            "Heavy Hauler",
+            "Import Mogul",
+            "Wholesale Wizard",
+            "Container King",
+            "Economic Giant",
+            "Cargo Czar",
+            "Bulk Buyer",
+            "Trade Route Ruler",
+            "Freight Tycoon",
+            "Import Impresario",
+            "Supply Chain Sultan",
+            "Worldwide Wholesaler",
+            "Mass Market Master",
+            "Goods Guru"
+        };
+            if (achievements.ContainsKey(city))
+            {
+                return achievements[city];
+            }
+            else
+            {
+                Random random = new Random();
+                return generalAchievements[random.Next(generalAchievements.Count)];
+            }
+        }
+        private String cityExportAchievementName(String city)
+        {
+            Dictionary<string, string> achievements = new Dictionary<string, string>()
+        {
+            {"Frankfurt", "Finance Forwarder"},
+            {"Paris", "Perfume Export Elite"},
+            {"Moscow", "Matryoshka Mover"},
+            {"Istanbul", "Istanbul Textile Tycoon"},
+            {"London", "Tea Trade Tsar"},
+            {"Shanghai", "Silk Road Reviver"},
+            {"Guangzhou", "Guangzhou Industrial Exporter"},
+            {"Singapore", "Singapore Spice Shipper"},
+            {"Shenzhen", "Shenzhen Tech Trafficker"},
+            {"Jakarta", "Jakarta Java Juggler"},
+            {"Tokyo", "Tokyo Tech Trailblazer"},
+            {"Seoul", "Seoul Semiconductor Supplier"},
+            {"Beijing", "Beijing Business Booster"},
+            {"Mumbai", "Mumbai Maritime Merchant"},
+            {"Delhi", "Delhi Textile Distributor"},
+            {"Dubai", "Dubai Gold Glider"},
+            {"New York City", "New York Navigator"},
+            {"Los Angeles", "LA Entertainment Exporter"},
+            {"Houston", "Houston Oil Outfitter"},
+            {"Mexico City", "Mexico City Manufacturing Maestro"},
+            {"São Paulo", "São Paulo Sugar Shuffler"},
+            {"Buenos Aires", "Buenos Aires Beef Baron"},
+            {"Bogota", "Bogota Bloom Broker"}
+        };
+            List<string> generalAchievements = new List<string>()
+        {
+            "Global Goods Guru",
+            "Export Emperor",
+            "Shipping Savant",
+            "World Trader",
+            "Transnational Tycoon",
+            "Export Expert",
+            "Overseas Operator",
+            "International Dealer",
+            "Cross-continental Captain",
+            "Merchandise Mogul",
+            "Trade Trailblazer",
+            "Foreign Market Maven",
+            "Export Entrepreneur",
+            "Export Ace",
+            "Outbound Oracle"
+        };
+            if (achievements.ContainsKey(city))
+            {
+                return achievements[city];
+            }
+            else
+            {
+                Random random = new Random();
+                return generalAchievements[random.Next(generalAchievements.Count)];
+            }
         }
         public (Int64,Int64) getAchievementStatus()
         {
