@@ -176,7 +176,7 @@ namespace Capital_and_Cargo
             DataTable dataTable = new DataTable();
             using (var command = _connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM cargoTypes ORDER BY CargoType where Unlocked = 1;";
+                command.CommandText = "SELECT * FROM cargoTypes where Unlocked = 1 ORDER BY CargoType ;";
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);

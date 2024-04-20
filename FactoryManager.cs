@@ -543,6 +543,26 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
 
             }
+            //Keep track of amount produced
+            var sqlHistory = @$"INSERT INTO HistoryDetail (Date, City, CargoType, Production)
+            SELECT 
+                @date AS Date,
+                f.CityName AS City,
+                f.CargoType AS CargoType,
+                {productionCalculation}  AS Production
+            FROM factories f
+            JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
+            ON CONFLICT(Date, City, CargoType) DO UPDATE SET
+                Production = Production + EXCLUDED.Production;";
+            DateTime firstOfMonth = player.firstOfMonth(player.getCurrentDate());
+            using (var command = _connection.CreateCommand())
+            {
+                //Debug.WriteLine("Storing production history " + firstOfMonthDate + "\t" + totalPrice + "\t" + city + "\t" + CargoType);
+                command.CommandText = sqlHistory;
+                
+                command.Parameters.AddWithValue("@date", firstOfMonth);
+                command.ExecuteNonQuery();
+            }
             stopwatch.Stop();
             Debug.WriteLine($"Updating production: {stopwatch.ElapsedMilliseconds} ms");
         }

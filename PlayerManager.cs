@@ -60,9 +60,14 @@ namespace Capital_and_Cargo
                 City      TEXT,
                 CargoType TEXT,
                 Import    INTEGER default 0,
-                Export    INTEGER default 0
+                Export    INTEGER default 0,
+                Production INTEGER default 0
             );
             CREATE UNIQUE INDEX idx_city_date_cargo ON HistoryDetail (City, Date, CargoType);
+            CREATE INDEX idx_city_cargo ON HistoryDetail (City, CargoType);
+            CREATE INDEX idx_city ON HistoryDetail (City);
+
+
             ";
             using (var command = _connection.CreateCommand())
             {

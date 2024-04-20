@@ -204,7 +204,29 @@ namespace Capital_and_Cargo
             InsertAchievement("exp/any/0005000", "exp/any", "City Export Champion", "Export {target} goods from a city.", "", 5000, sql_export_city, "");
             InsertAchievement("exp/any/0250000", "exp/any", "Metropolitan Merchant", "Export {target} goods from a city.", "", 250000, sql_export_city, "");
             InsertAchievement("exp/any/1000000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "", 1000000, sql_export_city, "");
+            //Unlock Auto Sell, Auto Export etc per city
+            String sql_autosellproduced_city = "  SELECT MIN(sum(Production),{target}) as target FROM HistoryDetail where city = '{city}' ";
+            String sql_autosellimported_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail where city = '{city}' ";
+            String sql_autotransport_city = "  SELECT MIN(sum(Export),{target}) as target FROM HistoryDetail where city = '{city}' ";
+            DataTable cargos = cargoTypes.LoadCargoTypes();
+            foreach (String city in cities.LoadCitiesList())
+            {
+                
+                    
+                    //Unlock AutoSell Produced
+                    String checkSql = SubstitutePlaceholder(sql_autosellproduced_city, "{city}", city);
+                    String updateSql = SubstitutePlaceholder(UnlockAutoSellProducedSql, "{city}", city);
+                    InsertAchievement("autosellprod/"+ city+"/0_prod", "autosellprod/" + city, "Produced xxx", "Produce {target}  goods in " + city, "Unlocks Auto Sell Produced Goods in "+ city, 1000, checkSql, updateSql);
+                    //Unlock AutoSell Imported
+                    checkSql = SubstitutePlaceholder(sql_autosellimported_city, "{city}", city);
+                    updateSql = SubstitutePlaceholder(UnlockAutoSellImportedSql, "{city}", city);
+                    InsertAchievement("autosellimp/" + city + "/1_imp", "autosellimp/" + city, "Imported xxx", "Import {target}  goods in " + city, "Unlocks Auto Sell Imported Goods in " + city, 1000, checkSql, updateSql);
+                    //Unlock Auto Export 
+                    checkSql = SubstitutePlaceholder(sql_autotransport_city, "{city}", city);
+                    updateSql = SubstitutePlaceholder(UnlockAutoExportUnlockedSql, "{city}", city);
+                    InsertAchievement("autotransp/" + city + "/0_autotrans", "autotransp/" + city, "Exported xxx", "Export {target}  goods from " + city, "Unlocks Auto Transport Goods in " + city, 1000, checkSql, updateSql);
 
+            }
 
         }
         public (Int64,Int64) getAchievementStatus()
@@ -261,28 +283,36 @@ namespace Capital_and_Cargo
             {
                 
                 command.CommandText = (String)row["checkSQL"];
-
+                Boolean achievementApplied = false;
                 Double result = 0;
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        result = reader.GetInt64(0);
-                        if (result >= (Int64)row["Target"])
-                        {
-                            Debug.WriteLine("achievement unlocked " + row["Name"] + " " + row["Text"]);
-                            using (var updcommand = _connection.CreateCommand())
+                        if(!reader.IsDBNull(0))
+                        { 
+                            result = reader.GetInt64(0);
+                            if (result >= (Int64)row["Target"])
                             {
+                                Debug.WriteLine("achievement unlocked " + row["Name"] + " " + row["Text"]);
+                                using (var updcommand = _connection.CreateCommand())
+                                {
 
-                                updcommand.CommandText = "UPDATE achievements SET achieved = 1, achievedDate = @achievedDate WHERE ID = @id";
-                                updcommand.Parameters.AddWithValue("@achievedDate", currentDate.ToString("yyyy-MM-dd HH:mm:ss"));
-                                updcommand.Parameters.AddWithValue("@id", row["id"]);
-                                updcommand.ExecuteNonQuery();
+                                    updcommand.CommandText = "UPDATE achievements SET achieved = 1, achievedDate = @achievedDate WHERE ID = @id";
+                                    updcommand.Parameters.AddWithValue("@achievedDate", currentDate.ToString("yyyy-MM-dd HH:mm:ss"));
+                                    updcommand.Parameters.AddWithValue("@id", row["id"]);
+                                    updcommand.ExecuteNonQuery();
+                                }
+                                //Apply achievement
+                                applyAchievement((String)row["updateSql"],(String)row["RewardText"]);
+                                achievementApplied = true;
                             }
-                            //Apply achievement
-                            applyAchievement((String)row["updateSql"],(String)row["RewardText"]);
                         }
                     }
+                }
+                if(achievementApplied) {
+                    //There maybe be things unlocked that lead to new achievements
+                    createPlayerAchievements();
                 }
 
 
