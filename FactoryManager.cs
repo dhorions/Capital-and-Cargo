@@ -279,6 +279,27 @@ namespace Capital_and_Cargo
                 return (0,0);
             
         }
+        public DataRow getFactory(String city, String cargoType)
+        {
+            DataTable fact = new DataTable();
+            string sql = @"SELECT 
+                 *
+              FROM factories where cityname = @city and cargotype = @cargo;
+            ";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                command.Parameters.AddWithValue("@cargo", cargoType);
+                using (var reader = command.ExecuteReader())
+                {
+                    fact.Load(reader);
+                }
+
+            }
+            return fact.Rows[0];
+        }
         public DataTable LoadFactories(String city)
         {
             DataTable dataTable = new DataTable();

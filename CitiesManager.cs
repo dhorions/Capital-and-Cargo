@@ -141,6 +141,26 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
+        public DataRow getCity(String city)
+        {
+            DataTable cit = new DataTable();
+            string sql = @"SELECT 
+                 *
+              FROM cities where city = @city ;
+            ";
+
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.Parameters.AddWithValue("@city", city);
+                using (var reader = command.ExecuteReader())
+                {
+                    cit.Load(reader);
+                }
+
+            }
+            return cit.Rows[0];
+        }
         public DataTable LoadCities()
         {
             DataTable dataTable = new DataTable();

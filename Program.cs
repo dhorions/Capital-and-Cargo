@@ -606,6 +606,7 @@ class Program
         var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 70, 15);
         var buttonOk = new Button("OK", is_default: true);
         var player = dataManager.player.LoadPlayer();
+        //-----------Production Bonus----------------
         var bonusPool = (Int64)player.Rows[0]["productionBonusPool"];
         dialog.AddButton(buttonOk);
         buttonOk.Clicked += () => { Application.RequestStop(); };
@@ -659,8 +660,84 @@ class Program
             };
             dialog.Add(productionLabel);
             dialog.Add(productionBonus);
+
             dialog.Add(buttonApply);
         }
+
+
+        //------------AutoSell Settings
+        
+            DataRow cityDetails = dataManager.cities.getCity(city);
+            
+            DataRow factory = dataManager.factory.getFactory(city, cargoType);
+        //Show checkbox if feature unlocked
+        if ((Int64)cityDetails["AutoSellProducedUnlocked"] == 1)
+        {
+            Boolean AutoSellProducedChecked = ((Int64)factory["AutoSellProduced"] == 1);
+            var autoSellProducedCheckBox = new CheckBox()
+            {
+                Checked = AutoSellProducedChecked,
+                Y = 3,
+                X = 35
+            };
+            var autoSellProducedLabel = new Terminal.Gui.Label("Auto Sell Produced " + cargoType)
+            {
+                X = 1,
+                Y = 3
+            };
+
+            autoSellProducedCheckBox.Toggled += (e) =>
+            {
+                Debug.WriteLine("TODO - Store AutoSellProduced");
+                if (autoSellProducedCheckBox.Checked)
+                {
+                    //
+                   
+                }
+                else
+                {
+                    //
+                }
+            };
+
+            dialog.Add(autoSellProducedLabel);
+            dialog.Add(autoSellProducedCheckBox);
+        }
+            //Show checkbox if feature unlocked
+            if ((Int64)cityDetails["AutoSellImportedUnlocked"] == 1)
+            {
+                Boolean AutoSellImportedChecked = ((Int64)factory["AutoSellImported"] == 1);
+                var autoSellImportedCheckBox = new CheckBox()
+                {
+                    Checked = AutoSellImportedChecked,
+                    Y = 4,
+                    X = 35
+                };
+                var autoSellImportedLabel = new Terminal.Gui.Label("Auto Sell Imported "+ cargoType)
+                {
+                    X = 1,
+                    Y = 4
+                };
+
+                autoSellImportedCheckBox.Toggled += (e) =>
+                {
+                    Debug.WriteLine("TODO - Store AutoSellImported");
+                    if (autoSellImportedCheckBox.Checked)
+                    {
+                        //
+                    }
+                    else
+                    {
+                        //
+                    }
+                };
+
+                dialog.Add(autoSellImportedLabel);
+                dialog.Add(autoSellImportedCheckBox);
+            }
+
+
+
         dialog.Add(efficiencyLabel, efficiencyValue);
         
         // Display the modal dialog
