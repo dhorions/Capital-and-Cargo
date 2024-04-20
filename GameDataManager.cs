@@ -45,9 +45,9 @@ namespace Capital_and_Cargo
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
             cities = new CitiesManager(ref this.connection, ref dm, reputationCalculation, ref player, ref factory);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
-            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player);
+            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player,ref cities);
             achievements = new AchievementManager(ref this.connection, reputationCalculation,ref cities,ref cargoTypes);
-            transits = new TransitManager(ref this.connection,ref dm,ref player);
+            transits = new TransitManager(ref this.connection,ref dm,ref player,ref cities,ref factory);
             
             
             

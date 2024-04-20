@@ -382,7 +382,7 @@ namespace Capital_and_Cargo
             }
         }
 
-        public void sell(String city, String CargoType, int amount, Double price)
+        public void sell(String city, String CargoType, Int64 amount, Double price)
         {
             using (var transaction = _connection.BeginTransaction())
             {

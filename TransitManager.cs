@@ -16,16 +16,20 @@ namespace Capital_and_Cargo
         private SqliteConnection _connection;
         private GameDataManager dataManager;
         private PlayerManager player;
+        private CitiesManager cities;
+        private FactoryManager factories;
         private Double kmPriceTruck = 0.0002;
         private Double kmPricePlane = 0.001;
         private Double speedTruck = 100;
         private Double speedPlane = 500;
-        public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager, ref PlayerManager player)
+        public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager, ref PlayerManager player, ref CitiesManager cities, ref FactoryManager factories)
         {
             _connection = connection;
             EnsureTableExistsAndIsPopulated();
             this.dataManager = dataManager;
             this.player = player;
+            this.cities = cities;   
+            this.factories = factories;
         }
 
         public void EnsureTableExistsAndIsPopulated()
@@ -234,11 +238,11 @@ PurchasePrice REAL NOT NULL
         {
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            using (var transaction = _connection.BeginTransaction())
+            /*using (var transaction = _connection.BeginTransaction())
             {
               
                 try
-                {
+                {*/
                     var sql = @"
                             UPDATE city_transit
                             SET ProgressKM = ProgressKM + @speed,
@@ -346,10 +350,18 @@ PurchasePrice REAL NOT NULL
                             command.Parameters.AddWithValue("@Import", row["CargoAmount"]);
                             command.ExecuteNonQuery();
                         }
+                //Auto Sell imported
+                DataRow factory = factories.getFactory((String)row["DestinationCity"], (String)row["CargoType"]);
+                        if (factory!=null && (Int64)(factory["AutoSellImported"]) == 1)
+                        { 
+                                DataTable prices = cities.GetPrices((String)row["DestinationCity"], (String)row["CargoType"]);
+                                Debug.WriteLine("AutoSell Import ->\t" + (Int64)row["CargoAmount"] + " " + (String)row["CargoType"] + " in " + (String)row["DestinationCity"] + " for " + (Double)prices.Rows[0]["BuyPrice"]);
+                                player.sell((String)row["DestinationCity"], (String)row["CargoType"], (Int64)row["CargoAmount"], (Double)prices.Rows[0]["BuyPrice"]);
+                        }
 
 
 
-                    }
+            }
                     using (var cmdDelete = _connection.CreateCommand())
                     {
                         //Debug.WriteLine("Deleting all finished transports");
@@ -362,17 +374,17 @@ PurchasePrice REAL NOT NULL
 
 
 
-                    // Commit the transaction if both commands succeed
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"An error updating transports {ex.Message} {ex.Source}");
-                    // Rollback the transaction on error
-                    transaction.Rollback();
-                }
-               
+            /*    // Commit the transaction if both commands succeed
+                transaction.Commit();
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error updating transports {ex.Message} {ex.Source}");
+                // Rollback the transaction on error
+                transaction.Rollback();
+            }
+
+        }*/
             stopwatch.Stop();
             Debug.WriteLine($"Update transports \t {stopwatch.ElapsedMilliseconds} ms");
         }
@@ -380,11 +392,11 @@ PurchasePrice REAL NOT NULL
         {
             var (distance, price) = getTransportPrice(transportationMode, originCity, targetCity);
 
-            using (var transaction = _connection.BeginTransaction())
+            /*using (var transaction = _connection.BeginTransaction())
             {
                 try
-                {
-                    Double cargoValue = 0;
+                {*/
+            Double cargoValue = 0;
                     //Get current price from Warehouse
                     using (var command = _connection.CreateCommand())
                     {
@@ -503,17 +515,17 @@ PurchasePrice REAL NOT NULL
 
 
 
-                    // Commit the transaction if both commands succeed
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"An error registering a transport: {ex.Message}");
+            // Commit the transaction if both commands succeed
+            /*transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"An error registering a transport: {ex.Message}");
 
-                    // Rollback the transaction on error
-                    transaction.Rollback();
-                }
-            }
+            // Rollback the transaction on error
+            transaction.Rollback();
+        }
+    }*/
         }
     }
 

@@ -16,6 +16,7 @@ namespace Capital_and_Cargo
         private String reputationCalculation;
         private CargoTypesManager cargo;
         private PlayerManager player;
+        private CitiesManager cities;
         private static int requiredReputationPerLevel = 500;
         private static String productionCalculation = "CAST(((f.AmountProduced * f.level) * (1 + f.productionBonus / 100.0)) + 0.99999 AS INTEGER)";
         private static String upgradePriceCalculation = "BaseFactoryPrice + (BaseFactoryPrice * ((COALESCE(f.Level, 0) + 1) / 5.0))";
@@ -23,12 +24,13 @@ namespace Capital_and_Cargo
         private static String upgradeReputationCalculation = $"((SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}) * (1+ (select level/2 from factories f3 where f3.CityName = f.CityName and f3.cargoType = f.cargoType))";
         //add comment
 
-        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player)
+        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player,ref CitiesManager cities)
         {
             _connection = connection;
             this.cargo = cargo;
             this.player = player;
             this.reputationCalculation = reputationCalculation;
+            this.cities = cities;
             EnsureTableExistsAndIsPopulated();
 
         }
@@ -312,7 +314,9 @@ namespace Capital_and_Cargo
                 }
 
             }
-            return fact.Rows[0];
+            if(fact.Rows.Count > 0) { return fact.Rows[0]; }
+            return null;
+            
         }
         public DataTable LoadFactories(String city)
         {
@@ -562,7 +566,7 @@ namespace Capital_and_Cargo
                 SELECT 
                     f.CityName, 
                     f.CargoType, 
-                    f.AmountProduced, 
+                    {productionCalculation}, 
                     ({productionCalculation} * cm.BuyPrice ) AS PurchasePrice
                 FROM factories f
                 JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
@@ -598,6 +602,33 @@ namespace Capital_and_Cargo
                 command.Parameters.AddWithValue("@date", firstOfMonth);
                 command.ExecuteNonQuery();
             }
+            //AutoSell
+            String autoSellInfoSql = @$"
+            SELECT
+                 f.CityName AS City,
+                 f.CargoType AS CargoType,
+                 {productionCalculation}  AS Production
+             FROM factories f
+             JOIN city_market cm ON f.CityName = cm.CityName AND f.CargoType = cm.CargoType
+             where f.AutoSellProduced = 1";
+            var autosellTable = new DataTable();
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = autoSellInfoSql;
+                using (var reader = command.ExecuteReader())
+                {
+                    autosellTable.Load(reader);
+                }
+                foreach(DataRow factory in autosellTable.Rows)
+                {
+                    DataTable prices = cities.GetPrices((String)factory["City"], (String)factory["CargoType"]);
+                    Debug.WriteLine("AutoSell Production ->\t" + (Int64)factory["Production"] + " " + (String)factory["CargoType"] + " in " + (String)factory["City"]+ " for "  + (Double)prices.Rows[0]["BuyPrice"]);
+                    player.sell((String)factory["City"], (String)factory["CargoType"], (Int64)factory["Production"], (Double)prices.Rows[0]["BuyPrice"]);
+                }
+
+            }
+
+
             stopwatch.Stop();
             Debug.WriteLine($"Updating production: {stopwatch.ElapsedMilliseconds} ms");
         }
