@@ -56,7 +56,8 @@ namespace Capital_and_Cargo
                     AutoSellProduced INTEGER default 0,
                     AutoSellImported INTEGER default 0,
                     AutoExport INTEGER default 0,
-                    AutoExportDestination String 
+                    AutoExportDestination String,
+                    AutoExportTreshold INTEGER default 0
                 );
                 CREATE INDEX IF NOT EXISTS factory_citycargo ON factories (
                     CityName,
@@ -102,6 +103,21 @@ namespace Capital_and_Cargo
                 command.CommandText = "update player set productionBonusPool = productionBonusPool - @bonus";
                
                 command.Parameters.AddWithValue("@bonus", bonus);
+                command.ExecuteNonQuery();
+            }
+        }
+        public void setAutoExport(String CityName, String CargoType,  Boolean enabled, String targetCity,int treshold)
+        {
+            int enabledInt = 0;
+            if (enabled) enabledInt = 1;
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = $"update factories set AutoExport =  @enabledInt, AutoExportDestination = @targetCity, AutoExportTreshold = @treshold where CityName = @city and CargoType = @cargo";
+                command.Parameters.AddWithValue("@cargo", CargoType);
+                command.Parameters.AddWithValue("@city", CityName);
+                command.Parameters.AddWithValue("@enabledInt", enabledInt);
+                command.Parameters.AddWithValue("@targetCity", targetCity);
+                command.Parameters.AddWithValue("@treshold", treshold);
                 command.ExecuteNonQuery();
             }
         }

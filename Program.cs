@@ -606,10 +606,16 @@ class Program
         var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 70, 15);
         var buttonOk = new Button("OK", is_default: true);
         var player = dataManager.player.LoadPlayer();
+
+
+        CheckBox autoTransportCheckBox;
+        ComboBox transportTarget;
+        TextField autoTransportTreshold;
+
         //-----------Production Bonus----------------
         var bonusPool = (Int64)player.Rows[0]["productionBonusPool"];
         dialog.AddButton(buttonOk);
-        buttonOk.Clicked += () => { Application.RequestStop(); };
+        
         //var productionBonus = new ComboBox(createDropdownList(bonusPool));
 
         var efficiency = dataManager.factory.getFactoryProductionBonus(city, cargoType);
@@ -734,11 +740,94 @@ class Program
                 dialog.Add(autoSellImportedLabel);
                 dialog.Add(autoSellImportedCheckBox);
             }
+        //--Auto Transport Settings
+        //Get list of cities
+        var cityList = dataManager.cities.LoadCitiesList();
+        cityList.Remove(city);
+        Boolean AutoTransportChecked = ((Int64)factory["AutoExport"] == 1);
+        autoTransportCheckBox = new CheckBox()
+        {
+            Checked = AutoTransportChecked,
+
+            X = 35,
+            Y = 5
+        };
+        autoTransportTreshold = new TextField()
+        {
+            Text = "0",
+            Height = 1,
+            Width = 10,
+            X = 35,
+            Y = 7,
+            Visible = AutoTransportChecked
+        };
+        transportTarget = new Terminal.Gui.ComboBox(cityList)
+        {
+            X = 35,
+            Y = 9,
+            Width = 25,
+            Height = 5,
+            Visible = AutoTransportChecked
+        };
+        //Show checkbox if feature unlocked
+        if ((Int64)cityDetails["AutoExportUnlocked"] != 1)
+        {
+            transportTarget.Visible = false;
+            autoTransportTreshold.Visible = false;
+            autoTransportCheckBox.Visible = false;
+        }
+        else { 
+           
+            var autoExportLabel = new Terminal.Gui.Label("Auto Export " + cargoType)
+            {
+                X = 1,
+                Y = 5
+            };
+            
+            var autoExportTresholdLabel = new Terminal.Gui.Label("Min cargo amount ")
+            {
+                X = 5,
+                Y = 7,
+                Visible = AutoTransportChecked
+            };
+            
+            var autoExportTargetLabel = new Terminal.Gui.Label("Transport to : ")
+            {
+                X = 5,
+                Y = 9,
+                Visible = AutoTransportChecked
+            };
+            
 
 
+            
+            autoTransportCheckBox.Toggled += (e) =>
+            {
+                autoExportTresholdLabel.Visible = autoTransportCheckBox.Checked;
+                autoTransportTreshold.Visible = autoTransportCheckBox.Checked;
+                autoExportTargetLabel.Visible = autoTransportCheckBox.Checked;
+                transportTarget.Visible = autoTransportCheckBox.Checked;
+                
+            };
 
-        dialog.Add(efficiencyLabel, efficiencyValue);
-        
+
+            dialog.Add(autoExportLabel);
+            dialog.Add(autoTransportCheckBox);
+            dialog.Add(autoExportTresholdLabel);
+            dialog.Add(autoTransportTreshold);
+            dialog.Add(autoExportTargetLabel);
+            dialog.Add(transportTarget);
+
+        }
+         dialog.Add(efficiencyLabel, efficiencyValue);
+        buttonOk.Clicked += () => {
+
+            /** Save auto transport settings */
+            dataManager.factory.setAutoExport(city, cargoType, autoTransportCheckBox.Checked, (String)transportTarget.Text, Convert.ToInt32(autoTransportTreshold.Text));
+            Application.RequestStop();
+
+
+        };
         // Display the modal dialog
         Application.Run(dialog);
     }
