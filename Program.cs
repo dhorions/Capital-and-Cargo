@@ -676,7 +676,7 @@ class Program
             
             DataRow factory = dataManager.factory.getFactory(city, cargoType);
         //Show checkbox if feature unlocked
-        if ((Int64)cityDetails["AutoSellProducedUnlocked"] == 1)
+        if (factory!=null && (Int64)cityDetails["AutoSellProducedUnlocked"] == 1)
         {
             Boolean AutoSellProducedChecked = ((Int64)factory["AutoSellProduced"] == 1);
             var autoSellProducedCheckBox = new CheckBox()
@@ -754,7 +754,7 @@ class Program
         };
         autoTransportTreshold = new TextField()
         {
-            Text = "0",
+            Text = factory["AutoExportTreshold"].ToString(),
             Height = 1,
             Width = 10,
             X = 35,
@@ -769,6 +769,11 @@ class Program
             Height = 5,
             Visible = AutoTransportChecked
         };
+        if(!factory.IsNull("AutoExportDestination"))
+        {
+            transportTarget.Text = (String)factory["AutoExportDestination"];
+        }
+       
         //Show checkbox if feature unlocked
         if ((Int64)cityDetails["AutoExportUnlocked"] != 1)
         {
@@ -849,7 +854,6 @@ class Program
         Int64 SupplyAmount = (Int64)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["SupplyAmount"];
         System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
         double totalMoney = Convert.ToDouble(playerTable.Rows[0]["Money"]);
-        //MessageBox.Query(50, 7, "Buy", (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"], "OK");
         var numberLabel = new Terminal.Gui.Label()
         {
             X = 1,

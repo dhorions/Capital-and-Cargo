@@ -388,7 +388,7 @@ PurchasePrice REAL NOT NULL
             stopwatch.Stop();
             Debug.WriteLine($"Update transports \t {stopwatch.ElapsedMilliseconds} ms");
         }
-        public void transport(String transportationMode, String originCity, String targetCity, String CargoType, int amount)
+        public void transport(String transportationMode, String originCity, String targetCity, String CargoType, Int64 amount)
         {
             var (distance, price) = getTransportPrice(transportationMode, originCity, targetCity);
 

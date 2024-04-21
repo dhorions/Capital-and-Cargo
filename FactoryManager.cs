@@ -17,6 +17,8 @@ namespace Capital_and_Cargo
         private CargoTypesManager cargo;
         private PlayerManager player;
         private CitiesManager cities;
+        private TransitManager transit;
+        private SoundMananger soundMananger;
         private static int requiredReputationPerLevel = 500;
         private static String productionCalculation = "CAST(((f.AmountProduced * f.level) * (1 + f.productionBonus / 100.0)) + 0.99999 AS INTEGER)";
         private static String upgradePriceCalculation = "BaseFactoryPrice + (BaseFactoryPrice * ((COALESCE(f.Level, 0) + 1) / 5.0))";
@@ -24,15 +26,20 @@ namespace Capital_and_Cargo
         private static String upgradeReputationCalculation = $"((SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}) * (1+ (select level/2 from factories f3 where f3.CityName = f.CityName and f3.cargoType = f.cargoType))";
         //add comment
 
-        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player,ref CitiesManager cities)
+        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player,ref CitiesManager cities,ref SoundMananger sound)
         {
             _connection = connection;
             this.cargo = cargo;
             this.player = player;
             this.reputationCalculation = reputationCalculation;
             this.cities = cities;
+            this.soundMananger = sound;
             EnsureTableExistsAndIsPopulated();
 
+        }
+        public void setTransitManager(TransitManager transitManager)
+        {
+            this.transit = transitManager;
         }
         public void EnsureTableExistsAndIsPopulated()
         {
@@ -643,8 +650,33 @@ namespace Capital_and_Cargo
                 }
 
             }
+            //Auto Export
+            String autoExportInfoSql = $@"
+            SELECT f.CityName,
+                   f.CargoType,
+                   w.Amount,
+                   f.AutoExportDestination
+              FROM warehouse w join factories f on w.CityName = f.CityName and w.CargoType = f.CargoType
+              join cities c on f.AutoExportDestination = c.City
+              where f.AutoExport = 1 and w.Amount >= f.AutoExportTreshold
+            ";
+            var autotransportTable = new DataTable();
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = autoExportInfoSql;
+                using (var reader = command.ExecuteReader())
+                {
+                    autotransportTable.Load(reader);
+                }
+                foreach (DataRow factory in autotransportTable.Rows)
+                {
+                    //DataTable prices = cities.GetPrices((String)factory["City"], (String)factory["CargoType"]);
+                    Debug.WriteLine("AutoTransport  ->\t" + (Int64)factory["Amount"] + " " + (String)factory["CargoType"] + " from " + (String)factory["CityName"] + " to " + (String)factory["AutoExportDestination"]);
+                    transit.transport("plane", (String)factory["CityName"], (String)factory["AutoExportDestination"], (String)factory["CargoType"],(Int64)factory["Amount"]);
+                    soundMananger.playSound(Capital_and_Cargo.Properties.Resources.planeTransport);
+                }
 
-
+            }
             stopwatch.Stop();
             Debug.WriteLine($"Updating production: {stopwatch.ElapsedMilliseconds} ms");
         }
