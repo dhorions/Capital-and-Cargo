@@ -1316,8 +1316,8 @@ class Program
         {
             var targetCityId = cityListView.SelectedItem;
             var targetCity = cityListView.Text;
-            (distance, price) = dataManager.transits.getTransportPrice(transportationMode, city, (string)targetCity);
-            costLabel.Text = "Transport price:" + Convert.ToInt64(price) * amount;
+            (distance, price) = dataManager.transits.getTransportPriceForAmount(transportationMode, city, (string)targetCity, amount);
+            costLabel.Text = "Transport price:" + Convert.ToInt64(price) ;
             distanceLabel.Text = "Distance:" + Convert.ToInt64(distance) + " km";
         };
         dialog.Add(cityListView);

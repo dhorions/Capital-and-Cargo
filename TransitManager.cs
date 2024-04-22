@@ -20,6 +20,8 @@ namespace Capital_and_Cargo
         private FactoryManager factories;
         private Double kmPriceTruck = 0.0002;
         private Double kmPricePlane = 0.001;
+        private Double minPriceTruck = 500;
+        private Double minPricePlane = 1500;
         private Double speedTruck = 100;
         private Double speedPlane = 500;
         public TransitManager(ref SqliteConnection connection, ref GameDataManager dataManager, ref PlayerManager player, ref CitiesManager cities, ref FactoryManager factories)
@@ -208,14 +210,29 @@ PurchasePrice REAL NOT NULL
             Double price = 0.0;
             if(transportType == "plane")
             {
-                price = distance * kmPricePlane;
+                price =  (distance * kmPricePlane);
             }
             else
             {
-                price = distance * kmPriceTruck;
+                price =  (distance * kmPriceTruck); 
             }
             return (distance, price);
         }
+        public (Double distance, Double price) getTransportPriceForAmount(String transportType, String originCity, String targetCity,Int64 amount)
+        {
+            (Double distance, Double price) = getTransportPrice(transportType, originCity, targetCity);
+            if (transportType == "plane")
+            {
+               if(price < minPricePlane) { price =  minPricePlane; }
+            }
+            else
+            {
+                
+                if (price < minPriceTruck) { price = minPriceTruck; }
+            }
+            return (distance, price);
+        }
+
         private  double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
             var R = 6371; // Radius of the earth in kilometers
@@ -390,7 +407,7 @@ PurchasePrice REAL NOT NULL
         }
         public void transport(String transportationMode, String originCity, String targetCity, String CargoType, Int64 amount)
         {
-            var (distance, price) = getTransportPrice(transportationMode, originCity, targetCity);
+            var (distance, price) = getTransportPriceForAmount(transportationMode, originCity, targetCity, amount);
 
             /*using (var transaction = _connection.BeginTransaction())
             {
@@ -450,7 +467,7 @@ PurchasePrice REAL NOT NULL
                         command.Parameters.AddWithValue("@price", price * amount);
                         command.ExecuteNonQuery();
                     }*/
-                    player.pay(price * amount, originCity, CargoType + ".transport." + transportationMode);
+                    player.pay(price , originCity, CargoType + ".transport." + transportationMode);
                     
                    
                         
