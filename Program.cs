@@ -333,6 +333,7 @@ class Program
             Debug.WriteLine("Selected city : " + city);
             populateMarket(city, cityMarketListView);
             populateWarehouse(city, cityGoodsListView);
+            populateFactorys();
             dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
         };
         // - Buy/Sell Goods
