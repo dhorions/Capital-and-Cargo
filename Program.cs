@@ -1178,6 +1178,11 @@ class Program
     }
     private static void sellDialog()
     {
+        if(cityGoodsListView.SelectedRow < 0)
+        {
+            return;
+        }
+
         //pause();//pause game loop when in dialog
         String CargoType = (String)cityGoodsListView.Table.Rows[cityGoodsListView.SelectedRow]["CargoType"];
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
