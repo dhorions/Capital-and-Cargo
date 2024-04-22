@@ -384,12 +384,12 @@ namespace Capital_and_Cargo
 
         public void sell(String city, String CargoType, Int64 amount, Double price)
         {
-            using (var transaction = _connection.BeginTransaction())
-            {
-                try
-                {
-                    //Decrease market supply
-                    using (var command = _connection.CreateCommand())
+            /* using (var transaction = _connection.BeginTransaction())
+             {
+                 try
+                 {*/
+            //Increase market supply
+            using (var command = _connection.CreateCommand())
                     {
                         Debug.WriteLine("Adding " + amount + " of " + CargoType + " to " + city + " market");
                         command.CommandText = @"
@@ -403,19 +403,7 @@ namespace Capital_and_Cargo
                     //Get Payed
                     Double totalPrice = amount * price;
                     receiveMoney(totalPrice, city, CargoType);
-                    /*using (var command = _connection.CreateCommand())
-                    {
-
-
-
-
-                        Debug.WriteLine("Getting Payed " + totalPrice);
-                        command.CommandText = @"
-                               UPDATE player SET money = money + @price 
-                        ";
-                        command.Parameters.AddWithValue("@price", totalPrice);
-                        command.ExecuteNonQuery();
-                    }*/
+                   
                     //Manage Reputation
                     using (var command = _connection.CreateCommand())
                     {
@@ -446,7 +434,7 @@ namespace Capital_and_Cargo
 
 
                     // Commit the transaction if both commands succeed
-                    transaction.Commit();
+                 /*   transaction.Commit();
                 }
                 catch (Exception ex)
                 {
@@ -455,7 +443,8 @@ namespace Capital_and_Cargo
                     // Rollback the transaction on error
                     transaction.Rollback();
                 }
-            }
+
+            }*/
         }
         private void receiveMoney(Double money, String city, String CargoType)
         {

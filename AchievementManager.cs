@@ -123,21 +123,24 @@ namespace Capital_and_Cargo
                 Mexico City
                 New York City
                 Buenos Aires
-            * No achievements yet
-                
                 São Paulo
+                Tokyo
                 Bogota
+                Delhi
+                Dubai
+                Seoul
+            * No achievements yet
+  
                 Shanghai
                 Guangzhou
                 Shenzhen
                 Beijing
                 Mumbai
-                Delhi
+                
                 Jakarta
-                Tokyo
                 Singapore
-                Seoul
-                Dubai
+                
+                
              * */
 
             /*
@@ -150,15 +153,23 @@ namespace Capital_and_Cargo
                 Livestock
             * achievements created
                  Food Products
+                 Plastics
+                 Electronics
+                Agricultural Products
+                Automobiles
+                 Wood Products
+                Rubber
+                Footwear
+                Beverages
             * No Achievements Yet
                
-                Agricultural Products
-                Plastics
-                Electronics
-                Footwear
-                Wood Products
-                Rubber
-                Beverages
+                
+                
+                
+                
+               
+                
+                
                 Furniture
                 Toys
                 Oil & Gas
@@ -169,7 +180,7 @@ namespace Capital_and_Cargo
                 Glass Products
                 Machinery
                 Pharmaceuticals
-                Automobiles
+                
                 Tobacco Products
 
             */
@@ -184,26 +195,45 @@ namespace Capital_and_Cargo
             String sql_import_total = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
             InsertAchievement("imp/any/month/0000500", "imp/any/month", "New Importer on the Dock", "Import {target} goods in 1 month.", "Unlock new city : London", 500, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "London"));
             InsertAchievement("imp/any/month/0005000", "imp/any/month", "Container Rookie", "Import {target} goods in 1 month.", "Unlock new city : Los Angeles", 5000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Los Angeles"));
-            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Freight Forwarder", "Import {target} goods in 1 month.", "Unlock new city : Houston", 250000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Houston"));
-            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "Unlock new city : Mexico City", 1000000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mexico City"));
-            //Total Expoprt per month
+            InsertAchievement("imp/any/month/0025000", "imp/any/month", "Freight Forwarder", "Import {target} goods in 1 month.", "Unlock new city : Houston", 25000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Houston"));
+            InsertAchievement("imp/any/month/0100000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "Unlock new city : Mexico City", 100000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mexico City"));
+            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Harbor Master", "Import {target} goods in 1 month.", "Unlock new city : São Paulo", 250000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "São Paulo"));
+            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Economic Engine", "Import {target} goods in 1 month.", "Unlock new city : Tokyo", 1000000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Tokyo"));
+
+
+
+            //Total Export per month
             String sql_export_total = "  SELECT MIN(sum(Export),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
             InsertAchievement("imp/any/month/0000500", "imp/any/month", "First-Time Exporter", "Export {target} goods in 1 month.", "Unlock new cargo type : Food products", 500, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{CargoType}", "Food products"));
             InsertAchievement("imp/any/month/0005000", "imp/any/month", "Export Enthusiast", "Export {target} goods in 1 month.", "Unlock new cargo type : Agricultural Products", 5000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{CargoType}", "Agricultural Products"));
-            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Captain of Commerce", "Export {target} goods in 1 month.", "Unlock new city : New York City", 250000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "New York City"));
-            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Continental Connector", "Export {target} goods in 1 month.", "Unlock new city : Buenos Aires", 1000000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Buenos Aires"));
+            InsertAchievement("imp/any/month/0010000", "imp/any/month", "Export Enthusiast", "Export {target} goods in 1 month.", "Unlock new cargo type : Footwear", 10000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{CargoType}", "Footwear"));
+            InsertAchievement("imp/any/month/0025000", "imp/any/month", "Captain of Commerce", "Export {target} goods in 1 month.", "Unlock new city : New York City", 25000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "New York City"));
+            InsertAchievement("imp/any/month/0050000", "imp/any/month", "Continental Connector", "Export {target} goods in 1 month.", "Unlock new cargo type : Plastics", 50000, sql_export_total, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Plastics"));
+            InsertAchievement("imp/any/month/0100000", "imp/any/month", "Continental Connector", "Export {target} goods in 1 month.", "Unlock new city : Buenos Aires", 100000, sql_export_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Buenos Aires"));
+            InsertAchievement("imp/any/month/0250000", "imp/any/month", "Economic Expander", "Export {target} goods in 1 month.", "Unlock new cargo Type : Electronics", 250000, sql_export_total, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Electronics"));
+            InsertAchievement("imp/any/month/1000000", "imp/any/month", "Economic Expander", "Export {target} goods in 1 month.", "Unlock new cargo Type : Automobiles", 1000000, sql_export_total, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Automobiles"));
+
             //Total Import in a city
             String sql_import_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by city order by target desc limit 1";
-            InsertAchievement("imp/any/0000500", "imp/any", "Market Pioneer", "Import {target} goods into a city.", "", 500, sql_import_city, "");
-            InsertAchievement("imp/any/0005000", "imp/any", "Urban Supplier", "Import {target} goods into a city.", "", 5000, sql_import_city, "");
-            InsertAchievement("imp/any/0250000", "imp/any", "City Stocker", "Import {target} goods into a city.", "", 250000, sql_import_city, "");
-            InsertAchievement("imp/any/1000000", "imp/any", "Import Icon", "Import {target} goods into a city.", "", 1000000, sql_import_city, "");
+            InsertAchievement("imp/any/0000500", "imp/any", "Market Pioneer", "Import {target} goods into a city.", "Production Bonus Points +2", 500, sql_import_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "2"));
+            InsertAchievement("imp/any/0005000", "imp/any", "Urban Supplier", "Import {target} goods into a city.", "Production Bonus Points +5", 5000, sql_import_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5"));
+            InsertAchievement("imp/any/0010000", "imp/any", "Town Trader", "Import {target} goods into a city.", "Production Bonus Points +10", 10000, sql_import_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "10"));
+            InsertAchievement("imp/any/0025000", "imp/any", "City Stocker", "Import {target} goods into a city.", "Unlock new cargo Type : Food Products", 25000, sql_import_city, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Food Products"));
+            InsertAchievement("imp/any/0050000", "imp/any", "Municipal Mogul", "Import {target} goods into a city.", "Production Bonus Points +20", 50000, sql_import_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("imp/any/0100000", "imp/any", "Import Icon", "Import {target} goods into a city.", "Unlock New City : Bogota", 100000, sql_import_city, SubstitutePlaceholder(cityUnlockSql, "{city}", "Bogota"));
+            InsertAchievement("imp/any/0250000", "imp/any", "Sovereign of Supply", "Import {target} goods into a city.", "Production Bonus Points +25", 250000, sql_import_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "25"));
+            InsertAchievement("imp/any/1000000", "imp/any", "Capitalist Connector", "Import {target} goods into a city.", "Unlock New City : Delhi", 1000000, sql_import_city, SubstitutePlaceholder(cityUnlockSql, "{city}", "Delhi"));
+
             //Total Export from a city
             String sql_export_city = "  SELECT MIN(sum(Export),{target}) as target FROM HistoryDetail group by city order by target desc limit 1";
-            InsertAchievement("exp/any/0000500", "exp/any", "Exporter Initiate", "Export {target} goods from a city.", "", 500, sql_export_city, "");
-            InsertAchievement("exp/any/0005000", "exp/any", "City Export Champion", "Export {target} goods from a city.", "", 5000, sql_export_city, "");
-            InsertAchievement("exp/any/0250000", "exp/any", "Metropolitan Merchant", "Export {target} goods from a city.", "", 250000, sql_export_city, "");
-            InsertAchievement("exp/any/1000000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "", 1000000, sql_export_city, "");
+            InsertAchievement("exp/any/0000500", "exp/any", "Exporter Initiate", "Export {target} goods from a city.", "Production Bonus Points +2", 500, sql_export_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "2"));
+            InsertAchievement("exp/any/0005000", "exp/any", "City Export Champion", "Export {target} goods from a city.", "Production Bonus Points +5", 5000, sql_export_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5"));
+            InsertAchievement("exp/any/0010000", "exp/any", "Metropolitan Merchant", "Export {target} goods from a city.", "Unlock new cargo Type : Wood Products", 10000, sql_export_city, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Wood Products"));
+            InsertAchievement("exp/any/0025000", "exp/any", "Metropolitan Merchant", "Export {target} goods from a city.", "Unlock new cargo Type : Rubber", 25000, sql_export_city, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Rubber"));
+            InsertAchievement("exp/any/0050000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Unlock new cargo Type : Beverages", 50000, sql_export_city, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Beverages"));
+            InsertAchievement("exp/any/0100000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Production Bonus Points +35", 100000, sql_export_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "35"));
+            InsertAchievement("exp/any/0250000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Unlock New City : Dubai", 250000, sql_export_city, SubstitutePlaceholder(cityUnlockSql, "{city}", "Dubai"));
+            InsertAchievement("exp/any/1000000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Unlock New City : Seoul", 1000000, sql_export_city, SubstitutePlaceholder(cityUnlockSql, "{city}", "Seoul"));
             //Unlock Auto Sell, Auto Export etc per city
             String sql_autosellproduced_city = "  SELECT MIN(sum(Production),{target}) as target FROM HistoryDetail where city = '{city}' ";
             String sql_autosellimported_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail where city = '{city}' ";

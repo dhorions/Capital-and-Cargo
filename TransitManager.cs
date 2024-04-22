@@ -221,6 +221,7 @@ PurchasePrice REAL NOT NULL
         public (Double distance, Double price) getTransportPriceForAmount(String transportType, String originCity, String targetCity,Int64 amount)
         {
             (Double distance, Double price) = getTransportPrice(transportType, originCity, targetCity);
+            price = price * amount;
             if (transportType == "plane")
             {
                if(price < minPricePlane) { price =  minPricePlane; }
@@ -368,7 +369,7 @@ PurchasePrice REAL NOT NULL
                             command.ExecuteNonQuery();
                         }
                 //Auto Sell imported
-                DataRow factory = factories.getFactory((String)row["DestinationCity"], (String)row["CargoType"]);
+                        DataRow factory = factories.getFactory((String)row["DestinationCity"], (String)row["CargoType"]);
                         if (factory!=null && (Int64)(factory["AutoSellImported"]) == 1)
                         { 
                                 DataTable prices = cities.GetPrices((String)row["DestinationCity"], (String)row["CargoType"]);
