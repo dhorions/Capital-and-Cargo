@@ -19,14 +19,20 @@ namespace Capital_and_Cargo
 
         // Create a new SoundPlayer instance with the path to the .wav audio file
         private SoundPlayer player;
-        private Program program;
+        public bool playsound = true;
+        public bool playmusic = true;
         
         public SoundMananger() 
         {
             this.player = new SoundPlayer(Properties.Resources.gameMusic);
-            this.program = new Program();
         }
-
+        public void updateMusic()
+        { 
+            if (playmusic) 
+            { playMusic(); }
+            else 
+            { stopMusic(); } 
+        }
         public void playMusic()
         {
 
@@ -42,7 +48,10 @@ namespace Capital_and_Cargo
         }
         public void playSound(System.IO.UnmanagedMemoryStream soundData)
         {
-            Task.Run(() => soundThread(soundData));
+            if (playsound)
+            {
+                Task.Run(() => soundThread(soundData));
+            }
         }
         private void soundThread(System.IO.UnmanagedMemoryStream soundData)
         {

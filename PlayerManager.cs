@@ -93,9 +93,10 @@ namespace Capital_and_Cargo
            CREATE TABLE Player (
                 Date TEXT NOT NULL,
                 Money REAL NOT NULL,
-                productionBonusPool INTEGER default 0
-);
-";
+                productionBonusPool INTEGER default 0,
+                displayStartPopup INTEGER NOT NULL default 0
+            );
+            ";
 
             using (var command = _connection.CreateCommand())
             {
@@ -474,13 +475,14 @@ namespace Capital_and_Cargo
                 command.Parameters.AddWithValue("@Income", money);
                 command.ExecuteNonQuery();
             }
-
-
+            SoundMananger soundMananger = new SoundMananger();
+            soundMananger.playSound(Properties.Resources.moneyGained);
+            
         }
         public DataTable LoadPlayer()
         {
             DataTable dataTable = new DataTable();
-            string sql = "SELECT Date, Money,productionBonusPool from Player";
+            string sql = "SELECT Date, Money,productionBonusPool,displayStartPopup from Player";
 
             using (var command = _connection.CreateCommand())
             {
@@ -540,6 +542,20 @@ namespace Capital_and_Cargo
                 }
             }
             return currentDate;
+        }
+        public void displayPopup(int value)
+        {
+            string updateQuery = @"
+            UPDATE Player
+            SET displayStartPopup = @value;";
+            using (var command = _connection.CreateCommand())
+            { 
+                command.CommandText = updateQuery;
+                command.Parameters.AddWithValue(@"value", value);
+                command.ExecuteNonQuery();
+            }
+
+            
         }
     }
 }

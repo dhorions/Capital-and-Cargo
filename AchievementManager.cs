@@ -53,17 +53,17 @@ namespace Capital_and_Cargo
         {
             string sql = @"
             CREATE TABLE achievements (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Key TEXT UNIQUE NOT NULL,
-    Path TEXT NOT NULL,
-    Name  TEXT NOT NULL,
-    Text  TEXT NOT NULL,
-    RewardText TEXT,
-    Target  INTEGER NOT NULL,
-    checkSQL  TEXT NOT NULL,
-    updateSql TEXT,
-    achieved INT NOT NULL DEFAULT 0,
-    achievedDate TEXT
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            Key TEXT UNIQUE NOT NULL,
+            Path TEXT NOT NULL,
+            Name  TEXT NOT NULL,
+            Text  TEXT NOT NULL,
+            RewardText TEXT,
+            Target  INTEGER NOT NULL,
+            checkSQL  TEXT NOT NULL,
+            updateSql TEXT,
+            achieved INT NOT NULL DEFAULT 0,
+            achievedDate TEXT
 );
 ";
 

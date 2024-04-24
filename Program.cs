@@ -21,6 +21,7 @@ using NStack;
 
 class Program
 {
+    static bool Popup;
     static CheckBox musicCheckBox = new CheckBox() { Checked = true};
     static int loopIntervalSeconds = 2;
     static int FFloopIntervalSeconds = 1;
@@ -161,6 +162,7 @@ class Program
                 pauseButton.ColorScheme = enabledColorScheme;
 
             }
+            playsound();
         };
         fastForwardButton.Clicked += () =>
         {
@@ -170,6 +172,7 @@ class Program
             normalSpeedButton.ColorScheme = myColorScheme;
             pauseButton.ColorScheme = myColorScheme;
             pauseToggle = false;
+            playsound();
         };
         normalSpeedButton.Clicked += () =>
         {
@@ -179,6 +182,7 @@ class Program
             normalSpeedButton.ColorScheme = enabledColorScheme;
             pauseButton.ColorScheme = myColorScheme;
             pauseToggle = false;
+            playsound();
         };
 
         titleContainer.Add(pauseButton);
@@ -190,6 +194,7 @@ class Program
         achievementsField.Clicked += () =>
         {
             achievementsDialog();
+            playsound();
         };
             topContainer.Add(titleContainer);
 
@@ -275,6 +280,10 @@ class Program
             Height = Dim.Fill(),
             FullRowSelect = true
         };
+        transitListView.SelectedCellChanged += (args) =>
+        {
+            playsound();
+        };
 
         transitView.Add(transitListView);
 
@@ -302,6 +311,7 @@ class Program
             FullRowSelect = true,
 
         };
+        cityMarketListView.SelectedCellChanged += (args) => { playsound(); };
         cityMarketView.Add(cityMarketListView);
         var buyButton = new Button("Buy")
         {
@@ -323,7 +333,7 @@ class Program
         buyButton.Clicked += () =>
         {
             buyButtonDialog();
-
+            playsound();
         };
 
         //Events
@@ -334,7 +344,8 @@ class Program
             populateMarket(city, cityMarketListView);
             populateWarehouse(city, cityGoodsListView);
             populateFactorys();
-            dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
+            playsound();
+            //dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
         };
         // - Buy/Sell Goods
         //cityMarketListView.AddKeyBinding(Key.Enter,)
@@ -351,7 +362,10 @@ class Program
         Application.Run();
 
     }
-
+    private static void playsound()
+    {
+        dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.blipSelect);
+    }
     private static void achievementsDialog()
     {
         var dialog = new Dialog("Achievements")
@@ -371,6 +385,7 @@ class Program
             Height = Dim.Fill(),
             FullRowSelect = true
         };
+        AchievementsView.SelectedCellChanged += (args) => { playsound(); };
         AchievementsView.Table = dataManager.achievements.GetAchievements();
         TableView.ColumnStyle targetStyle = AchievementsView.Style.GetOrCreateColumnStyle(AchievementsView.Table.Columns["Target"]);
         targetStyle.Visible = false;
@@ -378,41 +393,81 @@ class Program
         dialog.Add(AchievementsView);
         var okButton = new Button("OK", is_default: true);
         dialog.AddButton(okButton);
-        okButton.Clicked += () => { Application.RequestStop(); };
+        okButton.Clicked += () => { Application.RequestStop(); playsound(); };
         Application.Run(dialog);
     }
 
     private static void settingsDialog()
     {
+        bool showStartPopup;
+        System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+        Int64 showPopup = (Int64)(playerTable.Rows[0]["displayStartPopup"]);
+        if(showPopup == 0) { showStartPopup = true; } else { showStartPopup = false; }
+
         var dialog = new Dialog("Settings", 60, 10);
 
         musicCheckBox = new CheckBox()
         {
-            Checked = true,
+            Checked = dataManager.SoundMananger.playmusic,
+            Y = 1,
+            X = 20
+        };
+        var soundCheckBox = new CheckBox()
+        {
+            Checked = dataManager.SoundMananger.playsound,
             Y = 3,
+            X = 20
+        };
+        var startPopupCheckbox = new CheckBox()
+        {
+            Checked = showStartPopup,
+            Y = 5,
             X = 20
         };
         var musicLabel = new Terminal.Gui.Label("Music")
         {
             X = 1,
+            Y = 1
+        };
+        var soundLabel = new Terminal.Gui.Label("Sound")
+        {
+            X = 1,
             Y = 3
         };
-
-        musicCheckBox.Toggled += (e) =>
+        var startPopupLabel = new Terminal.Gui.Label("StartPopup")
         {
-            if (musicCheckBox.Checked)
+            X = 1,
+            Y = 5
+        };
+        startPopupCheckbox.Toggled += (e) =>
+        {
+            if (startPopupCheckbox.Checked)
             {
-                dataManager.SoundMananger.playMusic();
+                dataManager.player.displayPopup(1);
             }
             else
             {
-                dataManager.SoundMananger.stopMusic();
+                dataManager.player.displayPopup(0);
             }
         };
+        musicCheckBox.Toggled += (e) =>
+        {
+            dataManager.SoundMananger.playmusic = musicCheckBox.Checked;
+            dataManager.SoundMananger.updateMusic();
+        };
+        soundCheckBox.Toggled += (e) => 
+        {
+            dataManager.SoundMananger.playsound = soundCheckBox.Checked;
+            
+        };
 
+        dialog.Add(startPopupCheckbox);
+        dialog.Add(startPopupLabel);
+        dialog.Add(soundLabel);
+        dialog.Add(soundCheckBox);
         dialog.Add(musicLabel);
         dialog.Add(musicCheckBox);
-
+        
         Application.Run(dialog);
     }
 
@@ -480,9 +535,9 @@ class Program
         cityGoodsView.Add(transportLabel);
         cityGoodsView.Add(transportButtonPlane);
         cityGoodsView.Add(transportButtonTruck);
-        transportButtonPlane.Clicked += () => { transportDialog("plane"); };
-        transportButtonTruck.Clicked += () => { transportDialog("truck"); };
-        sellButton.Clicked += () => { sellDialog(); };
+        transportButtonPlane.Clicked += () => { transportDialog("plane"); playsound(); };
+        transportButtonTruck.Clicked += () => { transportDialog("truck"); playsound(); };
+        sellButton.Clicked += () => { sellDialog(); playsound(); };
 
         //Factory Tab Controls
         String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
@@ -528,9 +583,11 @@ class Program
             String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
             String cargoType = (String)factoryTableView.Table.Rows[factoryTableView.SelectedRow]["Resource"];
             factorySettingsDialog(city, cargoType);
+            playsound();
         };
             BuyFactory.Clicked += () =>
         {
+            playsound();
             String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
             String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
             
@@ -557,6 +614,7 @@ class Program
         };
         UpgradeFactory.Clicked += () =>
         {
+            playsound();
             String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
             String cargoType = (String)factoryTableView.Table.Rows[factoryTableView.SelectedRow]["Resource"];
             (Boolean haveFactoryBuild, String haveMessage) = dataManager.factory.haveFactory(city, cargoType);
@@ -661,7 +719,7 @@ class Program
                 //todo refresh screen
                 Application.RequestStop();
                 factorySettingsDialog(city, cargoType);
-
+                playsound();
 
             };
             dialog.Add(productionLabel);
@@ -831,7 +889,7 @@ class Program
             /** Save auto transport settings */
             dataManager.factory.setAutoExport(city, cargoType, autoTransportCheckBox.Checked, (String)transportTarget.Text, Convert.ToInt32(autoTransportTreshold.Text));
             Application.RequestStop();
-
+            playsound();
 
         };
         // Display the modal dialog
@@ -903,7 +961,7 @@ class Program
         };
 
         buttonBuy.Clicked += () => {
-
+            playsound();
             var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
             if ((SupplyAmount * SellPrice) > totalMoney)
             {
@@ -919,10 +977,10 @@ class Program
 
 
         };
-        buttonCancel.Clicked += () => { Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); playsound(); };
         buttonBuyMax.Clicked += () => {
 
-
+            playsound();
             Debug.WriteLine("buy max button pressed");
             var maxAmount = SupplyAmount;
             double minMoney = SupplyAmount * SellPrice;
@@ -995,7 +1053,12 @@ class Program
 
     private static void startPopup()
     {
-
+        System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
+        Int64 showPopup = (Int64)(playerTable.Rows[0]["displayStartPopup"]);
+        if (showPopup==1)
+        {
+            return;
+        }
         var dialog = new Dialog("Welcome")
         {
             X = 0,
@@ -1047,7 +1110,8 @@ class Program
         dialog.Add(label);
         dialog.AddButton(buttonCancel);
         buttonCancel.Clicked += () => {
-            dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
+            playsound();
+            //dataManager.SoundMananger.playSound(Capital_and_Cargo.Properties.Resources.buttonclick);
             Application.RequestStop(); };
         Application.Run(dialog);
     }
@@ -1228,6 +1292,7 @@ class Program
         };
         sellMax.Clicked += () => {
             amountField.Text = maxAmount.ToString();
+            playsound();
         };
 
 
@@ -1264,9 +1329,10 @@ class Program
 
             dataManager.player.sell(city, CargoType, amount, price);
             updateScreen();
-            Application.RequestStop(); };
+            Application.RequestStop(); playsound();
+        };
 
-        buttonCancel.Clicked += () => { Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); playsound(); };
         Application.Run(dialog);
     }
     private static void transportDialog(String transportationMode)
@@ -1333,8 +1399,7 @@ class Program
 
 
         buttonTransport.Clicked += () => {
-
-            //TODO transport registreren;
+            playsound();
             var targetCity = cityListView.Text;
             Boolean transportOk = dataManager.transits.canBeTransported(transportationMode, city, (string)targetCity);
             if (!transportOk)
@@ -1366,7 +1431,7 @@ class Program
 
 
         };
-        buttonCancel.Clicked += () => { Application.RequestStop(); };
+        buttonCancel.Clicked += () => { Application.RequestStop(); playsound(); };
 
 
         // Display the modal dialog
@@ -1481,7 +1546,7 @@ class Program
         dialog.Add(graphView);
         var okButton = new Button("OK", is_default: true);
         dialog.AddButton(okButton);
-        okButton.Clicked += () => { Application.RequestStop(); };
+        okButton.Clicked += () => { Application.RequestStop(); playsound(); };
         Application.Run(dialog);
 
     }
