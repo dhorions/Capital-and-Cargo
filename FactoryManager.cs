@@ -407,7 +407,10 @@ namespace Capital_and_Cargo
                         THEN 'Yes'
                         ELSE 'No'
                     END AS [Can Upgrade?],
-                    (100 + productionBonus) || '%' as Efficiency
+                    (100 + productionBonus) || '%' as Efficiency,
+                       case when f.AutoExport = 1 then 'Yes' else 'No' end as [Auto Export] ,
+                       case when f.AutoSellImported = 1 then 'Yes' else 'No' end as [Auto Sell Import] ,
+                       case when f.AutoSellProduced = 1 then 'Yes' else 'No' end as [Auto Sell Production]
                 FROM 
                     factories f
                 JOIN 
@@ -445,7 +448,34 @@ namespace Capital_and_Cargo
                             factory["Can Upgrade?"] = "";
                             break;
                     }
-                }
+                    switch (factory["Auto Export"])
+                    {
+                        case "Yes":
+                            factory["Auto Export"] = trueIcon;
+                            break;
+                        default:
+                            factory["Auto Export"] = "";
+                            break;
+                    }
+                    switch (factory["Auto Sell Import"])
+                    {
+                        case "Yes":
+                            factory["Auto Sell Import"] = trueIcon;
+                            break;
+                        default:
+                            factory["Auto Sell Import"] = "";
+                            break;
+                     }
+                    switch (factory["Auto Sell Production"])
+                    {
+                        case "Yes":
+                            factory["Auto Sell Production"] = trueIcon;
+                            break;
+                        default:
+                            factory["Auto Sell Production"] = "";
+                            break;
+                    }
+            }
             return dataTable;
         }
         public int getFactoryProductionBonus(String city, String cargoType)
