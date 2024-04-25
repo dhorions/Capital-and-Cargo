@@ -169,8 +169,8 @@ namespace Capital_and_Cargo
                     when sum(amount) is null then 0
                     else  sum(amount)
                 end as Inventory,
-                {reputationCalculation} as Reputation
-                  
+                {reputationCalculation} as Reputation,
+                 ( select count(*) from factories where CityName =  cities.city) as Factories
                 FROM cities left join warehouse on cities.city = warehouse.CityName
                 where Unlocked = 1
                 group by city
