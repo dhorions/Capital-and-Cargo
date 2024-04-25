@@ -134,13 +134,15 @@ namespace Capital_and_Cargo
             Beijing
             Shenzhen
             Mumbai
+            Jakarta
+            Singapore
             * No achievements yet
    
                 
                 
                 
-                Jakarta
-                Singapore
+                
+                
                 
                 
              * */
@@ -157,25 +159,18 @@ namespace Capital_and_Cargo
                  Food Products
                  Plastics
                  Electronics
-                Agricultural Products
-                Automobiles
+                 Agricultural Products
+                 Automobiles
                  Wood Products
-                Rubber
-                Footwear
-                Beverages
-            Furniture
+                 Rubber
+                 Footwear
+                 Beverages
+                 Furniture
+                 Oil & Gas
             * No Achievements Yet
                
                 
                 
-                
-                
-               
-                
-                
-                
-                Toys
-                Oil & Gas
                 Construction Materials
                 Textiles
                 Chemicals
@@ -183,7 +178,6 @@ namespace Capital_and_Cargo
                 Glass Products
                 Machinery
                 Pharmaceuticals
-                
                 Tobacco Products
 
             */
@@ -252,6 +246,20 @@ namespace Capital_and_Cargo
             InsertAchievement("fact/count/00100", "fact/count", "Industrial Pioneer", "Build {target} factories.", "Production Bonus Points +100", 100, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "100"));
             InsertAchievement("fact/count/00250", "fact/count", "Assembly Line Architect", "Build {target} factories.", "Unlock New City : Beijing", 250, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Beijing"));
             InsertAchievement("fact/count/00500", "fact/count", "Production Powerhouse", "Build {target} factories.", "Unlock New City : Mumbai", 500, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mumbai"));
+
+            //Total Reputation
+            String sqlTotalRep = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities desc limit 1";
+            InsertAchievement("rep/total/0010000", "rep/total", "Global Luminary", "Achieve {target} reputation.", "Production Bonus Points +10", 10000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "10"));
+            InsertAchievement("rep/total/0050000", "rep/total", "Worldwide Wunderkind", "Achieve {target} reputation.", "Unlock New City : Jakarta", 50000, sqlTotalRep, SubstitutePlaceholder(cityUnlockSql, "{city}", "Jakarta"));
+            InsertAchievement("rep/total/0100000", "rep/total", "International Icon", "Achieve {target} reputation.", "Unlock new cargo Type : Toys", 100000, sqlTotalRep, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Toys"));
+            InsertAchievement("rep/total/0250000", "rep/total", "Planetwide Patron", "Achieve {target} reputation.", "Unlock new cargo Type : Oil & Gas", 250000, sqlTotalRep, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Oil & Gas"));
+            InsertAchievement("rep/total/0500000", "rep/total", "Universal Uplifter", "Achieve {target} reputation.", "Unlock New City : Singapore", 500000, sqlTotalRep, SubstitutePlaceholder(cityUnlockSql, "{city}", "Singapore"));
+            InsertAchievement("rep/total/1000000", "rep/total", "Cosmopolitan Champion", "Achieve {target} reputation.", "Production Bonus Points +200", 1000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/total/2000000", "rep/total", "Earth's Emissary", "Achieve {target} reputation.", "Production Bonus Points +500", 2000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
+            InsertAchievement("rep/total/5000000", "rep/total", "Global Guardian", "Achieve {target} reputation.", "Production Bonus Points +5000", 5000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
+           
+
+
             //Unlock Auto Sell, Auto Export etc per city
             String sql_autosellproduced_city = "  SELECT MIN(sum(Production),{target}) as target FROM HistoryDetail where city = '{city}' ";
             String sql_autosellimported_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail where city = '{city}' ";
