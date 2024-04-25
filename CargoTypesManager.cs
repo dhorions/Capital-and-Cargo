@@ -185,6 +185,16 @@ namespace Capital_and_Cargo
 
             return dataTable;
         }
+        public System.Collections.IList LoadCargoList()
+        {
+            DataTable cities = LoadCargoTypes();
+            var list = new List<String>();
+            foreach (DataRow c in cities.Rows)
+            {
+                list.Add((string)c["CargoType"]);
+            }
+            return list;
+        }
         public List<(String CargoType, double BasePrice, double MinPrice, double MaxPrice, double BaseFactoryPrice, Double BaseFactoryProduction)> GetAllCargoTypesAndBasePrices()
         {
             var cargoTypes = new List<(String CargoType, double BasePrice, double MinPrice, double MaxPrice,double BaseFactoryPrice, Double BaseFactoryProduction)>();

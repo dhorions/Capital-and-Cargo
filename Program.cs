@@ -405,6 +405,7 @@ class Program
         if(showPopup == 0) { showStartPopup = true; } else { showStartPopup = false; }
 
         var dialog = new Dialog("Settings", 60, 10);
+        dialog.ColorScheme = myColorScheme;
 
         musicCheckBox = new CheckBox()
         {
@@ -588,28 +589,7 @@ class Program
             BuyFactory.Clicked += () =>
         {
             playsound();
-            String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
-            String cargoType = (String)cityMarketListView.Table.Rows[cityMarketListView.SelectedRow]["CargoType"];
-            
-            (Boolean haveFactoryBuild, String haveMessage) = dataManager.factory.haveFactory(city, cargoType);
-            if(haveFactoryBuild)
-            {
-                MessageBox.ErrorQuery("Unable to build factory", haveMessage);
-            }
-            else
-            {
-                (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
-                if (canBuild)
-                {
-                    dataManager.factory.buildFactory(city, cargoType);
-                    updateScreen();
-                }
-                else
-                {
-                    MessageBox.ErrorQuery("Unable to build factory", message);
-                }
-            }
-           
+            buyFactoryDialog();
 
         };
         UpgradeFactory.Clicked += () =>
@@ -660,9 +640,73 @@ class Program
 
     }
 
+    private static void buyFactoryDialog()
+    {
+        String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+
+        var dialog = new Dialog("Create a factory")
+        {
+            Width = 80,
+            Height = 20,
+            ColorScheme = myColorScheme,
+        };
+        var cargoTypeList = dataManager.cargoTypes.LoadCargoList();
+        var cargoTypeLabel = new Terminal.Gui.Label("Of type:")
+        {
+            X = 1,
+            Y = 3
+        };
+        var cargoListview = new Terminal.Gui.ComboBox(cargoTypeList)
+        {
+            Width = 16,
+            Height = 5,
+            X = 13,
+            Y = 3
+        };
+        var buttonCancel = new Button("Cancel");
+
+        var buttonOK = new Button("OK");
+
+        buttonCancel.Clicked += () => { Application.RequestStop(); playsound(); };
+        buttonOK.Clicked += () => 
+        {
+            playsound();
+            String city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["city"];
+            String cargoType = (String)cargoListview.Text;
+
+            (Boolean haveFactoryBuild, String haveMessage) = dataManager.factory.haveFactory(city, cargoType);
+            if (haveFactoryBuild)
+            {
+                MessageBox.ErrorQuery("Unable to build factory", haveMessage);
+            }
+            else
+            {
+                (Boolean canBuild, String message) = dataManager.factory.canBuildFactory(city, cargoType);
+                if (canBuild)
+                {
+                    dataManager.factory.buildFactory(city, cargoType);
+                    updateScreen();
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Unable to build factory", message);
+                }
+            }
+
+            Application.RequestStop(); 
+        };
+
+        dialog.AddButton(buttonOK);
+        dialog.AddButton(buttonCancel);
+        dialog.Add(cargoTypeLabel);
+        dialog.Add(cargoListview);
+        Application.Run(dialog);
+    }
+
     private static void factorySettingsDialog(string city, string cargoType)
     {
         var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 70, 15);
+        dialog.ColorScheme = myColorScheme;
         var buttonOk = new Button("OK", is_default: true);
         var player = dataManager.player.LoadPlayer();
 
@@ -951,6 +995,7 @@ class Program
         };
 
         var dialog = new Dialog("Purchase " + CargoType, 60, 10);
+        dialog.ColorScheme = myColorScheme;
         var buttonBuy = new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
         var buttonBuyMax = new Button("Max")
@@ -1258,7 +1303,8 @@ class Program
         {
             X = 60,
             Y = 10,
-            Height = 15
+            Height = 15,
+            ColorScheme = myColorScheme
         };
         var buttonSell = new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
@@ -1352,7 +1398,8 @@ class Program
         {
             X = 60,
             Y = 10,
-            Height = 15
+            Height = 15,
+            ColorScheme = myColorScheme
         };
         var buttonTransport = new Button("OK", is_default: true);
         var buttonCancel = new Button("Cancel", is_default: false);
