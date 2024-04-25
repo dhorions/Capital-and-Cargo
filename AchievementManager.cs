@@ -131,11 +131,14 @@ namespace Capital_and_Cargo
                 Seoul
                 Shanghai
                 Guangzhou
+            Beijing
+            Shenzhen
+            Mumbai
             * No achievements yet
    
-                Shenzhen
-                Beijing
-                Mumbai
+                
+                
+                
                 Jakarta
                 Singapore
                 
@@ -160,6 +163,7 @@ namespace Capital_and_Cargo
                 Rubber
                 Footwear
                 Beverages
+            Furniture
             * No Achievements Yet
                
                 
@@ -169,7 +173,7 @@ namespace Capital_and_Cargo
                
                 
                 
-                Furniture
+                
                 Toys
                 Oil & Gas
                 Construction Materials
@@ -239,6 +243,15 @@ namespace Capital_and_Cargo
             InsertAchievement("exp/any/0100000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Production Bonus Points +35", 100000, sql_export_city, SubstitutePlaceholder(prodBonusSql, "{bonus}", "35"));
             InsertAchievement("exp/any/0250000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Unlock New City : Dubai", 250000, sql_export_city, SubstitutePlaceholder(cityUnlockSql, "{city}", "Dubai"));
             InsertAchievement("exp/any/1000000", "exp/any", "Global Gateway Guru", "Export {target} goods from a city.", "Unlock New City : Seoul", 1000000, sql_export_city, SubstitutePlaceholder(cityUnlockSql, "{city}", "Seoul"));
+
+            //Total nr of factories
+            String sqlCountFactories = "select min(count(*),{target}) as target from factories";
+            InsertAchievement("fact/count/00005", "fact/count", "Industrial Pioneer", "Build {target} factories.", "Production Bonus Points +10", 5, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "10"));
+            InsertAchievement("fact/count/00010", "fact/count", "Factory Founder", "Build {target} factories.", "Unlock new cargo Type : Furniture", 10, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Furniture"));
+            InsertAchievement("fact/count/00050", "fact/count", "Manufacturing Magnate", "Build {target} factories.", "Unlock New City : Shenzhen", 50, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Shenzhen"));
+            InsertAchievement("fact/count/00100", "fact/count", "Industrial Pioneer", "Build {target} factories.", "Production Bonus Points +100", 100, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "100"));
+            InsertAchievement("fact/count/00250", "fact/count", "Assembly Line Architect", "Build {target} factories.", "Unlock New City : Beijing", 250, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Beijing"));
+            InsertAchievement("fact/count/00500", "fact/count", "Production Powerhouse", "Build {target} factories.", "Unlock New City : Mumbai", 500, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mumbai"));
             //Unlock Auto Sell, Auto Export etc per city
             String sql_autosellproduced_city = "  SELECT MIN(sum(Production),{target}) as target FROM HistoryDetail where city = '{city}' ";
             String sql_autosellimported_city = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail where city = '{city}' ";
