@@ -705,7 +705,7 @@ class Program
 
     private static void factorySettingsDialog(string city, string cargoType)
     {
-        var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 70, 15);
+        var dialog = new Dialog("Settings for " + city +" "+ cargoType + " factory ", 80, 20);
         dialog.ColorScheme = myColorScheme;
         var buttonOk = new Button("OK", is_default: true);
         var player = dataManager.player.LoadPlayer();
