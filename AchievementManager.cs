@@ -131,21 +131,11 @@ namespace Capital_and_Cargo
                 Seoul
                 Shanghai
                 Guangzhou
-            Beijing
-            Shenzhen
-            Mumbai
-            Jakarta
-            Singapore
-            * No achievements yet
-   
-                
-                
-                
-                
-                
-                
-                
-             * */
+                Beijing
+                Shenzhen
+                Mumbai
+                Jakarta
+                Singapore
 
             /*
             *  ----- GOODS -----
@@ -167,14 +157,12 @@ namespace Capital_and_Cargo
                  Beverages
                  Furniture
                  Oil & Gas
+                 Construction Materials
+                 Textiles
+                 Chemicals
+                 Metals
             * No Achievements Yet
                
-                
-                
-                Construction Materials
-                Textiles
-                Chemicals
-                Metals
                 Glass Products
                 Machinery
                 Pharmaceuticals
@@ -192,6 +180,19 @@ namespace Capital_and_Cargo
             InsertAchievement("rep/any/0100000", "rep/any", "Urban Influencer", "Achieve {target} reputation in any city.", "Production Bonus Points +20", 100000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
             InsertAchievement("rep/any/0250000", "rep/any", "Key to the City", "Achieve {target} reputation in any city.", "Production Bonus Points +50", 250000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
             InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "Production Bonus Points +50", 1000000, sql_rep_any,  SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
+
+            //Total Reputation
+            String sqlTotalRep = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities desc limit 1";
+            InsertAchievement("rep/total/0010000", "rep/total", "Global Luminary", "Achieve {target} reputation.", "Production Bonus Points +10", 10000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "10"));
+            InsertAchievement("rep/total/0050000", "rep/total", "Worldwide Wunderkind", "Achieve {target} reputation.", "Unlock New City : Jakarta", 50000, sqlTotalRep, SubstitutePlaceholder(cityUnlockSql, "{city}", "Jakarta"));
+            InsertAchievement("rep/total/0100000", "rep/total", "International Icon", "Achieve {target} reputation.", "Unlock new cargo Type : Toys", 100000, sqlTotalRep, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Toys"));
+            InsertAchievement("rep/total/0250000", "rep/total", "Planetwide Patron", "Achieve {target} reputation.", "Unlock new cargo Type : Oil & Gas", 250000, sqlTotalRep, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Oil & Gas"));
+            InsertAchievement("rep/total/0500000", "rep/total", "Universal Uplifter", "Achieve {target} reputation.", "Unlock New City : Singapore", 500000, sqlTotalRep, SubstitutePlaceholder(cityUnlockSql, "{city}", "Singapore"));
+            InsertAchievement("rep/total/1000000", "rep/total", "Cosmopolitan Champion", "Achieve {target} reputation.", "Production Bonus Points +200", 1000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/total/2000000", "rep/total", "Earth's Emissary", "Achieve {target} reputation.", "Production Bonus Points +500", 2000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "500"));
+            InsertAchievement("rep/total/5000000", "rep/total", "Global Guardian", "Achieve {target} reputation.", "Production Bonus Points +5000", 5000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5000"));
+
+
             //Total Import per month
             String sql_import_total = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
             InsertAchievement("imp/any/month/0000500", "imp/any/month", "New Importer on the Dock", "Import {target} goods in 1 month.", "Unlock new city : London", 500, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "London"));
@@ -247,17 +248,20 @@ namespace Capital_and_Cargo
             InsertAchievement("fact/count/00250", "fact/count", "Assembly Line Architect", "Build {target} factories.", "Unlock New City : Beijing", 250, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Beijing"));
             InsertAchievement("fact/count/00500", "fact/count", "Production Powerhouse", "Build {target} factories.", "Unlock New City : Mumbai", 500, sqlCountFactories, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mumbai"));
 
-            //Total Reputation
-            String sqlTotalRep = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities desc limit 1";
-            InsertAchievement("rep/total/0010000", "rep/total", "Global Luminary", "Achieve {target} reputation.", "Production Bonus Points +10", 10000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "10"));
-            InsertAchievement("rep/total/0050000", "rep/total", "Worldwide Wunderkind", "Achieve {target} reputation.", "Unlock New City : Jakarta", 50000, sqlTotalRep, SubstitutePlaceholder(cityUnlockSql, "{city}", "Jakarta"));
-            InsertAchievement("rep/total/0100000", "rep/total", "International Icon", "Achieve {target} reputation.", "Unlock new cargo Type : Toys", 100000, sqlTotalRep, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Toys"));
-            InsertAchievement("rep/total/0250000", "rep/total", "Planetwide Patron", "Achieve {target} reputation.", "Unlock new cargo Type : Oil & Gas", 250000, sqlTotalRep, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Oil & Gas"));
-            InsertAchievement("rep/total/0500000", "rep/total", "Universal Uplifter", "Achieve {target} reputation.", "Unlock New City : Singapore", 500000, sqlTotalRep, SubstitutePlaceholder(cityUnlockSql, "{city}", "Singapore"));
-            InsertAchievement("rep/total/1000000", "rep/total", "Cosmopolitan Champion", "Achieve {target} reputation.", "Production Bonus Points +200", 1000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
-            InsertAchievement("rep/total/2000000", "rep/total", "Earth's Emissary", "Achieve {target} reputation.", "Production Bonus Points +500", 2000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
-            InsertAchievement("rep/total/5000000", "rep/total", "Global Guardian", "Achieve {target} reputation.", "Production Bonus Points +5000", 5000000, sqlTotalRep, SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
+            //Different types of factories
+            String sqlDistinctFactories = "SELECT min(count(distinct CargoType),{target}) as target from factories";
+            InsertAchievement("fact/distinct/00002", "fact/distinct", "Diversified Developer", "Build {target} different factories.", "Unlock new cargo Type : Construction Materials", 2, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Construction Materials"));
+            InsertAchievement("fact/distinct/00005", "fact/distinct", "Industry Innovator", "Build {target} different factories.", "Unlock new cargo Type : Textiles", 5, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Textiles"));
+            InsertAchievement("fact/distinct/00010", "fact/distinct", "Sector Specialist", "Build {target} different factories.", "Unlock new cargo Type : Chemicals", 10, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Chemicals"));
+            InsertAchievement("fact/distinct/00015", "fact/distinct", "Factory Frontier", "Build {target} different factories.", "Unlock new cargo Type : Metals", 15, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Metals"));
+            InsertAchievement("fact/distinct/00020", "fact/distinct", "Manufacturing Medley", "Build {target} different factories.", "Production Bonus Points +500", 20, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "500"));
+            InsertAchievement("fact/distinct/00025", "fact/distinct", "Production Polyglot ", "Build {target} different factories.", "Production Bonus Points +5000", 25, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5000"));
+
+
+            
            
+
+
 
 
             //Unlock Auto Sell, Auto Export etc per city
