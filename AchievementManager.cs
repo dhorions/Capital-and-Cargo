@@ -250,12 +250,12 @@ namespace Capital_and_Cargo
 
             //Different types of factories
             String sqlDistinctFactories = "SELECT min(count(distinct CargoType),{target}) as target from factories";
-            InsertAchievement("fact/distinct/00002", "fact/distinct", "Diversified Developer", "Build {target} different factories.", "Unlock new cargo Type : Construction Materials", 2, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Construction Materials"));
-            InsertAchievement("fact/distinct/00005", "fact/distinct", "Industry Innovator", "Build {target} different factories.", "Unlock new cargo Type : Textiles", 5, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Textiles"));
-            InsertAchievement("fact/distinct/00010", "fact/distinct", "Sector Specialist", "Build {target} different factories.", "Unlock new cargo Type : Chemicals", 10, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Chemicals"));
-            InsertAchievement("fact/distinct/00015", "fact/distinct", "Factory Frontier", "Build {target} different factories.", "Unlock new cargo Type : Metals", 15, sqlCountFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Metals"));
-            InsertAchievement("fact/distinct/00020", "fact/distinct", "Manufacturing Medley", "Build {target} different factories.", "Production Bonus Points +500", 20, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "500"));
-            InsertAchievement("fact/distinct/00025", "fact/distinct", "Production Polyglot ", "Build {target} different factories.", "Production Bonus Points +5000", 25, sqlCountFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5000"));
+            InsertAchievement("fact/distinct/00002", "fact/distinct", "Diversified Developer", "Build {target} different factories.", "Unlock new cargo Type : Construction Materials", 2, sqlDistinctFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Construction Materials"));
+            InsertAchievement("fact/distinct/00005", "fact/distinct", "Industry Innovator", "Build {target} different factories.", "Unlock new cargo Type : Textiles", 5, sqlDistinctFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Textiles"));
+            InsertAchievement("fact/distinct/00010", "fact/distinct", "Sector Specialist", "Build {target} different factories.", "Unlock new cargo Type : Chemicals", 10, sqlDistinctFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Chemicals"));
+            InsertAchievement("fact/distinct/00015", "fact/distinct", "Factory Frontier", "Build {target} different factories.", "Unlock new cargo Type : Metals", 15, sqlDistinctFactories, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Metals"));
+            InsertAchievement("fact/distinct/00020", "fact/distinct", "Manufacturing Medley", "Build {target} different factories.", "Production Bonus Points +500", 20, sqlDistinctFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "500"));
+            InsertAchievement("fact/distinct/00025", "fact/distinct", "Production Polyglot ", "Build {target} different factories.", "Production Bonus Points +5000", 25, sqlDistinctFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5000"));
 
 
             
@@ -671,7 +671,8 @@ ORDER BY path ASC, key ASC, achieved DESC;
                 }
                 foreach (DataRow row in dataTable.Rows)
                 {
-                    row["Info"] = SubstitutePlaceholder((String)row["Info"], "{target}", "" + row["target"]);
+                    String formattedTarget = String.Format("{0:N0}", row["target"]);
+                    row["Info"] = SubstitutePlaceholder((String)row["Info"], "{target}", "" + formattedTarget);
                     
                 }
 
