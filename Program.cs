@@ -1008,7 +1008,7 @@ class Program
         buttonBuy.Clicked += () => {
             playsound();
             var city = (String)citiesListView.Table.Rows[citiesListView.SelectedRow]["City"];
-            if ((SupplyAmount * SellPrice) > totalMoney)
+            if ((Convert.ToInt64(numberField.Text) * SellPrice) > totalMoney)
             {
                 MessageBox.ErrorQuery("Insufficient money for this purchase", "Ok");
             }
