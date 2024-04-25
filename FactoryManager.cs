@@ -20,6 +20,7 @@ namespace Capital_and_Cargo
         private TransitManager transit;
         private SoundMananger soundMananger;
         private static int requiredReputationPerLevel = 500;
+        private static String trueIcon = "☑";
         private static String productionCalculation = "CAST(((f.AmountProduced * f.level) * (1 + f.productionBonus / 100.0)) + 0.99999 AS INTEGER)";
         private static String upgradePriceCalculation = "BaseFactoryPrice + (BaseFactoryPrice * ((COALESCE(f.Level, 0) + 1) / 5.0))";
         //private static String upgradeReputationCalculation = $"(SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}";
@@ -150,6 +151,9 @@ namespace Capital_and_Cargo
             requiredReputation = usedReputation + requiredReputation;
             int nextLevel = (int)getExistingFactoryLevel(CityName, CargoType) + 1;
             double requiredMoney = getRequiredMoney(CargoType, CityName, nextLevel);
+            Double Money;
+            Int64 Reputation;
+            (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
             Boolean canUpgrade = false;
             /**
              * Check if we can upgrade/build
@@ -159,7 +163,15 @@ namespace Capital_and_Cargo
             {
                 requiredReputation = (Int64)factory.Rows[0]["Upgrade Rep"];
                 requiredMoney = (Double)factory.Rows[0]["Upgrade Price"];
-                if ((String)factory.Rows[0]["Can Upgrade?"] == "Yes")
+                if ((String)factory.Rows[0]["Can Upgrade?"] == trueIcon)
+                {
+                    canUpgrade = true;
+                }
+            }
+            else
+            {
+                //no factory yet, just check the basics
+                if (Reputation >= requiredReputation && Money >= requiredMoney)
                 {
                     canUpgrade = true;
                 }
@@ -170,9 +182,7 @@ namespace Capital_and_Cargo
             
             
             
-            Double Money;
-            Int64 Reputation;
-            (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
+            
             
             String message = "";
             //if (Reputation >= requiredReputation && Money >= requiredMoney)
@@ -429,7 +439,7 @@ namespace Capital_and_Cargo
                     switch(factory["Can Upgrade?"])
                     {
                         case "Yes":
-                            factory["Can Upgrade?"] = "☑";
+                            factory["Can Upgrade?"] = trueIcon;
                             break;
                         default:
                             factory["Can Upgrade?"] = "";
