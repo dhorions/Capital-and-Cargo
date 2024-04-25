@@ -129,14 +129,13 @@ namespace Capital_and_Cargo
                 Delhi
                 Dubai
                 Seoul
-            * No achievements yet
-  
                 Shanghai
                 Guangzhou
+            * No achievements yet
+   
                 Shenzhen
                 Beijing
                 Mumbai
-                
                 Jakarta
                 Singapore
                 
@@ -189,13 +188,19 @@ namespace Capital_and_Cargo
             String sql_rep_any = "SELECT MIN(sum(" + reputationCalculation + "),{target}) as target FROM cities group by city order by target desc limit 1";
             InsertAchievement("rep/any/0000500", "rep/any", "Trade Pioneer", "Achieve {target} reputation in any city.", "Factory Building Unlocked", 500, sql_rep_any, "");
             InsertAchievement("rep/any/0005000", "rep/any", "Master Trader", "Achieve {target} reputation in any city.", "Production Bonus Points +10", 5000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}","10"));
-            InsertAchievement("rep/any/0250000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "Production Bonus Points +20", 250000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/any/0010000", "rep/any", "Civic Champion ", "Achieve {target} reputation in any city.", "Production Bonus Points +10", 10000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "10"));
+            InsertAchievement("rep/any/0025000", "rep/any", "Local Kingpin", "Achieve {target} reputation in any city.", "Production Bonus Points +20", 25000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/any/0050000", "rep/any", "Pillar of the Community", "Achieve {target} reputation in any city.", "Production Bonus Points +20", 50000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/any/0100000", "rep/any", "Urban Influencer", "Achieve {target} reputation in any city.", "Production Bonus Points +20", 100000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "20"));
+            InsertAchievement("rep/any/0250000", "rep/any", "Key to the City", "Achieve {target} reputation in any city.", "Production Bonus Points +50", 250000, sql_rep_any, SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
             InsertAchievement("rep/any/1000000", "rep/any", "City Magnate ", "Achieve {target} reputation in any city.", "Production Bonus Points +50", 1000000, sql_rep_any,  SubstitutePlaceholder(prodBonusSql, "{bonus}", "50"));
             //Total Import per month
             String sql_import_total = "  SELECT MIN(sum(Import),{target}) as target FROM HistoryDetail group by Date order by target desc limit 1";
             InsertAchievement("imp/any/month/0000500", "imp/any/month", "New Importer on the Dock", "Import {target} goods in 1 month.", "Unlock new city : London", 500, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "London"));
             InsertAchievement("imp/any/month/0005000", "imp/any/month", "Container Rookie", "Import {target} goods in 1 month.", "Unlock new city : Los Angeles", 5000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Los Angeles"));
+            InsertAchievement("imp/any/month/0010000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "Unlock new city : Shanghai", 10000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Shanghai"));
             InsertAchievement("imp/any/month/0025000", "imp/any/month", "Freight Forwarder", "Import {target} goods in 1 month.", "Unlock new city : Houston", 25000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Houston"));
+            InsertAchievement("imp/any/month/0050000", "imp/any/month", "Freight Forwarder", "Import {target} goods in 1 month.", "Unlock new city : Guangzhou", 50000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Guangzhou"));
             InsertAchievement("imp/any/month/0100000", "imp/any/month", "Import Mogul", "Import {target} goods in 1 month.", "Unlock new city : Mexico City", 100000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Mexico City"));
             InsertAchievement("imp/any/month/0250000", "imp/any/month", "Harbor Master", "Import {target} goods in 1 month.", "Unlock new city : São Paulo", 250000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "São Paulo"));
             InsertAchievement("imp/any/month/1000000", "imp/any/month", "Economic Engine", "Import {target} goods in 1 month.", "Unlock new city : Tokyo", 1000000, sql_import_total, SubstitutePlaceholder(cityUnlockSql, "{city}", "Tokyo"));
