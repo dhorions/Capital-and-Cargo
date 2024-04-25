@@ -20,6 +20,7 @@ namespace Capital_and_Cargo
         private TransitManager transit;
         private SoundMananger soundMananger;
         private static int requiredReputationPerLevel = 500;
+        private static String trueIcon = "☑";
         private static String productionCalculation = "CAST(((f.AmountProduced * f.level) * (1 + f.productionBonus / 100.0)) + 0.99999 AS INTEGER)";
         private static String upgradePriceCalculation = "BaseFactoryPrice + (BaseFactoryPrice * ((COALESCE(f.Level, 0) + 1) / 5.0))";
         //private static String upgradeReputationCalculation = $"(SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}";
@@ -145,28 +146,70 @@ namespace Capital_and_Cargo
         public (Boolean canBuild,String message) canBuildFactory(String CityName, String CargoType)
         {
            
-            int requiredReputation = requiredReputationPerLevel;
-            
-            int usedReputation = (Convert.ToInt32(Math.Floor(getExistingFactoryLevelCount(CityName))) * requiredReputationPerLevel);
+            Int64 requiredReputation = requiredReputationPerLevel;
+            Int64 usedReputation = (Convert.ToInt64(Math.Floor(getExistingFactoryLevelCount(CityName))) * requiredReputationPerLevel);
             requiredReputation = usedReputation + requiredReputation;
             int nextLevel = (int)getExistingFactoryLevel(CityName, CargoType) + 1;
-            double requiredMoney = getRequiredMoney(CargoType, CityName,nextLevel);
-            
+            double requiredMoney = getRequiredMoney(CargoType, CityName, nextLevel);
             Double Money;
             Int64 Reputation;
             (Money, Reputation) = getPlayerMoneyAndReputation(CityName);
+            Boolean canUpgrade = false;
+            /**
+             * Check if we can upgrade/build
+             * */
+            DataTable factory = LoadFactories(CityName, CargoType);
+            if(factory.Rows.Count == 1 )
+            {
+                requiredReputation = (Int64)factory.Rows[0]["Upgrade Rep"];
+                requiredMoney = (Double)factory.Rows[0]["Upgrade Price"];
+                if ((String)factory.Rows[0]["Can Upgrade?"] == trueIcon)
+                {
+                    canUpgrade = true;
+                }
+            }
+            else
+            {
+                //no factory yet, just check the basics
+                if (Reputation >= requiredReputation && Money >= requiredMoney)
+                {
+                    canUpgrade = true;
+                }
+            }
+
+
+            
+            
+            
+            
+            
             
             String message = "";
-            if (Reputation >= requiredReputation && Money >= requiredMoney)
+            //if (Reputation >= requiredReputation && Money >= requiredMoney)
+            if(canUpgrade)
             {
                 return (true, message);
             }
             else
             {
-                message = $@"You cannot build a factory yet.
-                You have €{(Int32)Money} and you need €{requiredMoney}.
-                Your reputation in {CityName} is {Reputation} and you need at least {requiredReputation}.
-                You can get more reputation by importing, exporting, selling and buying goods in {CityName}.
+                String formattedMoney = String.Format("{0:N0}", Money);
+                String formattedRequiredMoney = String.Format("{0:N0}", requiredMoney);
+                String formattedReputation = String.Format("{0:N0}", Reputation);
+                String formattedRequiredReputation = String.Format("{0:N0}", requiredReputation);
+                var reputationMessage = $@"";
+                var moneyMessage = $@"";
+                if(Reputation < requiredReputation)
+                {
+                    reputationMessage = $@"Your reputation in {CityName} is {formattedReputation} and you need at least {formattedRequiredReputation}.
+                    You can get more reputation by importing, exporting, selling and buying goods in {CityName}.";
+                }
+                if (Money < requiredMoney)
+                {
+                    moneyMessage = $@"You have €{formattedMoney} and you need €{formattedRequiredMoney}.";
+                }
+                message = $@"You cannot build or upgrade a {CargoType} factory in {CityName} yet.
+                {reputationMessage}
+                {moneyMessage}
                 ";
                 return (false, message);
             }
@@ -343,60 +386,13 @@ namespace Capital_and_Cargo
         }
         public DataTable LoadFactories(String city)
         {
+            return LoadFactories(city, "");
+        }
+            public DataTable LoadFactories(String city,String cargo)
+        {
             DataTable dataTable = new DataTable();
             string sql =
-               /*@"SELECT 
-                  CargoType as [Resource],
-                  Level as [Factory Level],
-                  (AmountProduced * Level)  as [Weekly Production]
-             FROM factories where CityName = @city;
-           ";*/
-               /* $@"
-                SELECT 
-                    f1.CargoType AS [Resource],
-                    f1.CityName as City,
-                    f1.Level AS [Level],
-                    (f1.AmountProduced * f1.Level) AS [Weekly Prod],
-                    (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500 AS [Upgrade Rep],
-                    (SELECT (BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))) FROM cargoTypes WHERE CargoType = f1.CargoType) AS [Upgrade Price],
-                    CASE 
-                        WHEN p.Money >= (SELECT ({BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))}) FROM cargoTypes WHERE CargoType = f1.CargoType)
-                             AND c.Reputation >= (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500
-                        THEN 'Yes'
-                        ELSE 'No'
-                    END AS [Can Upgrade?],
-                    (100 + productionBonus) || '%' as Efficiency
-                FROM 
-                    factories f1
-                JOIN 
-                    player p
-                JOIN 
-                    (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f1.CityName = c.City
-                WHERE c.City = @city
-             
-
-""$@"
-                SELECT 
-                    f1.CargoType AS [Resource],
-                    f1.CityName as City,
-                    f1.Level AS [Level],
-                    (f1.AmountProduced * f1.Level) AS [Weekly Prod],
-                    (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500 AS [Upgrade Rep],
-                    (SELECT (BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))) FROM cargoTypes WHERE CargoType = f1.CargoType) AS [Upgrade Price],
-                    CASE 
-                        WHEN p.Money >= (SELECT (BaseFactoryPrice + (BaseFactoryPrice * ((f1.Level + 1) / 10.0))) FROM cargoTypes WHERE CargoType = f1.CargoType)
-                             AND c.Reputation >= (SELECT SUM(Level) * 500 FROM factories f2 WHERE f2.CityName = f1.CityName) + 500
-                        THEN 'Yes'
-                        ELSE 'No'
-                    END AS [Can Upgrade?],
-                    (100 + productionBonus) || '%' as Efficiency
-                FROM 
-                    factories f1
-                JOIN 
-                    player p
-                JOIN 
-                    (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f1.CityName = c.City
-                WHERE c.City = @city*/
+            
                $@"
                 SELECT 
                     f.CargoType AS [Resource],
@@ -411,7 +407,10 @@ namespace Capital_and_Cargo
                         THEN 'Yes'
                         ELSE 'No'
                     END AS [Can Upgrade?],
-                    (100 + productionBonus) || '%' as Efficiency
+                    (100 + productionBonus) || '%' as Efficiency,
+                       case when f.AutoExport = 1 then 'Yes' else 'No' end as [Auto Export] ,
+                       case when f.AutoSellImported = 1 then 'Yes' else 'No' end as [Auto Sell Import] ,
+                       case when f.AutoSellProduced = 1 then 'Yes' else 'No' end as [Auto Sell Production]
                 FROM 
                     factories f
                 JOIN 
@@ -419,13 +418,20 @@ namespace Capital_and_Cargo
                 JOIN 
                     (SELECT City, {this.reputationCalculation} AS Reputation FROM cities) c ON f.CityName = c.City
                 WHERE c.City = @city
-";
-
-
+            ";
+            if(cargo != "")
+            {
+                sql += $@" and f.CargoType = @CargoType";
+            }
+            
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = sql;
                 command.Parameters.AddWithValue("@city", city);
+                if (cargo != "")
+                {
+                    command.Parameters.AddWithValue("@CargoType", cargo);
+                }
                 using (var reader = command.ExecuteReader())
                 {
                     dataTable.Load(reader);
@@ -436,13 +442,40 @@ namespace Capital_and_Cargo
                     switch(factory["Can Upgrade?"])
                     {
                         case "Yes":
-                            factory["Can Upgrade?"] = "☑";
+                            factory["Can Upgrade?"] = trueIcon;
                             break;
                         default:
                             factory["Can Upgrade?"] = "";
                             break;
                     }
-                }
+                    switch (factory["Auto Export"])
+                    {
+                        case "Yes":
+                            factory["Auto Export"] = trueIcon;
+                            break;
+                        default:
+                            factory["Auto Export"] = "";
+                            break;
+                    }
+                    switch (factory["Auto Sell Import"])
+                    {
+                        case "Yes":
+                            factory["Auto Sell Import"] = trueIcon;
+                            break;
+                        default:
+                            factory["Auto Sell Import"] = "";
+                            break;
+                     }
+                    switch (factory["Auto Sell Production"])
+                    {
+                        case "Yes":
+                            factory["Auto Sell Production"] = trueIcon;
+                            break;
+                        default:
+                            factory["Auto Sell Production"] = "";
+                            break;
+                    }
+            }
             return dataTable;
         }
         public int getFactoryProductionBonus(String city, String cargoType)
