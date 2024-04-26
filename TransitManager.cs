@@ -368,7 +368,7 @@ PurchasePrice REAL NOT NULL
                             command.Parameters.AddWithValue("@Import", row["CargoAmount"]);
                             command.ExecuteNonQuery();
                         }
-                //Auto Sell imported
+                        //Auto Sell imported
                         DataRow factory = factories.getFactory((String)row["DestinationCity"], (String)row["CargoType"]);
                         if (factory!=null && (Int64)(factory["AutoSellImported"]) == 1)
                         { 

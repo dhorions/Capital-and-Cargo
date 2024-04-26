@@ -829,7 +829,6 @@ class Program
 
                 autoSellImportedCheckBox.Toggled += (e) =>
                 {
-                    Debug.WriteLine("TODO - Store AutoSellImported");
                     if (autoSellImportedCheckBox.Checked)
                     {
                         dataManager.factory.setAutoSellProduction(city, cargoType, "AutoSellImported", true);
@@ -872,7 +871,26 @@ class Program
             Height = 5,
             Visible = AutoTransportChecked
         };
-        if(!factory.IsNull("AutoExportDestination"))
+        autoTransportTreshold = new TextField()
+        {
+            Text = factory["AutoExportTreshold"].ToString(),
+            Height = 1,
+            Width = 10,
+            X = 35,
+            Y = 7,
+            Visible = AutoTransportChecked
+        };
+        Boolean useTruck = ((Int64)factory["AutoExportUseTruck"] == 1);
+        var autoExportUseTruck = new CheckBox()
+        {
+            Checked = useTruck,
+            Y = 11,
+            X = 35,
+            Visible = AutoTransportChecked
+        };
+
+
+        if (!factory.IsNull("AutoExportDestination"))
         {
             transportTarget.Text = (String)factory["AutoExportDestination"];
         }
@@ -906,16 +924,24 @@ class Program
                 Visible = AutoTransportChecked
             };
             
+            var autoExportUseTruckLabel = new Terminal.Gui.Label("Use truck if possible")
+            {
+                X = 5,
+                Y = 11
+            };
 
 
-            
+
+
             autoTransportCheckBox.Toggled += (e) =>
             {
                 autoExportTresholdLabel.Visible = autoTransportCheckBox.Checked;
                 autoTransportTreshold.Visible = autoTransportCheckBox.Checked;
                 autoExportTargetLabel.Visible = autoTransportCheckBox.Checked;
                 transportTarget.Visible = autoTransportCheckBox.Checked;
-                
+                autoExportUseTruck.Visible = autoTransportCheckBox.Checked;
+
+
             };
 
 
@@ -925,13 +951,15 @@ class Program
             dialog.Add(autoTransportTreshold);
             dialog.Add(autoExportTargetLabel);
             dialog.Add(transportTarget);
+            dialog.Add(autoExportUseTruck);
+            dialog.Add(autoExportUseTruckLabel);
 
         }
          dialog.Add(efficiencyLabel, efficiencyValue);
         buttonOk.Clicked += () => {
 
             /** Save auto transport settings */
-            dataManager.factory.setAutoExport(city, cargoType, autoTransportCheckBox.Checked, (String)transportTarget.Text, Convert.ToInt32(autoTransportTreshold.Text));
+            dataManager.factory.setAutoExport(city, cargoType, autoTransportCheckBox.Checked, (String)transportTarget.Text, Convert.ToInt32(autoTransportTreshold.Text), autoExportUseTruck.Checked);
             Application.RequestStop();
             playsound();
 

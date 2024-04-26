@@ -161,12 +161,16 @@ namespace Capital_and_Cargo
                  Textiles
                  Chemicals
                  Metals
+                Glass Products
+            Machinery
+             Pharmaceuticals
+            Tobacco Products
             * No Achievements Yet
                
-                Glass Products
-                Machinery
-                Pharmaceuticals
-                Tobacco Products
+                
+                
+               
+                
 
             */
 
@@ -258,11 +262,14 @@ namespace Capital_and_Cargo
             InsertAchievement("fact/distinct/00025", "fact/distinct", "Production Polyglot ", "Build {target} different factories.", "Production Bonus Points +5000", 25, sqlDistinctFactories, SubstitutePlaceholder(prodBonusSql, "{bonus}", "5000"));
 
 
-            
-           
 
-
-
+            //Transports by truck
+            String sqlTruckTransport = "select min(count (*),{target}) from HistoryDetail where cargoType like '%.truck'";
+            InsertAchievement("transp/truck/00100", "transp/truck", "Rookie Roadster", "{target} transports by truck.", "Production Bonus Points +250", 100, sqlTruckTransport, SubstitutePlaceholder(prodBonusSql, "{bonus}", "250"));
+            InsertAchievement("transp/truck/00500", "transp/truck", "Interstate Merchant", "{target} transports by truck.", "Unlock new cargo Type : Glass Products", 500, sqlTruckTransport, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Glass Products"));
+            InsertAchievement("transp/truck/02000", "transp/truck", "Heavy Hauler", "{target} transports by truck.", "Unlock new cargo Type : Machinery", 2000, sqlTruckTransport, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", "Machinery"));
+            InsertAchievement("transp/truck/05000", "transp/truck", "Coast-to-Coast Conductor", "{target} transports by truck.", "Unlock new cargo Type :  Pharmaceuticals", 5000, sqlTruckTransport, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", " Pharmaceuticals"));
+            InsertAchievement("transp/truck/05000", "transp/truck", "Trucking Tycoon", "{target} transports by truck.", "Unlock new cargo Type :  Tobacco Products", 10000, sqlTruckTransport, SubstitutePlaceholder(cargoUnlockSql, "{CargoType}", " Tobacco Products"));
 
             //Unlock Auto Sell, Auto Export etc per city
             String sql_autosellproduced_city = "  SELECT MIN(sum(Production),{target}) as target FROM HistoryDetail where city = '{city}' ";

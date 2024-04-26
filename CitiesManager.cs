@@ -167,7 +167,7 @@ namespace Capital_and_Cargo
             string sql = $@"SELECT continent,country,city,
                 case 
                     when sum(amount) is null then 0
-                    else  sum(amount)
+                    else  max(sum(amount),0)
                 end as Inventory,
                 {reputationCalculation} as Reputation,
                  ( select count(*) from factories where CityName =  cities.city) as Factories

@@ -43,9 +43,10 @@ namespace Capital_and_Cargo
             SoundMananger = new SoundMananger();
             player = new PlayerManager(ref this.connection);
             cargoTypes = new CargoTypesManager(ref this.connection, ref dm);
+            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player,  ref SoundMananger);
             cities = new CitiesManager(ref this.connection, ref dm, reputationCalculation, ref player, ref factory);
             cities.PopulateCityMarketTable(cities.LoadCities(), cargoTypes.GetAllCargoTypesAndBasePrices());
-            factory = new FactoryManager(ref this.connection, reputationCalculation, ref cargoTypes, ref player,ref cities,ref SoundMananger);
+            factory.setCitiesManager(cities);
             achievements = new AchievementManager(ref this.connection, reputationCalculation,ref cities,ref cargoTypes);
             transits = new TransitManager(ref this.connection,ref dm,ref player,ref cities,ref factory);
             factory.setTransitManager(transits);
@@ -93,14 +94,19 @@ namespace Capital_and_Cargo
             return date.DayOfWeek == DayOfWeek.Monday;
 
         }
+        
         public void gameUpdateLoop()
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            player.nextDay();
-            System.Data.DataTable p = player.LoadPlayer();
-            //Debug.WriteLine("->" + p.Rows[0]["Date"]);
-            DateTime currentDay =  DateTime.ParseExact((String)p.Rows[0]["Date"], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             
+            player.nextDay();
+            //Task.Run(() => processDay());
+            processDay();
+        }
+        private void processDay()
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            System.Data.DataTable p = player.LoadPlayer();
+            DateTime currentDay = DateTime.ParseExact((String)p.Rows[0]["Date"], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             if (IsFirstDayOfMonth(currentDay))
             {
                 Debug.WriteLine("First Day of new Month : " + currentDay);
@@ -116,8 +122,7 @@ namespace Capital_and_Cargo
             transits.updateTransits();
             achievements.checkAchievements(currentDay);
             stopwatch.Stop();
-            Debug.WriteLine($"-> {currentDay} -  {stopwatch.ElapsedMilliseconds} ms"  );
-
+            Debug.WriteLine($"-> {currentDay} -  {stopwatch.ElapsedMilliseconds} ms");
         }
         public void purchase(String city, String CargoType, int amount, Double price)
         {

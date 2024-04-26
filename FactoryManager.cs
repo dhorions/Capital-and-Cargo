@@ -27,16 +27,20 @@ namespace Capital_and_Cargo
         private static String upgradeReputationCalculation = $"((SELECT SUM(Level) * ({requiredReputationPerLevel} * Level / 2) FROM factories f2 WHERE f2.CityName = f.CityName) + {requiredReputationPerLevel}) * (1+ (select level/2 from factories f3 where f3.CityName = f.CityName and f3.cargoType = f.cargoType))";
         //add comment
 
-        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player,ref CitiesManager cities,ref SoundMananger sound)
+        public FactoryManager(ref SqliteConnection connection,String reputationCalculation, ref CargoTypesManager cargo, ref PlayerManager player,ref SoundMananger sound)
         {
             _connection = connection;
             this.cargo = cargo;
             this.player = player;
             this.reputationCalculation = reputationCalculation;
-            this.cities = cities;
+           
             this.soundMananger = sound;
             EnsureTableExistsAndIsPopulated();
 
+        }
+        public void setCitiesManager(CitiesManager cities)
+        {
+            this.cities = cities;
         }
         public void setTransitManager(TransitManager transitManager)
         {
@@ -65,7 +69,8 @@ namespace Capital_and_Cargo
                     AutoSellImported INTEGER default 0,
                     AutoExport INTEGER default 0,
                     AutoExportDestination String,
-                    AutoExportTreshold INTEGER default 0
+                    AutoExportTreshold INTEGER default 0,
+                    AutoExportUseTruck INTEGER default 0
                 );
                 CREATE INDEX IF NOT EXISTS factory_citycargo ON factories (
                     CityName,
@@ -114,18 +119,22 @@ namespace Capital_and_Cargo
                 command.ExecuteNonQuery();
             }
         }
-        public void setAutoExport(String CityName, String CargoType,  Boolean enabled, String targetCity,int treshold)
+        public void setAutoExport(String CityName, String CargoType,  Boolean enabled, String targetCity,int treshold, Boolean useTruck = true)
         {
             int enabledInt = 0;
             if (enabled) enabledInt = 1;
+            int useTruckInt = 0;
+            if (useTruck) useTruckInt = 1;
+
             using (var command = _connection.CreateCommand())
             {
-                command.CommandText = $"update factories set AutoExport =  @enabledInt, AutoExportDestination = @targetCity, AutoExportTreshold = @treshold where CityName = @city and CargoType = @cargo";
+                command.CommandText = $"update factories set AutoExport =  @enabledInt, AutoExportDestination = @targetCity, AutoExportTreshold = @treshold,AutoExportUseTruck = @useTruck where CityName = @city and CargoType = @cargo";
                 command.Parameters.AddWithValue("@cargo", CargoType);
                 command.Parameters.AddWithValue("@city", CityName);
                 command.Parameters.AddWithValue("@enabledInt", enabledInt);
                 command.Parameters.AddWithValue("@targetCity", targetCity);
                 command.Parameters.AddWithValue("@treshold", treshold);
+                command.Parameters.AddWithValue("@useTruck", useTruckInt);
                 command.ExecuteNonQuery();
             }
         }
@@ -688,7 +697,8 @@ namespace Capital_and_Cargo
             SELECT f.CityName,
                    f.CargoType,
                    w.Amount,
-                   f.AutoExportDestination
+                   f.AutoExportDestination,
+                   f.AutoExportUseTruck
               FROM warehouse w join factories f on w.CityName = f.CityName and w.CargoType = f.CargoType
               join cities c on f.AutoExportDestination = c.City
               where f.AutoExport = 1 and w.Amount >= f.AutoExportTreshold
@@ -705,7 +715,18 @@ namespace Capital_and_Cargo
                 {
                     //DataTable prices = cities.GetPrices((String)factory["City"], (String)factory["CargoType"]);
                     Debug.WriteLine("AutoTransport  ->\t" + (Int64)factory["Amount"] + " " + (String)factory["CargoType"] + " from " + (String)factory["CityName"] + " to " + (String)factory["AutoExportDestination"]);
-                    transit.transport("plane", (String)factory["CityName"], (String)factory["AutoExportDestination"], (String)factory["CargoType"],(Int64)factory["Amount"]);
+                    //Check if a truck should be used 
+                    String method = "plane";
+                    if((Int64)factory["AutoExportUseTruck"]==1)
+                    {
+                        //use a truck if possible
+                        if(transit.canBeTransported("truck",(String)factory["CityName"], (String)factory["AutoExportDestination"]))
+                        {
+                            method = "truck";
+                        }
+
+                    }
+                    transit.transport(method, (String)factory["CityName"], (String)factory["AutoExportDestination"], (String)factory["CargoType"],(Int64)factory["Amount"]);
                     soundMananger.playSound(Capital_and_Cargo.Properties.Resources.planeTransport);
                 }
 
