@@ -6,6 +6,7 @@ $originalDirectory = Get-Location
 $baseZipPath = $originalDirectory.Path +"/builds/CapitalAndCargo_"
  Write-Host $originalDirectory
 $buildsDirectory = "./builds"
+$installerPath = "../Installer/Installer/Debug/Capital and Cargo.msi"
 
 # Get the current date in YYYYMMDD format
 $currentDate = Get-Date -Format "yyyyMMdd"
@@ -47,6 +48,8 @@ if (Test-Path -Path $targetDirectory) {
     # Move the ZIP file to the target directory
     Copy-Item -Path $destinationZipFile -Destination $targetDirectory
     Copy-Item -Path $installScriptPath -Destination $targetDirectory
+    Copy-Item -Path $installerPath  -Destination $targetDirectory -Force
+
     Write-Host "Local Build created and moved to kids share."
 } else {
     Write-Host "Local build created."

@@ -24,7 +24,7 @@ namespace Capital_and_Cargo
         public FactoryManager ? factory;
         public SoundMananger? SoundMananger;
         public AchievementManager? achievements;
-        private SqliteConnection connection = new SqliteConnection("Data Source=CandC.db");
+        private SqliteConnection connection;
         private String reputationCalculation = "";
         private static Double importReputation = .50;
         private static Double exportReputation = .25;
@@ -32,8 +32,24 @@ namespace Capital_and_Cargo
         private static Double buyReputation = .10;
         public GameDataManager()
         {
+            initDb();
             EnsureDatabaseCreated();
             initData();
+        }
+
+        private void initDb()
+        {
+           
+            string dbPath = Path.Combine(getDataPath(), "CandC.db"); 
+            Debug.WriteLine("Database Path:" + dbPath);
+            connection =  new SqliteConnection($"Data Source={dbPath}");
+        }
+        private String getDataPath()
+        {
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            appDataPath = Path.Combine(appDataPath, "Capital and Cargo");
+            Directory.CreateDirectory(appDataPath);
+            return appDataPath;
         }
 
         private void initData()

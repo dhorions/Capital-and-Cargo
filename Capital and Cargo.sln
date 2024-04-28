@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34701.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Capital and Cargo", "Capital and Cargo.csproj", "{D6553EB8-69BC-4CA2-B048-B08BDD5F9693}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Capital and Cargo", "Capital and Cargo.csproj", "{D6553EB8-69BC-4CA2-B048-B08BDD5F9693}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer\Installer.vdproj", "{32997C4A-9132-4AE2-90FE-8A101D8BB000}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,8 @@ Global
 		{D6553EB8-69BC-4CA2-B048-B08BDD5F9693}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6553EB8-69BC-4CA2-B048-B08BDD5F9693}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6553EB8-69BC-4CA2-B048-B08BDD5F9693}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32997C4A-9132-4AE2-90FE-8A101D8BB000}.Debug|Any CPU.ActiveCfg = Debug
+		{32997C4A-9132-4AE2-90FE-8A101D8BB000}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

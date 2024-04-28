@@ -1128,7 +1128,7 @@ class Program
     {
         System.Data.DataTable playerTable = dataManager.player.LoadPlayer();
         Int64 showPopup = (Int64)(playerTable.Rows[0]["displayStartPopup"]);
-        if (showPopup==1)
+        if (showPopup==0)
         {
             return;
         }
